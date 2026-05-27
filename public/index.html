@@ -256,7 +256,7 @@ p {
 }
 
 .hero h1 {
-  font-size: clamp(52px, 8vw, 118px);
+  font-size: clamp(50px, 8vw, 116px);
   line-height: 0.9;
   margin: 0 0 24px;
   text-transform: uppercase;
@@ -460,41 +460,62 @@ p {
   padding-bottom: 7px;
 }
 
-.process-grid {
-  counter-reset: flow;
+.process {
   display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(42px, 6vw, 80px);
+  grid-template-columns: minmax(280px, 0.42fr) minmax(0, 0.58fr);
+}
+
+.process-intro {
+  align-self: start;
+  position: sticky;
+  top: 100px;
+}
+
+.process-desc {
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.7;
+  margin: 18px 0 28px;
+}
+
+.process-timeline {
+  display: flex;
+  flex-direction: column;
   list-style: none;
-  margin: 42px 0 0;
+  margin: 0;
   padding: 0;
 }
 
-.process-grid li {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  min-height: 278px;
-  padding: 28px;
+.process-timeline li {
+  align-items: flex-start;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 22px;
+  padding: 28px 0;
 }
 
-.process-grid li::before {
+.process-timeline li:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+.step-num {
   color: var(--steel);
-  content: "0" counter(flow);
-  counter-increment: flow;
-  display: block;
-  font: 600 17px/1 "Kanit", sans-serif;
-  margin-bottom: 88px;
+  flex: 0 0 44px;
+  font: 600 15px/1.6 "Kanit", sans-serif;
 }
 
-.process-grid strong,
-.process-grid span {
+.process-timeline strong {
   display: block;
-}
-
-.process-grid strong {
-  font-size: 25px;
+  font-size: 20px;
   margin-bottom: 8px;
+}
+
+.process-timeline span {
+  color: var(--muted);
+  display: block;
+  font-size: 15px;
+  line-height: 1.65;
 }
 
 .faq-list {
@@ -542,31 +563,45 @@ p {
     linear-gradient(135deg, rgba(226, 41, 63, 0.15), transparent 25rem),
     var(--panel-2);
   border-top: 1px solid var(--line);
-  display: grid;
-  gap: clamp(26px, 4vw, 58px);
-  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.55fr);
   padding: clamp(72px, 8vw, 112px) clamp(18px, 7vw, 96px);
+  text-align: center;
 }
 
-.contact-copy p {
+.contact-inner {
+  margin: 0 auto;
+  max-width: 680px;
+}
+
+.contact h2 {
+  font-size: clamp(34px, 5vw, 62px);
+  line-height: 1.05;
+  margin: 0 0 18px;
+}
+
+.contact-desc {
+  color: var(--muted);
   font-size: 18px;
-  margin-top: 24px;
-  max-width: 760px;
-}
-
-.contact-copy strong {
-  color: #fff;
+  line-height: 1.7;
+  margin-bottom: 24px;
 }
 
 .lead-note {
   background: rgba(7, 9, 12, 0.72);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 12px;
+  margin-top: 32px;
   padding: clamp(24px, 4vw, 38px);
+  text-align: left;
 }
 
 .lead-note h3 {
-  margin: 0;
+  font-size: 18px;
+  margin: 0 0 16px;
+}
+
+.lead-note .button {
+  margin-top: 24px;
+  width: 100%;
 }
 
 .footer {
@@ -717,13 +752,19 @@ p {
   }
 
   .intro-grid,
-  .products,
-  .contact {
+  .products {
     grid-template-columns: 1fr;
   }
 
-  .service-grid,
-  .process-grid {
+  .process {
+    grid-template-columns: 1fr;
+  }
+
+  .process-intro {
+    position: static;
+  }
+
+  .service-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -759,8 +800,7 @@ p {
     padding-block: 68px;
   }
 
-  .service-grid,
-  .process-grid {
+  .service-grid {
     grid-template-columns: 1fr;
   }
 
@@ -778,14 +818,6 @@ p {
 
   .product-rows article {
     grid-template-columns: 1fr;
-  }
-
-  .process-grid li {
-    min-height: 0;
-  }
-
-  .process-grid li::before {
-    margin-bottom: 42px;
   }
 
   .contact {
@@ -832,27 +864,27 @@ p {
         <p class="eyebrow">ECU Remap via OBD2 / Exhaust Upgrade / EV Active Sound</p>
         <h1 id="hero-title">Shiftup Performance</h1>
         <p class="hero-lead">
-          ยกระดับฟีลการขับขี่ด้วยการปรับจูนที่คุยรายละเอียดก่อนทำ
-          พร้อมทางเลือกด้านระบบไอเสีย HKS และ Panthera Active Sound
-          สำหรับรถที่ต้องการคาแรกเตอร์ชัดขึ้น
+          ไม่ใช่แค่การจูนรถ แต่คือการสร้างคาแรกเตอร์ใหม่ให้สอดรับกับสไตล์คุณ
+          ปลดล็อกสมรรถนะที่ซ่อนอยู่ด้วยการทำ ECU Remap พร้อมยกระดับสุ้มเสียงด้วย
+          HKS Exhaust และนวัตกรรม Active Sound สำหรับ EV
         </p>
         <div class="hero-actions">
-          <a class="button primary" href="https://line.me/R/ti/p/@shiftup" target="_blank" rel="noreferrer">ประเมินรถกับทีมงาน</a>
-          <a class="button ghost" href="#services">ดูบริการ</a>
+          <a class="button primary" href="https://lin.ee/nZOMcph" target="_blank" rel="noreferrer">ประเมินรถกับทีมงาน</a>
+          <a class="button ghost" href="#services">ดูบริการของเรา</a>
         </div>
       </div>
       <div class="hero-rail" aria-label="จุดเด่น">
         <article>
-          <strong>Mazda Focus</strong>
-          <span>เริ่มต้นจากรถ Mazda และเตรียมต่อยอดรุ่นอื่น</span>
+          <strong>Mazda Specialist</strong>
+          <span>เชี่ยวชาญพิเศษ เริ่มต้นจาก Mazda สู่สมรรถนะที่เหนือกว่า</span>
         </article>
         <article>
           <strong>Fit Before Flash</strong>
-          <span>ตรวจโจทย์การใช้งานและสภาพรถก่อนเลือกแนวทาง</span>
+          <span>วิเคราะห์โจทย์และสภาพรถอย่างละเอียด ก่อนตัดสินใจจูน</span>
         </article>
         <article>
           <strong>One Contact</strong>
-          <span>คุยบริการ จองคิว และสอบถามสินค้าได้ทาง LINE</span>
+          <span>ดูแลเบ็ดเสร็จในที่เดียว จองคิว ปรึกษา จบผ่าน LINE</span>
         </article>
       </div>
     </section>
@@ -880,20 +912,20 @@ p {
     <section class="services band" id="services" aria-labelledby="services-title">
       <div class="section-head">
         <p class="eyebrow">Core Services</p>
-        <h2 id="services-title">สามแกนหลักของ Shiftup</h2>
+        <h2 id="services-title">รถคันเดิม ประสบการณ์ใหม่.</h2>
+        <p style="color:var(--muted);font-size:17px;line-height:1.7;margin-top:14px;max-width:640px;">บริการ 3 แกนหลักที่ออกแบบมาเพื่อตอบสนองความต้องการของคนรักรถ ที่ต้องการคาแรกเตอร์ที่ชัดเจน และสมรรถนะที่จับต้องได้</p>
       </div>
       <div class="service-grid">
         <article class="service">
           <p class="service-index">01</p>
           <h3>ECU Remap</h3>
           <p>
-            ปรับจูนผ่าน OBD2 โดยเริ่มจากการสอบถามรุ่นรถ สภาพรถ
-            ของแต่งที่มี และลักษณะการใช้งาน เพื่อเลือกแนวทางที่เหมาะสม
+            ปรับจูนทะลุขีดจำกัดผ่านพอร์ต OBD2 ออกแบบกราฟเครื่องยนต์ใหม่ตามสภาพรถ
+            และสไตล์การขับขี่ของคุณโดยเฉพาะ (เน้น Mazda ในระยะแรก)
           </p>
           <ul>
-            <li>โฟกัสรถ Mazda ในระยะแรก</li>
-            <li>สื่อสารโจทย์ก่อนเริ่มงาน</li>
-            <li>เหมาะกับลูกค้าที่ต้องการฟีลขับที่ชัดขึ้น</li>
+            <li>สื่อสารโจทย์ชัดเจนก่อนเริ่มงาน</li>
+            <li>ดันเร่งตอบสนองไวขึ้น ขับสนุกขึ้น</li>
           </ul>
         </article>
 
@@ -901,27 +933,25 @@ p {
           <p class="service-index">02</p>
           <h3>HKS Exhaust</h3>
           <p>
-            ช่วยเลือกท่อและชุดไอเสีย HKS ให้ตรงรุ่นและตรงบุคลิกที่ลูกค้าต้องการ
-            ตั้งแต่ใช้งานบนถนนจนถึงรถแต่งที่ต้องการภาพลักษณ์จริงจังขึ้น
+            ยกระดับสุ้มเสียงและภาพลักษณ์ ด้วยระบบท่อไอเสียแบรนด์ระดับโลก HKS
+            เราช่วยเลือกสเปคที่พอดีกับรถคุณ ทั้งขับใช้งานประจำวันหรือสายซิ่ง
           </p>
           <ul>
-            <li>สินค้าในกลุ่มระบบไอเสีย</li>
-            <li>สอบถาม fitment ก่อนสั่ง</li>
-            <li>เชื่อมช่องทาง Pingstores และ Shiftup</li>
+            <li>ตรวจสอบ Fitment ก่อนสั่งซื้อ</li>
+            <li>เชื่อมโยงสต๊อกโดยตรงกับ Pingstores</li>
           </ul>
         </article>
 
         <article class="service">
           <p class="service-index">03</p>
-          <h3>Panthera Active Sound</h3>
+          <h3>Panthera EV Sound</h3>
           <p>
-            ทางเลือกสำหรับลูกค้าที่สนใจคาแรกเตอร์เสียงของรถ EV
-            และรถที่เหมาะกับระบบ Active Sound โดยปัจจุบันอยู่ในช่วงทดสอบสินค้า
+            เปิดมิติใหม่แห่งเสียงให้กับรถยนต์ไฟฟ้า (EV) ด้วยระบบ Active Sound จาก Panthera
+            สร้างความเร้าใจในทุกอัตราเร่ง (ปัจจุบันอยู่ในช่วงทดสอบ)
           </p>
           <ul>
-            <li>สื่อสารสถานะทดสอบอย่างชัดเจน</li>
-            <li>เก็บความสนใจลูกค้าก่อนเปิดขายเต็มรูปแบบ</li>
-            <li>เหมาะกับแคมเปญ demo และรีวิวภายหลัง</li>
+            <li>ลงชื่อสนใจรับข้อเสนอพิเศษตอนเปิดตัว</li>
+            <li>ปรับแต่งเสียงได้หลากหลายคาแรกเตอร์</li>
           </ul>
         </article>
       </div>
@@ -953,26 +983,40 @@ p {
     </section>
 
     <section class="process band" id="process" aria-labelledby="process-title">
-      <div class="section-head">
+      <div class="process-intro">
         <p class="eyebrow">Customer Flow</p>
-        <h2 id="process-title">ขั้นตอนคุยงานที่ลูกค้าเข้าใจง่าย</h2>
+        <h2 id="process-title">The Shiftup Experience.</h2>
+        <p class="process-desc">เราเชื่อว่ารถทุกคันมีโจทย์ที่ไม่เหมือนกัน กระบวนการทำงานของเราจึงเน้นความเข้าใจที่ตรงกัน เพื่อให้คุณได้รับผลลัพธ์ที่ตรงใจ คุ้มค่า และปลอดภัยที่สุด</p>
+        <a class="text-link" href="https://lin.ee/nZOMcph" target="_blank" rel="noreferrer">ส่งข้อมูลรถของคุณให้เราประเมินตอนนี้ ›</a>
       </div>
-      <ol class="process-grid">
+      <ol class="process-timeline">
         <li>
-          <strong>ส่งข้อมูลรถ</strong>
-          <span>รุ่น ปี เครื่องยนต์ ของแต่ง และโจทย์ที่ต้องการ</span>
+          <span class="step-num">01</span>
+          <div>
+            <strong>ส่งข้อมูลเบื้องต้น</strong>
+            <span>ทัก LINE ส่งยี่ห้อ รุ่น ปี เครื่องยนต์ รายการของแต่ง และความต้องการของคุณ</span>
+          </div>
         </li>
         <li>
-          <strong>ประเมินแนวทาง</strong>
-          <span>ทีมงานช่วยแยกว่าควรเริ่ม Remap, สินค้า หรือรอข้อมูลเพิ่ม</span>
+          <span class="step-num">02</span>
+          <div>
+            <strong>ประเมินแนวทาง (Fit Before Flash)</strong>
+            <span>ทีมงานวิเคราะห์และแนะนำว่าควรจูนแบบไหน หรือควรอัปเกรดอะไหล่ส่วนใดก่อน</span>
+          </div>
         </li>
         <li>
-          <strong>นัดหมาย</strong>
-          <span>ตกลงคิว รายละเอียดงาน และสิ่งที่ต้องเตรียมก่อนเข้ารับบริการ</span>
+          <span class="step-num">03</span>
+          <div>
+            <strong>นัดหมาย & ดำเนินการ</strong>
+            <span>ตกลงคิวงาน แจ้งสิ่งที่ต้องเตรียม แล้วนำรถเข้ามาให้เราจัดการตามแผน</span>
+          </div>
         </li>
         <li>
-          <strong>ติดตามผล</strong>
-          <span>เก็บ feedback เพื่อนำไปพัฒนาคอนเทนต์และบริการต่อเนื่อง</span>
+          <span class="step-num">04</span>
+          <div>
+            <strong>ส่งมอบ & ติดตามผล</strong>
+            <span>ทดสอบการขับขี่จริง และทีมงานคอยสอบถาม Feedback หลังการใช้งาน</span>
+          </div>
         </li>
       </ol>
     </section>
@@ -999,31 +1043,26 @@ p {
     </section>
 
     <section class="contact" id="contact" aria-labelledby="contact-title">
-      <div class="contact-copy">
+      <div class="contact-inner">
         <p class="eyebrow">Contact Shiftup</p>
-        <h2 id="contact-title">เริ่มจากส่งข้อมูลรถมาให้ครบ แล้วคุยกันให้ตรงโจทย์</h2>
-        <p>
-          ช่องทางหลักสำหรับสอบถามบริการ Remap, สินค้า HKS และความคืบหน้า Panthera
-          คือ LINE OA <strong>@shiftup</strong> และเพจ Facebook Shiftup Performance
+        <h2 id="contact-title">พร้อมอัปเกรดรถคู่ใจหรือยัง?</h2>
+        <p class="contact-desc">
+          ประเมินฟรี ไม่มีค่าใช้จ่าย ส่งข้อมูลรถของคุณมาให้เรา แล้วมาคุยกันว่า Shiftup จะช่วยยกระดับการขับขี่ของคุณได้อย่างไร
         </p>
-        <div class="contact-channels">
+        <div class="contact-channels" style="text-align:left;">
           <p><span class="channel-label">โทร</span><a href="tel:0830092554">083-009-2554</a> / <a href="tel:0887888364">088-788-8364</a> <span class="channel-note">(ปิง)</span></p>
           <p><span class="channel-label">LINE</span><a href="https://lin.ee/nZOMcph" target="_blank" rel="noreferrer">lin.ee/nZOMcph</a></p>
         </div>
-        <div class="contact-actions">
-          <a class="button primary" href="https://lin.ee/nZOMcph" target="_blank" rel="noreferrer">LINE @shiftup</a>
-          <a class="button ghost" href="https://www.facebook.com/shiftupperformance" target="_blank" rel="noreferrer">Facebook Page</a>
-        </div>
+        <aside class="lead-note">
+          <h3>สิ่งที่ควรเตรียมก่อนทักหาเรา:</h3>
+          <ul>
+            <li>ยี่ห้อ รุ่น ปี และรหัสเครื่องยนต์</li>
+            <li>รายการของแต่งที่มีอยู่ในปัจจุบัน</li>
+            <li>สไตล์การขับขี่ และเป้าหมายที่ต้องการ</li>
+          </ul>
+          <a class="button primary" href="https://lin.ee/nZOMcph" target="_blank" rel="noreferrer">คุยผ่าน LINE @shiftup</a>
+        </aside>
       </div>
-      <aside class="lead-note">
-        <h3>ข้อมูลที่ช่วยให้ประเมินได้เร็ว</h3>
-        <ul>
-          <li>ยี่ห้อ รุ่น ปี และเครื่องยนต์</li>
-          <li>รูปหน้าปัดหรือข้อมูลอาการที่พบ</li>
-          <li>รายการของแต่งที่ติดตั้งแล้ว</li>
-          <li>เป้าหมาย: ขับทุกวัน, ตอบสนอง, เสียง, หรือสินค้า</li>
-        </ul>
-      </aside>
     </section>
   </main>
 

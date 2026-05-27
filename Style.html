@@ -246,7 +246,7 @@ p {
 }
 
 .hero h1 {
-  font-size: clamp(52px, 8vw, 118px);
+  font-size: clamp(50px, 8vw, 116px);
   line-height: 0.9;
   margin: 0 0 24px;
   text-transform: uppercase;
@@ -450,41 +450,62 @@ p {
   padding-bottom: 7px;
 }
 
-.process-grid {
-  counter-reset: flow;
+.process {
   display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(42px, 6vw, 80px);
+  grid-template-columns: minmax(280px, 0.42fr) minmax(0, 0.58fr);
+}
+
+.process-intro {
+  align-self: start;
+  position: sticky;
+  top: 100px;
+}
+
+.process-desc {
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.7;
+  margin: 18px 0 28px;
+}
+
+.process-timeline {
+  display: flex;
+  flex-direction: column;
   list-style: none;
-  margin: 42px 0 0;
+  margin: 0;
   padding: 0;
 }
 
-.process-grid li {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  min-height: 278px;
-  padding: 28px;
+.process-timeline li {
+  align-items: flex-start;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 22px;
+  padding: 28px 0;
 }
 
-.process-grid li::before {
+.process-timeline li:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+.step-num {
   color: var(--steel);
-  content: "0" counter(flow);
-  counter-increment: flow;
-  display: block;
-  font: 600 17px/1 "Kanit", sans-serif;
-  margin-bottom: 88px;
+  flex: 0 0 44px;
+  font: 600 15px/1.6 "Kanit", sans-serif;
 }
 
-.process-grid strong,
-.process-grid span {
+.process-timeline strong {
   display: block;
-}
-
-.process-grid strong {
-  font-size: 25px;
+  font-size: 20px;
   margin-bottom: 8px;
+}
+
+.process-timeline span {
+  color: var(--muted);
+  display: block;
+  font-size: 15px;
+  line-height: 1.65;
 }
 
 .faq-list {
@@ -532,31 +553,45 @@ p {
     linear-gradient(135deg, rgba(226, 41, 63, 0.15), transparent 25rem),
     var(--panel-2);
   border-top: 1px solid var(--line);
-  display: grid;
-  gap: clamp(26px, 4vw, 58px);
-  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.55fr);
   padding: clamp(72px, 8vw, 112px) clamp(18px, 7vw, 96px);
+  text-align: center;
 }
 
-.contact-copy p {
+.contact-inner {
+  margin: 0 auto;
+  max-width: 680px;
+}
+
+.contact h2 {
+  font-size: clamp(34px, 5vw, 62px);
+  line-height: 1.05;
+  margin: 0 0 18px;
+}
+
+.contact-desc {
+  color: var(--muted);
   font-size: 18px;
-  margin-top: 24px;
-  max-width: 760px;
-}
-
-.contact-copy strong {
-  color: #fff;
+  line-height: 1.7;
+  margin-bottom: 24px;
 }
 
 .lead-note {
   background: rgba(7, 9, 12, 0.72);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 12px;
+  margin-top: 32px;
   padding: clamp(24px, 4vw, 38px);
+  text-align: left;
 }
 
 .lead-note h3 {
-  margin: 0;
+  font-size: 18px;
+  margin: 0 0 16px;
+}
+
+.lead-note .button {
+  margin-top: 24px;
+  width: 100%;
 }
 
 .footer {
@@ -707,13 +742,19 @@ p {
   }
 
   .intro-grid,
-  .products,
-  .contact {
+  .products {
     grid-template-columns: 1fr;
   }
 
-  .service-grid,
-  .process-grid {
+  .process {
+    grid-template-columns: 1fr;
+  }
+
+  .process-intro {
+    position: static;
+  }
+
+  .service-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -749,8 +790,7 @@ p {
     padding-block: 68px;
   }
 
-  .service-grid,
-  .process-grid {
+  .service-grid {
     grid-template-columns: 1fr;
   }
 
@@ -768,14 +808,6 @@ p {
 
   .product-rows article {
     grid-template-columns: 1fr;
-  }
-
-  .process-grid li {
-    min-height: 0;
-  }
-
-  .process-grid li::before {
-    margin-bottom: 42px;
   }
 
   .contact {
