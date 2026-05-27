@@ -594,6 +594,49 @@ p {
   gap: 24px;
 }
 
+.brand-logo {
+  flex: 0 0 auto;
+  height: 46px;
+  max-width: 150px;
+  object-fit: contain;
+  width: auto;
+}
+
+.contact-channels {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.contact-channels p {
+  color: var(--muted);
+  font-size: 17px;
+}
+
+.contact-channels a {
+  color: var(--text);
+  transition: color 180ms ease;
+}
+
+.contact-channels a:hover {
+  color: var(--accent);
+}
+
+.channel-label {
+  color: var(--steel);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin-right: 6px;
+  text-transform: uppercase;
+}
+
+.channel-note {
+  color: var(--steel);
+  font-size: 14px;
+}
+
 @media (max-width: 980px) {
   .site-header {
     padding: 12px;
@@ -760,11 +803,7 @@ p {
   <header class="site-header">
     <nav class="nav-shell" aria-label="เมนูหลัก">
       <a class="brand" href="#top" aria-label="Shiftup Performance หน้าแรก">
-        <span class="brand-mark">SU</span>
-        <span>
-          <strong>Shiftup</strong>
-          <small>Performance</small>
-        </span>
+        <img class="brand-logo" src="images/logo.png" alt="Shiftup Performance">
       </a>
 
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-menu">
@@ -781,7 +820,7 @@ p {
         <a href="#contact">ติดต่อ</a>
       </div>
 
-      <a class="nav-cta" href="https://line.me/R/ti/p/@shiftup" target="_blank" rel="noreferrer">คุยผ่าน LINE</a>
+      <a class="nav-cta" href="https://lin.ee/nZOMcph" target="_blank" rel="noreferrer">คุยผ่าน LINE</a>
     </nav>
   </header>
 
@@ -967,8 +1006,12 @@ p {
           ช่องทางหลักสำหรับสอบถามบริการ Remap, สินค้า HKS และความคืบหน้า Panthera
           คือ LINE OA <strong>@shiftup</strong> และเพจ Facebook Shiftup Performance
         </p>
+        <div class="contact-channels">
+          <p><span class="channel-label">โทร</span><a href="tel:0830092554">083-009-2554</a> / <a href="tel:0887888364">088-788-8364</a> <span class="channel-note">(ปิง)</span></p>
+          <p><span class="channel-label">LINE</span><a href="https://lin.ee/nZOMcph" target="_blank" rel="noreferrer">lin.ee/nZOMcph</a></p>
+        </div>
         <div class="contact-actions">
-          <a class="button primary" href="https://line.me/R/ti/p/@shiftup" target="_blank" rel="noreferrer">LINE @shiftup</a>
+          <a class="button primary" href="https://lin.ee/nZOMcph" target="_blank" rel="noreferrer">LINE @shiftup</a>
           <a class="button ghost" href="https://www.facebook.com/shiftupperformance" target="_blank" rel="noreferrer">Facebook Page</a>
         </div>
       </div>
@@ -987,9 +1030,8 @@ p {
   <footer class="footer">
     <div>
       <a class="brand footer-brand" href="#top">
-        <span class="brand-mark">SU</span>
+        <img class="brand-logo" src="images/logo.png" alt="Shiftup Performance">
         <span>
-          <strong>Shiftup</strong>
           <small>Performance by P2W Interplus</small>
         </span>
       </a>
@@ -999,7 +1041,7 @@ p {
       <a href="#services">บริการ</a>
       <a href="#products">สินค้า</a>
       <a href="#process">ขั้นตอน</a>
-      <a href="https://line.me/R/ti/p/@shiftup" target="_blank" rel="noreferrer">LINE OA</a>
+      <a href="https://lin.ee/nZOMcph" target="_blank" rel="noreferrer">LINE OA</a>
     </div>
   </footer>
 
