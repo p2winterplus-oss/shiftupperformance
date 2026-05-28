@@ -1,691 +1,715 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import {
+  Menu, X, ChevronRight, Zap, Volume2, Settings, MessageCircle, Activity,
+  ShieldCheck, Wrench, Star, PlayCircle, CheckCircle2, UserPlus, Send
+} from 'lucide-react';
 
 /* ── Image constants ─────────────────────────────────────────── */
 const LOGO_SRC = '/images/logo.png';
 const HERO_BG  = 'https://drive.google.com/thumbnail?id=1G3y845m2OTvSpoDjUG4v59Tx6G--VMtY&sz=w2400';
 const PROD_BG  = 'https://drive.google.com/thumbnail?id=1Fw5aLkbJZvHxIeu7NtegJnRSE_aO1UiA&sz=w2400';
 
-/* ── Shared Navbar ───────────────────────────────────────────── */
-function Navbar({ page, setPage }) {
-  const [menuOpen, setMenuOpen] = useState(false);
+// --- MAIN APP COMPONENT (Handles Routing) ---
+const ShiftupApp = () => {
+  const [activePage, setActivePage] = useState('home');
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navLinks = [
-    { label: 'Service',  section: '#services',  page: 'home' },
-    { label: 'Product',  section: '#products',  page: 'home' },
-    { label: 'Process',  section: '#process',   page: 'home' },
-    { label: 'Contact',  section: '#contact',   page: 'home' },
-  ];
-
-  function handleNavClick(link) {
-    setMenuOpen(false);
-    if (page !== 'home') {
-      setPage('home');
-      // wait for home to mount then scroll
-      setTimeout(() => {
-        document.querySelector(link.section)?.scrollIntoView({ behavior: 'smooth' });
-      }, 80);
-    } else {
-      document.querySelector(link.section)?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }
-
-  return (
-    <header className="site-header">
-      <nav className="nav-shell" aria-label="เมนูหลัก">
-        {/* Logo */}
-        <a
-          className="brand"
-          onClick={() => { setPage('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          aria-label="Shiftup Performance หน้าแรก"
-        >
-          <img
-            src={LOGO_SRC}
-            alt="Shiftup Performance"
-            className="brand-logo"
-          />
-        </a>
-
-        {/* Mobile toggle */}
-        <button
-          className="menu-toggle"
-          type="button"
-          aria-expanded={menuOpen}
-          aria-controls="site-menu"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          <span />
-          <span />
-          <span />
-          <b className="sr-only">เปิดเมนู</b>
-        </button>
-
-        {/* Links */}
-        <div className={`site-menu${menuOpen ? ' is-open' : ''}`} id="site-menu">
-          {navLinks.map((link) => (
-            <a key={link.label} onClick={() => handleNavClick(link)}>
-              {link.label}
-            </a>
-          ))}
-        </div>
-
-        {/* CTA */}
-        <a
-          className="nav-cta"
-          href="https://lin.ee/nZOMcph"
-          target="_blank"
-          rel="noreferrer"
-        >
-          คุยผ่าน LINE
-        </a>
-      </nav>
-    </header>
-  );
-}
-
-/* ── Shared Footer ───────────────────────────────────────────── */
-function Footer({ setPage }) {
-  function goSection(section) {
-    setPage('home');
-    setTimeout(() => {
-      document.querySelector(section)?.scrollIntoView({ behavior: 'smooth' });
-    }, 80);
-  }
-
-  return (
-    <footer className="footer">
-      <div>
-        <a
-          className="brand footer-brand"
-          onClick={() => { setPage('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          style={{ cursor: 'pointer' }}
-        >
-          <img
-            src={LOGO_SRC}
-            alt="Shiftup Performance"
-            style={{ height: '38px', width: 'auto', objectFit: 'contain' }}
-          />
-          <span>
-            <small>Performance by P2W Interplus</small>
-          </span>
-        </a>
-        <p>Performance tuning, exhaust selection, and the next sound experience for selected vehicles.</p>
-      </div>
-      <div className="footer-links">
-        <a onClick={() => goSection('#services')} style={{ cursor: 'pointer' }}>บริการ</a>
-        <a onClick={() => goSection('#products')} style={{ cursor: 'pointer' }}>สินค้า</a>
-        <a onClick={() => goSection('#process')} style={{ cursor: 'pointer' }}>ขั้นตอน</a>
-        <a href="https://lin.ee/nZOMcph" target="_blank" rel="noreferrer">LINE OA</a>
-      </div>
-    </footer>
-  );
-}
-
-/* ── Home Page ───────────────────────────────────────────────── */
-function HomePage({ setPage }) {
-  return (
-    <main id="top">
-      {/* Hero */}
-      <section className="hero" aria-labelledby="hero-title">
-        <img
-          className="hero-media"
-          src={HERO_BG}
-          alt="รถแต่งในอู่จูนพร้อมอุปกรณ์ตรวจสอบระบบรถยนต์"
-        />
-        <div className="hero-overlay" />
-        <div className="hero-copy">
-          <p className="eyebrow">ECU Remap via OBD2 / Exhaust Upgrade / EV Active Sound</p>
-          <h1 id="hero-title">Shiftup Performance</h1>
-          <p className="hero-lead">
-            ไม่ใช่แค่การจูนรถ แต่คือการสร้างคาแรกเตอร์ใหม่ให้สอดรับกับสไตล์คุณ
-            ปลดล็อกสมรรถนะที่ซ่อนอยู่ด้วยการทำ ECU Remap พร้อมยกระดับสุ้มเสียงด้วย
-            HKS Exhaust และนวัตกรรม Active Sound สำหรับ EV
-          </p>
-          <div className="hero-actions">
-            <a
-              className="button primary"
-              href="https://lin.ee/nZOMcph"
-              target="_blank"
-              rel="noreferrer"
-            >
-              ประเมินรถกับทีมงาน
-            </a>
-            <a
-              className="button ghost"
-              onClick={() => document.querySelector('#services')?.scrollIntoView({ behavior: 'smooth' })}
-              style={{ cursor: 'pointer' }}
-            >
-              ดูบริการของเรา
-            </a>
-          </div>
-        </div>
-        <div className="hero-rail" aria-label="จุดเด่น">
-          <article>
-            <strong>Mazda Specialist</strong>
-            <span>เชี่ยวชาญพิเศษ เริ่มต้นจาก Mazda สู่สมรรถนะที่เหนือกว่า</span>
-          </article>
-          <article>
-            <strong>Fit Before Flash</strong>
-            <span>วิเคราะห์โจทย์และสภาพรถอย่างละเอียด ก่อนตัดสินใจจูน</span>
-          </article>
-          <article>
-            <strong>One Contact</strong>
-            <span>ดูแลเบ็ดเสร็จในที่เดียว จองคิว ปรึกษา จบผ่าน LINE</span>
-          </article>
-        </div>
-      </section>
-
-      {/* Intro */}
-      <section className="intro band">
-        <div className="section-head">
-          <p className="eyebrow">What Shiftup Handles</p>
-          <h2>บริการที่ออกแบบให้รถตอบสนองตรงกับเจ้าของ</h2>
-        </div>
-        <div className="intro-grid">
-          <p>
-            Shiftup Performance อยู่ในกลุ่มงานยานยนต์ของ P2W Interplus
-            โดยโฟกัสการ Remap ผ่านพอร์ต OBD2, การแนะนำระบบไอเสียที่เหมาะกับรถ
-            ด้วยแบรนด์ที่มีชื่อเสียงอย่าง HKS และกลุ่มรถ EV ที่ยังชื่นชมเสียง
-            การทำงานของเครื่องยนต์ผ่าน Active Sound จาก Panthera
-          </p>
-          <div className="signal-list">
-            <span>ขับใช้งานประจำวัน</span>
-            <span>ต้องการคันเร่งตอบสนองดีขึ้น</span>
-            <span>เลือกเสียงและบุคลิกรถให้ชัด</span>
-            <span>ปรึกษาก่อนสั่งสินค้า</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Services */}
-      <section className="services band" id="services" aria-labelledby="services-title">
-        <div className="section-head">
-          <p className="eyebrow">Core Services</p>
-          <h2 id="services-title">รถคันเดิม ประสบการณ์ใหม่.</h2>
-          <p style={{ color: 'var(--muted)', fontSize: '17px', lineHeight: '1.7', marginTop: '14px', maxWidth: '640px' }}>
-            บริการ 3 แกนหลักที่ออกแบบมาเพื่อตอบสนองความต้องการของคนรักรถ
-            ที่ต้องการคาแรกเตอร์ที่ชัดเจน และสมรรถนะที่จับต้องได้
-          </p>
-        </div>
-        <div className="service-grid">
-          {/* 01 – ECU Remap */}
-          <article className="service" onClick={() => setPage('remap')} style={{ cursor: 'pointer' }}>
-            <p className="service-index">01</p>
-            <h3>ECU Remap</h3>
-            <p>
-              เปลี่ยนความรู้สึกจากรถเดิมๆ ด้วยการปรับจูนผ่านพอร์ต OBD2
-              ออกแบบกราฟเครื่องยนต์ใหม่ตามสภาพรถ และสไตล์การขับขี่ของคุณโดยเฉพาะ
-            </p>
-            <ul>
-              <li>ออกแบบเฉพาะคัน ตามรูปแบบการขับขี่</li>
-              <li>ดันเร่งตอบสนองไวขึ้น ขับสนุกขึ้น ไม่หน่วง</li>
-              <li>แรงม้า แรงบิด เพิ่มขึ้น</li>
-            </ul>
-          </article>
-
-          {/* 02 – HKS */}
-          <article className="service" onClick={() => setPage('hks')} style={{ cursor: 'pointer' }}>
-            <p className="service-index">02</p>
-            <h3>HKS Exhaust</h3>
-            <p>
-              ยกระดับพลังเสียงและภาพลักษณ์ ด้วยระบบท่อไอเสียแบรนด์ระดับโลก HKS
-              ที่เหมาะกับการขับใช้งานประจำวันและสายซิ่ง
-            </p>
-            <ul>
-              <li>ท่อตรงรุ่น ติดตั้งง่าย ไม่ต้องดัดแปลง</li>
-              <li>ของแท้ รับประกันจากทางโรงงาน 2 ปีเต็ม</li>
-              <li>สินค้าของใหม่ จากโรงงานทุกใบ</li>
-              <li>เช็คสต๊อคและรายละเอียดก่อนสั่งซื้อทุกครั้ง</li>
-            </ul>
-          </article>
-
-          {/* 03 – Panthera */}
-          <article className="service" onClick={() => setPage('panthera')} style={{ cursor: 'pointer' }}>
-            <p className="service-index">03</p>
-            <h3>Panthera EV Sound</h3>
-            <p>
-              เปิดมิติใหม่แห่งเสียงให้กับรถยนต์ไฟฟ้า (EV) ด้วยระบบ Active Sound จาก Panthera
-              สร้างความเร้าใจในทุกอัตราเร่ง เหมือนกลับมาขับรถน้ำมันอีกครั้ง
-            </p>
-            <ul>
-              <li>ติดตั้งง่าย ไม่ต้องตัดต่อสายไฟ</li>
-              <li>ใช้ได้ทั้งรถน้ำมัน และ EV</li>
-            </ul>
-          </article>
-        </div>
-      </section>
-
-      {/* Products */}
-      <section className="products" id="products" aria-labelledby="products-title">
-        <div className="product-media">
-          <img
-            src={PROD_BG}
-            alt="ระบบท่อไอเสียและอุปกรณ์ active sound บนโต๊ะงาน"
-          />
-        </div>
-        <div className="product-copy">
-          <p className="eyebrow">Product Direction</p>
-          <h2 id="products-title">รถคันเดียวกัน เปลี่ยนประสบการณ์ได้หลายมิติ</h2>
-          <div className="product-rows">
-            <article>
-              <h3>Remap</h3>
-              <p>เริ่มจากความต้องการด้านการตอบสนองและความเหมาะสมของรถคันนั้น</p>
-            </article>
-            <article>
-              <h3>Exhaust</h3>
-              <p>เลือกบุคลิกของเสียง รูปลักษณ์ และรุ่นสินค้าที่ใส่กับรถได้จริง</p>
-            </article>
-            <article>
-              <h3>EV Sound</h3>
-              <p>เปิดพื้นที่ใหม่ให้รถไฟฟ้ามีประสบการณ์ด้านเสียงที่สื่อสารได้ชัดขึ้น</p>
-            </article>
-          </div>
-          <a
-            className="text-link"
-            href="https://www.facebook.com/shiftupperformance"
-            target="_blank"
-            rel="noreferrer"
-          >
-            ติดตามงานและประกาศล่าสุดบน Facebook
-          </a>
-        </div>
-      </section>
-
-      {/* Process */}
-      <section className="process band" id="process" aria-labelledby="process-title">
-        <div className="process-intro">
-          <p className="eyebrow">Customer Flow</p>
-          <h2 id="process-title">The Shiftup Experience.</h2>
-          <p className="process-desc">
-            เราเชื่อว่ารถทุกคันมีโจทย์ที่ไม่เหมือนกัน กระบวนการทำงานของเราจึงเน้นความเข้าใจที่ตรงกัน
-            เพื่อให้คุณได้รับผลลัพธ์ที่ตรงใจ คุ้มค่า และปลอดภัยที่สุด
-          </p>
-          <a
-            className="text-link"
-            href="https://lin.ee/nZOMcph"
-            target="_blank"
-            rel="noreferrer"
-          >
-            ส่งข้อมูลรถของคุณให้เราประเมินตอนนี้ ›
-          </a>
-        </div>
-        <ol className="process-timeline">
-          <li>
-            <span className="step-num">01</span>
-            <div>
-              <strong>ส่งข้อมูลเบื้องต้น</strong>
-              <span>ทัก LINE ส่งยี่ห้อ รุ่น ปี เครื่องยนต์ รายการของแต่ง และความต้องการของคุณ</span>
-            </div>
-          </li>
-          <li>
-            <span className="step-num">02</span>
-            <div>
-              <strong>ประเมินแนวทาง (Fit Before Flash)</strong>
-              <span>ทีมงานวิเคราะห์และแนะนำว่าควรจูนแบบไหน หรือควรอัปเกรดอะไหล่ส่วนใดก่อน</span>
-            </div>
-          </li>
-          <li>
-            <span className="step-num">03</span>
-            <div>
-              <strong>นัดหมาย &amp; ดำเนินการ</strong>
-              <span>ตกลงคิวงาน แจ้งสิ่งที่ต้องเตรียม แล้วนำรถเข้ามาให้เราจัดการตามแผน</span>
-            </div>
-          </li>
-          <li>
-            <span className="step-num">04</span>
-            <div>
-              <strong>ส่งมอบ &amp; ติดตามผล</strong>
-              <span>ทดสอบการขับขี่จริง และทีมงานคอยสอบถาม Feedback หลังการใช้งาน</span>
-            </div>
-          </li>
-        </ol>
-      </section>
-
-      {/* FAQ */}
-      <section className="faq band" aria-labelledby="faq-title">
-        <div className="section-head">
-          <p className="eyebrow">Quick Answers</p>
-          <h2 id="faq-title">คำถามที่ควรถามก่อนตัดสินใจ</h2>
-        </div>
-        <div className="faq-list">
-          <details>
-            <summary>รถของฉัน Remap ได้หรือไม่</summary>
-            <p>ส่งรุ่นรถ ปี เครื่องยนต์ และรายละเอียดการใช้งานมาทาง LINE เพื่อให้ทีมงานตรวจความเหมาะสมก่อนนัดหมาย</p>
-          </details>
-          <details>
-            <summary>ควรเริ่มจาก Remap หรือท่อก่อน</summary>
-            <p>ขึ้นอยู่กับเป้าหมายของรถแต่ละคัน หากต้องการเปลี่ยนฟีลตอบสนองและมีข้อมูลรถพร้อม ทีมงานจะช่วยเรียงลำดับให้</p>
-          </details>
-          <details>
-            <summary>Panthera พร้อมจำหน่ายหรือยัง</summary>
-            <p>ขณะนี้ Shiftup อยู่ในช่วงทดสอบสินค้าเบื้องต้น ลูกค้าที่สนใจสามารถลงชื่อไว้เพื่อรับข้อมูลเมื่อมีผลทดสอบและแผนเปิดตัว</p>
-          </details>
-        </div>
-      </section>
-
-      {/* Contact */}
-      <section className="contact" id="contact" aria-labelledby="contact-title">
-        <div className="contact-inner">
-          <p className="eyebrow">Contact Shiftup</p>
-          <h2 id="contact-title">พร้อมอัปเกรดรถคู่ใจหรือยัง?</h2>
-          <p className="contact-desc">
-            ประเมินฟรี ไม่มีค่าใช้จ่าย ส่งข้อมูลรถของคุณมาให้เรา
-            แล้วมาคุยกันว่า Shiftup จะช่วยยกระดับการขับขี่ของคุณได้อย่างไร
-          </p>
-          <div className="contact-channels" style={{ textAlign: 'left' }}>
-            <p>
-              <span className="channel-label">โทร</span>
-              <a href="tel:0830092554">083-009-2554</a>
-              {' / '}
-              <a href="tel:0887888364">088-788-8364</a>
-              {' '}
-              <span className="channel-note">(ปิง)</span>
-            </p>
-            <p>
-              <span className="channel-label">LINE</span>
-              <a href="https://lin.ee/nZOMcph" target="_blank" rel="noreferrer">lin.ee/nZOMcph</a>
-            </p>
-          </div>
-          <aside className="lead-note">
-            <h3>สิ่งที่ควรเตรียมก่อนทักหาเรา:</h3>
-            <ul>
-              <li>ยี่ห้อ รุ่น ปี และรหัสเครื่องยนต์</li>
-              <li>รายการของแต่งที่มีอยู่ในปัจจุบัน</li>
-              <li>สไตล์การขับขี่ และเป้าหมายที่ต้องการ</li>
-            </ul>
-            <a
-              className="button primary"
-              href="https://lin.ee/nZOMcph"
-              target="_blank"
-              rel="noreferrer"
-              style={{ marginTop: '24px', width: '100%' }}
-            >
-              คุยผ่าน LINE @shiftup
-            </a>
-          </aside>
-        </div>
-      </section>
-    </main>
-  );
-}
-
-/* ── Remap Page ──────────────────────────────────────────────── */
-function RemapPage({ setPage }) {
-  useEffect(() => { window.scrollTo({ top: 0 }); }, []);
-  return (
-    <main>
-      <section className="inner-hero">
-        <div className="inner-hero-bg">
-          <img src={HERO_BG} alt="ECU Remap" />
-        </div>
-        <div className="inner-hero-overlay" />
-        <div className="inner-hero-copy">
-          <button className="back-btn" onClick={() => setPage('home')}>← กลับหน้าหลัก</button>
-          <p className="eyebrow">01 — Core Service</p>
-          <h1>ECU Remap</h1>
-          <p className="inner-lead">
-            ปลดล็อกศักยภาพที่แท้จริงของเครื่องยนต์ผ่านการปรับค่า ECU ผ่านพอร์ต OBD2
-            โดยไม่ต้องดัดแปลงฮาร์ดแวร์ ออกแบบเฉพาะตามสภาพรถและสไตล์การขับขี่ของคุณ
-          </p>
-          <a className="button primary" href="https://lin.ee/nZOMcph" target="_blank" rel="noreferrer">
-            สอบถามราคา / นัดหมาย
-          </a>
-        </div>
-      </section>
-
-      <div className="band">
-        <div className="section-head" style={{ marginBottom: '48px' }}>
-          <p className="eyebrow">What You Get</p>
-          <h2>สิ่งที่คุณจะได้รับจาก ECU Remap</h2>
-        </div>
-        <div className="specs-grid">
-          <div className="spec-row">
-            <div className="spec-label">วิธีการ</div>
-            <div className="spec-value">Remap ผ่านพอร์ต OBD2 ไม่ต้องถอด ECU ออกจากตัวรถ</div>
-          </div>
-          <div className="spec-row">
-            <div className="spec-label">ผลลัพธ์หลัก</div>
-            <div className="spec-value">แรงม้าและแรงบิดเพิ่มขึ้น คันเร่งตอบสนองดีขึ้น ขับสนุกขึ้น</div>
-          </div>
-          <div className="spec-row">
-            <div className="spec-label">การออกแบบ</div>
-            <div className="spec-value">ออกแบบเฉพาะรายคัน ตามรูปแบบการขับขี่และสภาพรถในปัจจุบัน</div>
-          </div>
-          <div className="spec-row">
-            <div className="spec-label">ขั้นตอน</div>
-            <div className="spec-value">ประเมินรถ → วางแผน → ดำเนินการ → ทดสอบผล → ส่งมอบ</div>
-          </div>
-          <div className="spec-row">
-            <div className="spec-label">ความเชี่ยวชาญ</div>
-            <div className="spec-value">เริ่มต้นจาก Mazda — Skyactiv G / Skyactiv D และขยายสู่รุ่นอื่นๆ</div>
-          </div>
-          <div className="spec-row">
-            <div className="spec-label">ก่อนตัดสินใจ</div>
-            <div className="spec-value">ส่งข้อมูลรถมาก่อน ทีมงานจะประเมินว่าเหมาะสมหรือต้องอัปเกรดอะไหล่ก่อนหรือไม่</div>
-          </div>
-        </div>
-
-        <div style={{ marginTop: '64px', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-          <a className="button primary" href="https://lin.ee/nZOMcph" target="_blank" rel="noreferrer">
-            ทักหาเราผ่าน LINE
-          </a>
-          <button className="button ghost" onClick={() => setPage('home')}>
-            ← กลับหน้าหลัก
-          </button>
-        </div>
-      </div>
-    </main>
-  );
-}
-
-/* ── HKS Page ────────────────────────────────────────────────── */
-function HKSPage({ setPage }) {
-  useEffect(() => { window.scrollTo({ top: 0 }); }, []);
-  return (
-    <main>
-      <section className="inner-hero">
-        <div className="inner-hero-bg">
-          <img src={PROD_BG} alt="HKS Exhaust" />
-        </div>
-        <div className="inner-hero-overlay" />
-        <div className="inner-hero-copy">
-          <button className="back-btn" onClick={() => setPage('home')}>← กลับหน้าหลัก</button>
-          <p className="eyebrow">02 — Core Service</p>
-          <h1>HKS Exhaust</h1>
-          <p className="inner-lead">
-            ท่อไอเสียจากแบรนด์ระดับโลก HKS เหมาะกับทั้งการขับใช้งานประจำวันและสายซิ่ง
-            ของแท้ตรงรุ่น พร้อมรับประกันจากโรงงาน
-          </p>
-          <a className="button primary" href="https://lin.ee/nZOMcph" target="_blank" rel="noreferrer">
-            เช็คสต๊อค / สอบถาม
-          </a>
-        </div>
-      </section>
-
-      <div className="band">
-        <div className="section-head" style={{ marginBottom: '48px' }}>
-          <p className="eyebrow">Product Details</p>
-          <h2>รายละเอียดสินค้า HKS Exhaust</h2>
-        </div>
-        <div className="specs-grid">
-          <div className="spec-row">
-            <div className="spec-label">แบรนด์</div>
-            <div className="spec-value">HKS — ผู้นำด้านอุปกรณ์แต่งรถสมรรถนะสูงจากญี่ปุ่น</div>
-          </div>
-          <div className="spec-row">
-            <div className="spec-label">ประเภทสินค้า</div>
-            <div className="spec-value">ท่อตรงรุ่น (Cat-Back / Axle-Back) ติดตั้งง่าย ไม่ต้องดัดแปลง</div>
-          </div>
-          <div className="spec-row">
-            <div className="spec-label">การรับประกัน</div>
-            <div className="spec-value">รับประกันจากทางโรงงาน 2 ปีเต็ม ของใหม่จากโรงงานทุกชิ้น</div>
-          </div>
-          <div className="spec-row">
-            <div className="spec-label">สต๊อค</div>
-            <div className="spec-value">เช็คสต๊อคและรายละเอียดก่อนสั่งซื้อทุกครั้ง เพื่อความถูกต้อง</div>
-          </div>
-          <div className="spec-row">
-            <div className="spec-label">เหมาะกับ</div>
-            <div className="spec-value">รถที่ต้องการยกระดับเสียงและภาพลักษณ์ ทั้งสายสตรีทและสายแทร็ก</div>
-          </div>
-          <div className="spec-row">
-            <div className="spec-label">ขั้นตอน</div>
-            <div className="spec-value">ส่งรุ่นรถมาให้เราเช็คความเข้ากัน → ยืนยันออเดอร์ → รอสินค้า → ติดตั้ง</div>
-          </div>
-        </div>
-
-        <div style={{ marginTop: '64px', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-          <a className="button primary" href="https://lin.ee/nZOMcph" target="_blank" rel="noreferrer">
-            ทักหาเราผ่าน LINE
-          </a>
-          <button className="button ghost" onClick={() => setPage('home')}>
-            ← กลับหน้าหลัก
-          </button>
-        </div>
-      </div>
-    </main>
-  );
-}
-
-/* ── Panthera Page ───────────────────────────────────────────── */
-function PantheraPage({ setPage }) {
-  useEffect(() => { window.scrollTo({ top: 0 }); }, []);
-  return (
-    <main>
-      <section className="inner-hero" style={{ minHeight: '480px' }}>
-        <div className="inner-hero-bg" style={{ background: 'linear-gradient(135deg, #0d1116, #07090c)' }} />
-        <div className="inner-hero-overlay" style={{ background: 'linear-gradient(135deg, rgba(226,41,63,0.22), transparent 60%)' }} />
-        <div className="inner-hero-copy">
-          <button className="back-btn" onClick={() => setPage('home')}>← กลับหน้าหลัก</button>
-          <p className="eyebrow">03 — Core Service</p>
-          <h1>Panthera EV Sound</h1>
-          <p className="inner-lead">
-            ระบบ Active Exhaust Sound ที่เปิดมิติใหม่ด้านเสียงให้กับรถยนต์ไฟฟ้า
-            สร้างประสบการณ์การขับขี่ที่สมบูรณ์ยิ่งขึ้น
-          </p>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: 'rgba(226,41,63,0.12)', border: '1px solid rgba(226,41,63,0.3)', borderRadius: '8px', padding: '10px 18px', color: '#ff8f9e', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', marginBottom: '20px' }}>
-            🔬 อยู่ในช่วงทดสอบ — เปิดรับลงชื่อจอง
-          </div>
-          <br />
-          <a className="button primary" href="https://lin.ee/nZOMcph" target="_blank" rel="noreferrer">
-            ลงชื่อจองล่วงหน้า
-          </a>
-        </div>
-      </section>
-
-      <div className="band">
-        <div className="section-head" style={{ marginBottom: '48px' }}>
-          <p className="eyebrow">About Panthera</p>
-          <h2>Active Sound สำหรับยุค EV</h2>
-        </div>
-        <div className="specs-grid">
-          <div className="spec-row">
-            <div className="spec-label">เทคโนโลยี</div>
-            <div className="spec-value">Active Exhaust Sound System — จำลองเสียงเครื่องยนต์ผ่านลำโพงภายนอก</div>
-          </div>
-          <div className="spec-row">
-            <div className="spec-label">ใช้ได้กับ</div>
-            <div className="spec-value">รถยนต์ไฟฟ้า (EV) และรถยนต์น้ำมันที่ต้องการปรับแต่งเสียง</div>
-          </div>
-          <div className="spec-row">
-            <div className="spec-label">การติดตั้ง</div>
-            <div className="spec-value">ติดตั้งง่าย ไม่ต้องตัดต่อสายไฟ ไม่กระทบระบบรถเดิม</div>
-          </div>
-          <div className="spec-row">
-            <div className="spec-label">ประสบการณ์</div>
-            <div className="spec-value">เสียงตอบสนองต่ออัตราเร่ง ให้ความรู้สึกเหมือนขับรถน้ำมัน</div>
-          </div>
-          <div className="spec-row">
-            <div className="spec-label">สถานะ</div>
-            <div className="spec-value">อยู่ในช่วงทดสอบสินค้าเบื้องต้น — เปิดรับลงชื่อเพื่อรับข้อมูลเมื่อพร้อมเปิดตัว</div>
-          </div>
-        </div>
-
-        <div style={{ marginTop: '64px', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-          <a className="button primary" href="https://lin.ee/nZOMcph" target="_blank" rel="noreferrer">
-            ลงชื่อจองผ่าน LINE
-          </a>
-          <button className="button ghost" onClick={() => setPage('home')}>
-            ← กลับหน้าหลัก
-          </button>
-        </div>
-      </div>
-    </main>
-  );
-}
-
-/* ── Partner Page ────────────────────────────────────────────── */
-function PartnerPage({ setPage }) {
-  useEffect(() => { window.scrollTo({ top: 0 }); }, []);
-  return (
-    <main>
-      <section className="inner-hero" style={{ minHeight: '420px' }}>
-        <div className="inner-hero-bg" style={{ background: 'linear-gradient(135deg, #0d1116, #07090c)' }} />
-        <div className="inner-hero-overlay" style={{ background: 'linear-gradient(90deg, rgba(4,5,8,0.95), rgba(4,5,8,0.5))' }} />
-        <div className="inner-hero-copy">
-          <button className="back-btn" onClick={() => setPage('home')}>← กลับหน้าหลัก</button>
-          <p className="eyebrow">About Us</p>
-          <h1>P2W Interplus</h1>
-          <p className="inner-lead">
-            Shiftup Performance เป็นส่วนหนึ่งของกลุ่มยานยนต์ P2W Interplus
-            ที่มุ่งมั่นนำเสนอโซลูชันด้านสมรรถนะและเสียงสำหรับรถยนต์
-          </p>
-        </div>
-      </section>
-
-      <div className="band">
-        <div className="section-head" style={{ marginBottom: '48px' }}>
-          <p className="eyebrow">Our Partners</p>
-          <h2>แบรนด์ที่เราเชื่อมั่น</h2>
-        </div>
-        <div className="partner-grid">
-          <div className="partner-card">
-            <h3>HKS</h3>
-            <p>ผู้นำด้านอุปกรณ์แต่งรถสมรรถนะสูงจากญี่ปุ่น มีประวัติยาวนานกว่า 50 ปีในวงการมอเตอร์สปอร์ต</p>
-          </div>
-          <div className="partner-card">
-            <h3>Panthera</h3>
-            <p>เทคโนโลยี Active Sound ชั้นนำสำหรับยานยนต์ไฟฟ้า นวัตกรรมที่เปลี่ยนประสบการณ์การขับขี่</p>
-          </div>
-          <div className="partner-card">
-            <h3>P2W Interplus</h3>
-            <p>บริษัทแม่ของ Shiftup Performance ดูแลด้านยานยนต์ครบวงจร ตั้งแต่ที่ปรึกษาจนถึงการติดตั้ง</p>
-          </div>
-        </div>
-
-        <div style={{ marginTop: '64px' }}>
-          <a className="button primary" href="https://lin.ee/nZOMcph" target="_blank" rel="noreferrer">
-            ติดต่อเราผ่าน LINE
-          </a>
-        </div>
-      </div>
-    </main>
-  );
-}
-
-/* ── Root App ────────────────────────────────────────────────── */
-export default function App() {
-  const [page, setPage] = useState('home');
-
-  // Scroll to top on page change (except home handles its own scroll anchors)
   useEffect(() => {
-    if (page === 'home') window.scrollTo({ top: 0 });
-  }, [page]);
+    window.scrollTo(0, 0);
+  }, [activePage]);
 
-  const renderPage = () => {
-    switch (page) {
-      case 'remap':    return <RemapPage    setPage={setPage} />;
-      case 'hks':      return <HKSPage      setPage={setPage} />;
-      case 'panthera': return <PantheraPage setPage={setPage} />;
-      case 'partner':  return <PartnerPage  setPage={setPage} />;
-      default:         return <HomePage     setPage={setPage} />;
-    }
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const lineUrl = "https://lin.ee/nZOMcph";
+
+  const navigateTo = (page) => {
+    setActivePage(page);
+    setMobileMenuOpen(false);
   };
 
   return (
+    <div className="min-h-screen bg-neutral-950 text-neutral-200 font-sans selection:bg-red-600 selection:text-white">
+
+      {/* ── Shared Navigation ── */}
+      <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-neutral-950/90 backdrop-blur-md border-b border-neutral-800 shadow-lg' : 'bg-neutral-950/50 backdrop-blur-sm'}`}>
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+
+            {/* Logo image */}
+            <div className="flex-shrink-0 cursor-pointer" onClick={() => navigateTo('home')}>
+              <img src={LOGO_SRC} alt="Shiftup Performance" className="h-10 w-auto" />
+            </div>
+
+            <div className="hidden md:block">
+              <div className="ml-10 flex items-baseline space-x-6 lg:space-x-8">
+                <button onClick={() => navigateTo('home')} className={`hover:text-red-500 transition-colors px-3 py-2 text-sm font-medium tracking-wide ${activePage === 'home' ? 'text-red-500' : 'text-neutral-300'}`}>HOME</button>
+                <button onClick={() => navigateTo('remap')} className={`hover:text-red-500 transition-colors px-3 py-2 text-sm font-medium tracking-wide ${activePage === 'remap' ? 'text-red-500' : 'text-neutral-300'}`}>REMAP</button>
+                <button onClick={() => navigateTo('hks')} className={`hover:text-red-500 transition-colors px-3 py-2 text-sm font-medium tracking-wide ${activePage === 'hks' ? 'text-red-500' : 'text-neutral-300'}`}>HKS EXHAUST</button>
+                <button onClick={() => navigateTo('panthera')} className={`hover:text-red-500 transition-colors px-3 py-2 text-sm font-medium tracking-wide ${activePage === 'panthera' ? 'text-red-500' : 'text-neutral-300'}`}>PANTHERA EV</button>
+                <button onClick={() => navigateTo('partner')} className={`hover:text-red-500 transition-colors px-3 py-2 text-sm font-medium tracking-wide text-orange-400 ${activePage === 'partner' ? 'border-b-2 border-orange-400' : ''}`}>JOIN PARTNER</button>
+              </div>
+            </div>
+
+            <div className="hidden md:block">
+              <a href={lineUrl} target="_blank" rel="noreferrer" className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-full text-sm font-bold tracking-wide transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:shadow-[0_0_25px_rgba(220,38,38,0.6)] flex items-center gap-2">
+                <MessageCircle size={18} />
+                ปรึกษาช่างเทคนิค
+              </a>
+            </div>
+
+            <div className="md:hidden flex items-center">
+              <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-neutral-300 hover:text-white">
+                {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-neutral-900 border-b border-neutral-800 absolute w-full shadow-2xl">
+            <div className="px-4 pt-2 pb-6 space-y-1 sm:px-3 flex flex-col gap-4">
+              <button onClick={() => navigateTo('home')} className="block px-3 py-2 text-base font-medium text-white text-left">Home</button>
+              <button onClick={() => navigateTo('remap')} className="block px-3 py-2 text-base font-medium text-white text-left">ECU Remap</button>
+              <button onClick={() => navigateTo('hks')} className="block px-3 py-2 text-base font-medium text-white text-left">HKS Exhaust</button>
+              <button onClick={() => navigateTo('panthera')} className="block px-3 py-2 text-base font-medium text-white text-left">Panthera EV Sound</button>
+              <button onClick={() => navigateTo('partner')} className="block px-3 py-2 text-base font-medium text-orange-400 text-left">สมัคร Partner / ทีมงาน</button>
+              <a href={lineUrl} target="_blank" rel="noreferrer" className="mt-4 bg-red-600 text-white px-4 py-3 rounded-md text-center font-bold flex justify-center items-center gap-2">
+                <MessageCircle size={18} /> คุยกับเราผ่าน LINE
+              </a>
+            </div>
+          </div>
+        )}
+      </nav>
+
+      {/* Page Content */}
+      <div className="pt-20">
+        {activePage === 'home'     && <HomePage navigateTo={navigateTo} lineUrl={lineUrl} />}
+        {activePage === 'remap'    && <RemapPage />}
+        {activePage === 'hks'      && <HKSPage />}
+        {activePage === 'panthera' && <PantheraPage />}
+        {activePage === 'partner'  && <PartnerPage />}
+      </div>
+
+      {/* ── Shared Footer ── */}
+      <footer className="bg-neutral-950 border-t border-neutral-900 pt-16 pb-8 mt-auto">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+            <div className="col-span-1 lg:col-span-2">
+              {/* Footer logo image */}
+              <div className="cursor-pointer mb-4 inline-block" onClick={() => navigateTo('home')}>
+                <img src={LOGO_SRC} alt="Shiftup Performance" className="h-8 w-auto" />
+              </div>
+              <p className="text-neutral-500 max-w-sm mb-6">
+                Performance tuning, exhaust selection, and the next sound experience for selected vehicles. By P2W Interplus.
+              </p>
+            </div>
+
+            <div>
+              <h4 className="text-white font-bold mb-4">Quick Links</h4>
+              <ul className="space-y-3 text-neutral-400">
+                <li><button onClick={() => navigateTo('remap')} className="hover:text-white transition-colors">ECU Remap</button></li>
+                <li><button onClick={() => navigateTo('hks')} className="hover:text-white transition-colors">HKS Exhaust</button></li>
+                <li><button onClick={() => navigateTo('panthera')} className="hover:text-white transition-colors">Panthera EV Sound</button></li>
+                <li><button onClick={() => navigateTo('partner')} className="hover:text-orange-400 text-orange-500 transition-colors font-medium">ร่วมงานกับเรา (Partner)</button></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-white font-bold mb-4">Contact Info</h4>
+              <ul className="space-y-3 text-neutral-400">
+                <li><a href="tel:0830092554" className="hover:text-white transition-colors">Tel: 083-009-2554 (ปิง)</a></li>
+                <li><a href="tel:0887888364" className="hover:text-white transition-colors">Tel: 088-788-8364</a></li>
+                <li><a href={lineUrl} target="_blank" rel="noreferrer" className="hover:text-white transition-colors text-[#06C755]">LINE: @shiftup</a></li>
+                <li><a href="https://www.facebook.com/shiftupperformance" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Facebook Page</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-neutral-900 pt-8 flex flex-col md:flex-row items-center justify-between">
+            <p className="text-neutral-600 text-sm">
+              &copy; {new Date().getFullYear()} Shiftup Performance. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+// --- HOME PAGE ---
+const HomePage = ({ navigateTo, lineUrl }) => {
+  return (
     <>
-      <Navbar page={page} setPage={setPage} />
-      {renderPage()}
-      <Footer setPage={setPage} />
+      {/* ── Hero ── */}
+      <section className="relative pt-12 pb-20 lg:pt-32 lg:pb-32 overflow-hidden flex items-center min-h-[85vh]">
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
+          {/* Background photo from Google Drive */}
+          <img
+            src={HERO_BG}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover object-center opacity-20"
+          />
+          <div className="absolute top-[20%] right-[-10%] w-[50vw] h-[50vw] bg-red-600/10 rounded-full blur-[120px]"></div>
+          <div className="absolute bottom-[-20%] left-[-10%] w-[40vw] h-[40vw] bg-blue-600/10 rounded-full blur-[100px]"></div>
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03]"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10 w-full">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-800/50 border border-neutral-700 backdrop-blur-sm mb-6">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+              <span className="text-xs font-semibold tracking-wider text-neutral-300 uppercase">Performance by P2W Interplus</span>
+            </div>
+            <h1 className="text-5xl lg:text-7xl font-black text-white leading-[1.1] tracking-tighter mb-6">
+              UNLEASH THE <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">
+                TRUE POTENTIAL.
+              </span>
+            </h1>
+            <p className="text-lg lg:text-xl text-neutral-400 mb-10 max-w-2xl leading-relaxed">
+              ไม่ใช่แค่การจูนรถ แต่คือการสร้างคาแรกเตอร์ใหม่ให้สอดรับกับสไตล์คุณ ปลดล็อกสมรรถนะที่ซ่อนอยู่ด้วยการทำ <strong>ECU Remap</strong> พร้อมยกระดับสุ้มเสียงด้วย <strong>HKS Exhaust</strong> และนวัตกรรม <strong>Active Sound</strong> สำหรับ EV
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <a href={lineUrl} target="_blank" rel="noreferrer" className="bg-white text-black hover:bg-neutral-200 px-8 py-4 rounded-full font-bold text-center transition-colors flex items-center justify-center gap-2">
+                ประเมินรถกับทีมงาน <ChevronRight size={20} />
+              </a>
+              <button
+                onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })}
+                className="px-8 py-4 rounded-full font-bold text-center border border-neutral-700 hover:bg-neutral-800 transition-colors text-white"
+              >
+                ดูบริการของเรา
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Stats bar ── */}
+      <div className="border-y border-neutral-800 bg-neutral-900/50">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-neutral-800">
+            <div className="flex flex-col items-center pt-4 md:pt-0">
+              <Settings className="text-red-500 mb-3" size={32} />
+              <h3 className="text-white font-bold text-lg mb-1">Mazda Specialist</h3>
+              <p className="text-sm text-neutral-400">เชี่ยวชาญพิเศษ เริ่มต้นจาก Mazda สู่สมรรถนะที่เหนือกว่า</p>
+            </div>
+            <div className="flex flex-col items-center pt-8 md:pt-0">
+              <Activity className="text-red-500 mb-3" size={32} />
+              <h3 className="text-white font-bold text-lg mb-1">Fit Before Flash</h3>
+              <p className="text-sm text-neutral-400">วิเคราะห์โจทย์และสภาพรถอย่างละเอียด ก่อนตัดสินใจจูน</p>
+            </div>
+            <div className="flex flex-col items-center pt-8 md:pt-0">
+              <MessageCircle className="text-red-500 mb-3" size={32} />
+              <h3 className="text-white font-bold text-lg mb-1">One Contact</h3>
+              <p className="text-sm text-neutral-400">ดูแลเบ็ดเสร็จในที่เดียว จองคิว ปรึกษา จบผ่าน LINE</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Services ── */}
+      <section id="services" className="py-24 relative">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-red-500 font-bold tracking-widest text-sm uppercase mb-3">Core Services</h2>
+            <h3 className="text-3xl md:text-5xl font-black text-white mb-6 tracking-tight">รถคันเดิม ประสบการณ์ใหม่.</h3>
+            <p className="text-neutral-400 text-lg">คลิกที่บริการด้านล่างเพื่อดูรายละเอียดเชิงลึก ผลงาน และราคา</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* 01 – ECU Remap */}
+            <div
+              onClick={() => navigateTo('remap')}
+              className="group cursor-pointer bg-neutral-900 border border-neutral-800 hover:border-red-500/80 rounded-2xl p-8 transition-all duration-300 hover:bg-neutral-900/80 hover:shadow-[0_0_30px_rgba(220,38,38,0.15)] hover:-translate-y-2 relative overflow-hidden"
+            >
+              <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                <ChevronRight className="text-red-500" />
+              </div>
+              <div className="w-14 h-14 bg-red-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <Zap className="text-red-500" size={28} />
+              </div>
+              <h4 className="text-2xl font-bold text-white mb-3">ECU Remap</h4>
+              <p className="text-neutral-400 mb-6 leading-relaxed">
+                ปรับจูนทะลุขีดจำกัดผ่านพอร์ต OBD2 ออกแบบกราฟเครื่องยนต์ใหม่ตามสภาพรถและสไตล์การขับขี่ของคุณโดยเฉพาะ (เน้นรถ Mazda ในระยะแรก)
+              </p>
+              <ul className="space-y-2 mb-8 text-sm text-neutral-300">
+                <li className="flex items-center gap-2"><ShieldCheck size={16} className="text-green-500" /> สื่อสารโจทย์ชัดเจนก่อนเริ่มงาน</li>
+                <li className="flex items-center gap-2"><ShieldCheck size={16} className="text-green-500" /> คันเร่งตอบสนองไวขึ้น ขับสนุกขึ้น</li>
+              </ul>
+              <div className="text-red-500 font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+                ดูรายละเอียดและราคา <ChevronRight size={16} />
+              </div>
+            </div>
+
+            {/* 02 – HKS Exhaust */}
+            <div
+              onClick={() => navigateTo('hks')}
+              className="group cursor-pointer bg-neutral-900 border border-neutral-800 hover:border-orange-500/80 rounded-2xl p-8 transition-all duration-300 hover:bg-neutral-900/80 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)] hover:-translate-y-2 relative overflow-hidden"
+            >
+              <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                <ChevronRight className="text-orange-500" />
+              </div>
+              <div className="w-14 h-14 bg-orange-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <Wrench className="text-orange-500" size={28} />
+              </div>
+              <h4 className="text-2xl font-bold text-white mb-3">HKS Exhaust</h4>
+              <p className="text-neutral-400 mb-6 leading-relaxed">
+                ยกระดับสุ้มเสียงและภาพลักษณ์ ด้วยระบบท่อไอเสียแบรนด์ระดับโลก HKS เราช่วยเลือกสเปคที่พอดีกับรถคุณ ทั้งขับใช้งานประจำวันหรือสายซิ่ง
+              </p>
+              <ul className="space-y-2 mb-8 text-sm text-neutral-300">
+                <li className="flex items-center gap-2"><ShieldCheck size={16} className="text-green-500" /> ตรวจสอบ Fitment ก่อนสั่งซื้อ</li>
+                <li className="flex items-center gap-2"><ShieldCheck size={16} className="text-green-500" /> เชื่อมโยงสต็อกโดยตรงกับ Pingstores</li>
+              </ul>
+              <div className="text-orange-500 font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+                ดูรุ่นท่อและรายละเอียด <ChevronRight size={16} />
+              </div>
+            </div>
+
+            {/* 03 – Panthera EV Sound */}
+            <div
+              onClick={() => navigateTo('panthera')}
+              className="group cursor-pointer bg-neutral-900 border border-neutral-800 hover:border-blue-500/80 rounded-2xl p-8 transition-all duration-300 hover:bg-neutral-900/80 hover:shadow-[0_0_30px_rgba(59,130,246,0.15)] hover:-translate-y-2 relative overflow-hidden"
+            >
+              <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                <ChevronRight className="text-blue-500" />
+              </div>
+              <div className="w-14 h-14 bg-blue-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <Volume2 className="text-blue-500" size={28} />
+              </div>
+              <h4 className="text-2xl font-bold text-white mb-3">Panthera EV Sound</h4>
+              <p className="text-neutral-400 mb-6 leading-relaxed">
+                เปิดมิติใหม่แห่งเสียงให้กับรถยนต์ไฟฟ้า (EV) ด้วยระบบ Active Sound จาก Panthera สร้างความเร้าใจในทุกอัตราเร่ง (ปัจจุบันอยู่ในช่วงทดสอบ)
+              </p>
+              <ul className="space-y-2 mb-8 text-sm text-neutral-300">
+                <li className="flex items-center gap-2"><ShieldCheck size={16} className="text-green-500" /> ลงชื่อสนใจรับข้อเสนอพิเศษตอนเปิดตัว</li>
+                <li className="flex items-center gap-2"><ShieldCheck size={16} className="text-green-500" /> ปรับแต่งเสียงได้หลากหลายคาแรกเตอร์</li>
+              </ul>
+              <div className="text-blue-500 font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+                ดูคลิปรีวิวและราคา <ChevronRight size={16} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </>
   );
-}
+};
+
+// --- PAGE 2: ECU REMAP ---
+const RemapPage = () => (
+  <div className="pb-24">
+    <div className="bg-neutral-900 border-b border-neutral-800 py-20 px-6">
+      <div className="max-w-4xl mx-auto text-center">
+        <Zap className="text-red-500 w-16 h-16 mx-auto mb-6" />
+        <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">ECU Remap</h1>
+        <p className="text-xl text-neutral-400">ปลดล็อกพลังแฝง ปรับจูนให้ตรงสไตล์คุณ ขับสนุกขึ้น ประหยัดขึ้น ในแบบที่คุณสัมผัสได้ทันที</p>
+      </div>
+    </div>
+
+    <div className="max-w-7xl mx-auto px-6 lg:px-8 space-y-24 mt-16">
+
+      {/* Articles */}
+      <section>
+        <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">บทความ & ความรู้ก่อนรีแมป</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-800 hover:border-neutral-600 transition-colors">
+              <div className="h-48 bg-neutral-800 flex items-center justify-center">
+                <span className="text-neutral-600">รูปภาพปกบทความ {i}</span>
+              </div>
+              <div className="p-6">
+                <div className="text-red-500 text-xs font-bold mb-2">KNOWLEDGE</div>
+                <h3 className="text-lg font-bold text-white mb-2">ทำไมต้อง Fit Before Flash? ขั้นตอนสำคัญที่หลายคนมองข้าม</h3>
+                <p className="text-neutral-400 text-sm">การเช็คความพร้อมของฮาร์ดแวร์ก่อนปรับจูนซอฟต์แวร์ คือหัวใจสำคัญของความทนทาน...</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Portfolio */}
+      <section>
+        <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">ผลงานรีแมป (Portfolio)</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div key={i} className="aspect-square bg-neutral-900 rounded-xl border border-neutral-800 flex items-center justify-center hover:border-red-500 transition-colors cursor-pointer group relative overflow-hidden">
+              <span className="text-neutral-600 z-10 relative">ภาพผลงานรถที่ {i}</span>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4 z-20">
+                <span className="text-white font-bold text-sm">Mazda 3 Skyactiv-G</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Reviews */}
+      <section>
+        <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">รีวิวจากผู้ใช้จริง</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-neutral-900 p-8 rounded-2xl border border-neutral-800">
+              <div className="flex text-yellow-500 mb-4">
+                {[...Array(5)].map((_, s) => <Star key={s} fill="currentColor" size={20} />)}
+              </div>
+              <p className="text-neutral-300 mb-6 font-medium italic">"คันเร่งเบาขึ้นชัดเจน อาการรอรอบตอนออกตัวหายไปเลย ช่างอธิบายละเอียดมากว่ากราฟเดิมเป็นยังไง คุ้มค่าครับ"</p>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-neutral-800 rounded-full" />
+                <div>
+                  <h4 className="text-white font-bold text-sm">คุณ K.</h4>
+                  <p className="text-neutral-500 text-xs">Mazda 2 Diesel</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Pricing + Contact Form */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+        <section className="bg-gradient-to-br from-neutral-900 to-neutral-950 p-8 rounded-3xl border border-neutral-800">
+          <h2 className="text-3xl font-bold text-white mb-2">อัตราค่าบริการ (Pricing)</h2>
+          <p className="text-neutral-400 mb-8">ราคามาตรฐาน พร้อมบริการเช็คความพร้อมก่อนและหลังจูน</p>
+          <div className="space-y-4">
+            <div className="bg-neutral-950 p-6 rounded-2xl border border-neutral-800 flex justify-between items-center">
+              <div>
+                <h3 className="text-xl font-bold text-white">Stage 1 Remap</h3>
+                <p className="text-sm text-neutral-500">สำหรับรถเดิมๆ ที่ต้องการอัตราเร่งที่ดีขึ้น</p>
+              </div>
+              <div className="text-2xl font-black text-red-500">฿ XX,XXX</div>
+            </div>
+            <div className="bg-neutral-950 p-6 rounded-2xl border border-neutral-800 flex justify-between items-center">
+              <div>
+                <h3 className="text-xl font-bold text-white">Custom Tune</h3>
+                <p className="text-sm text-neutral-500">สำหรับรถที่มีการอัปเกรดฮาร์ดแวร์มาแล้ว</p>
+              </div>
+              <div className="text-2xl font-black text-red-500">สอบถาม</div>
+            </div>
+          </div>
+          <ul className="mt-8 space-y-2 text-sm text-neutral-400">
+            <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500" /> ฟรี! ตรวจเช็คค่าต่างๆ ก่อนจูน</li>
+            <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500" /> รับประกันซอฟต์แวร์ตลอดอายุการใช้งาน</li>
+          </ul>
+        </section>
+
+        <section className="bg-neutral-900 p-8 rounded-3xl border border-neutral-800 shadow-2xl">
+          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+            <MessageCircle className="text-red-500" /> ประเมินรถของคุณฟรี
+          </h2>
+          <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); alert('ระบบจำลอง: ข้อมูลถูกส่งเรียบร้อยแล้ว'); }}>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-neutral-400 mb-1">ชื่อ - นามสกุล *</label>
+                <input type="text" required className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="ระบุชื่อ" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-neutral-400 mb-1">เบอร์ติดต่อ / LINE ID *</label>
+                <input type="text" required className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="เบอร์โทร หรือไอดีไลน์" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-400 mb-1">รุ่นรถ และ ปี (เช่น Mazda 2 ดีเซล 2018) *</label>
+              <input type="text" required className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="ยี่ห้อ / รุ่น / เครื่องยนต์ / ปี" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-400 mb-1">สถานที่ / เขตที่พักอาศัย</label>
+              <input type="text" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="เพื่อประเมินการเดินทาง" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-400 mb-1">รายละเอียดที่ต้องการ / อาการปัจจุบัน</label>
+              <textarea required className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 h-24 resize-none" placeholder="เช่น อยากได้ต้นจัดขึ้น, ปัจจุบันรถมีอาการอืดตอนออกตัว, มีของแต่งอะไรใส่มาบ้างแล้ว" />
+            </div>
+            <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors">
+              <Send size={18} /> ส่งข้อมูลเพื่อรับคำปรึกษา
+            </button>
+          </form>
+        </section>
+      </div>
+    </div>
+  </div>
+);
+
+// --- PAGE 3: HKS EXHAUST ---
+const HKSPage = () => (
+  <div className="pb-24">
+    {/* Hero with product background image */}
+    <div className="border-b border-neutral-800 py-20 px-6 relative overflow-hidden" style={{ background: '#0d1116' }}>
+      <img
+        src={PROD_BG}
+        alt="HKS Exhaust Products"
+        className="absolute inset-0 w-full h-full object-cover opacity-25"
+      />
+      {/* dark overlay to keep text readable */}
+      <div className="absolute inset-0 bg-gradient-to-r from-neutral-950/95 via-neutral-950/70 to-neutral-950/40" />
+      <div className="absolute right-0 top-0 opacity-10 pointer-events-none w-1/2 h-full flex items-center justify-end">
+        <div className="w-[500px] h-[200px] border-[20px] border-orange-500 rounded-l-[100px] mr-[-100px]" />
+      </div>
+      <div className="max-w-4xl mx-auto text-center relative z-10">
+        <Wrench className="text-orange-500 w-16 h-16 mx-auto mb-6" />
+        <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">HKS Exhaust Systems</h1>
+        <p className="text-xl text-neutral-400 mb-8">
+          นิยามใหม่ของเสียงและสมรรถนะระดับโลก ยกระดับภาพลักษณ์พร้อมปลดปล่อยความดุดันในสไตล์ที่เป็นคุณ <br />
+          เราคือตัวกลางที่ช่วยคุณเลือกสเปคที่ตรงรุ่นแบบ <span className="text-orange-500 font-bold">100% Fitment</span>
+        </p>
+      </div>
+    </div>
+
+    <div className="max-w-7xl mx-auto px-6 lg:px-8 mt-16">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl font-bold text-white mb-4">เลือกรุ่นรถเพื่อดูสินค้า</h2>
+        <div className="flex flex-wrap justify-center gap-4">
+          <button className="px-6 py-2 rounded-full bg-orange-600 text-white font-bold">Mazda</button>
+          <button className="px-6 py-2 rounded-full bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-600">Honda</button>
+          <button className="px-6 py-2 rounded-full bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-600">Toyota</button>
+          <button className="px-6 py-2 rounded-full bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-600">Subaru</button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {[
+          { model: "Mazda 3 (BP)",  type: "Legamax Premium",    desc: "ปลายท่อคู่สแตนเลส เสียงนุ่มลึก ไม่หนวกหูตอนเดินทางไกล" },
+          { model: "Mazda 2 (DJ)",  type: "Silent Hi-Power",    desc: "ดีไซน์สปอร์ตปลายคาร์บอน เพิ่มแรงม้าและแรงบิดชัดเจน" },
+          { model: "Mazda CX-30",   type: "Legamax Sports",     desc: "ตรงรุ่นเป๊ะ ไม่ต้องดัดแปลง เสียงทุ้มแน่นสไตล์ SUV" },
+          { model: "Mazda CX-5",    type: "Touring Spec-L",     desc: "หรูหรา เสียงผู้ดี เหมาะกับรถครอบครัวที่แอบซิ่ง" },
+          { model: "MX-5 (ND)",     type: "Hi-Power SPEC-L II", desc: "น้ำหนักเบาพิเศษ เสียงลั่นเร้าใจสาย Track" },
+          { model: "Mazda 3 (BM)",  type: "Legamax Premium",    desc: "รุ่นยอดฮิตของบอดี้เก่า อัปเกรดความหล่อได้ทันที" },
+        ].map((item, idx) => (
+          <div key={idx} className="bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-800 group hover:border-orange-500/50 transition-colors">
+            <div className="h-64 bg-neutral-950 flex flex-col items-center justify-center p-4 relative">
+              <div className="w-3/4 h-8 bg-neutral-800 rounded-full mb-2" />
+              <div className="w-1/2 h-8 bg-neutral-800 rounded-full flex items-center justify-end pr-2">
+                <div className="w-10 h-10 bg-orange-900/50 rounded-full" />
+              </div>
+              <span className="absolute bottom-4 right-4 text-neutral-700 font-mono text-xs">IMG_HKS_{idx + 1}.JPG</span>
+            </div>
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-white group-hover:text-orange-500 transition-colors mb-1">{item.model}</h3>
+              <p className="text-orange-400 text-sm font-bold mb-3">{item.type}</p>
+              <p className="text-neutral-400 text-sm mb-6">{item.desc}</p>
+              <button className="w-full py-3 rounded-lg border border-neutral-700 hover:bg-white hover:text-black transition-colors font-bold text-sm">
+                เช็คสต็อกและราคา
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+// --- PAGE 4: PANTHERA EV SOUND ---
+const PantheraPage = () => (
+  <div className="pb-24">
+    <div className="bg-neutral-900 border-b border-neutral-800 py-20 px-6 relative overflow-hidden">
+      <div className="absolute inset-0 flex items-center justify-center opacity-5">
+        <Volume2 size={400} />
+      </div>
+      <div className="max-w-4xl mx-auto text-center relative z-10">
+        <Volume2 className="text-blue-500 w-16 h-16 mx-auto mb-6" />
+        <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">Panthera Active Sound</h1>
+        <p className="text-xl text-neutral-400">
+          เติมเต็มอรรถรสการขับขี่ให้ยนตรกรรมไฟฟ้า (EV) ด้วยมิติแห่งเสียงที่เลือกได้ <br />
+          สร้างคาแรกเตอร์ตั้งแต่เสียงยานอวกาศล้ำอนาคต ไปจนถึงเสียง V8 สุดดุดัน
+        </p>
+        <div className="mt-8 inline-block bg-blue-900/30 border border-blue-500/50 text-blue-400 px-4 py-2 rounded-full text-sm font-bold animate-pulse">
+          ปัจจุบันอยู่ในช่วงทดสอบระบบ (Beta Phase)
+        </div>
+      </div>
+    </div>
+
+    <div className="max-w-7xl mx-auto px-6 lg:px-8 mt-16 space-y-24">
+      {/* Features */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {[
+          { title: "Custom Profiles", desc: "ปรับแต่งและสลับเสียงผ่านแอปพลิเคชันบนมือถือได้แบบ Real-time" },
+          { title: "OBD2 Integration", desc: "อ่านค่าคันเร่งและความเร็วรถโดยตรง เพื่อความสมจริงในการไล่ระดับเสียง" },
+          { title: "Safe Installation", desc: "ติดตั้งง่าย ไม่ต้องดัดแปลงโครงสร้างรถ ปลอดภัยต่อระบบไฟฟ้าเดิม" },
+        ].map((f, i) => (
+          <div key={i} className="bg-neutral-900 p-8 rounded-2xl border border-neutral-800">
+            <h3 className="text-xl font-bold text-white mb-4">{f.title}</h3>
+            <p className="text-neutral-400">{f.desc}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Video Reviews */}
+      <section>
+        <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-blue-500 pl-4">คลิปทดสอบ & รีวิวเสียงจริง</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {[
+            { title: "ทดสอบเสียง V8 Muscle ในรถ BYD Seal",        length: "03:45" },
+            { title: "Panthera App Walkthrough สอนปรับจูนเสียง",  length: "05:20" },
+            { title: "รีวิวขับจริง อารมณ์เปลี่ยนไปแค่ไหน?",     length: "08:15" },
+            { title: "เสียงสไตล์ Futuristic Hypercar",             length: "02:30" },
+          ].map((video, idx) => (
+            <div key={idx} className="group cursor-pointer">
+              <div className="aspect-video bg-neutral-900 rounded-2xl border border-neutral-800 flex flex-col items-center justify-center relative overflow-hidden mb-4 group-hover:border-blue-500 transition-colors">
+                <PlayCircle className="text-neutral-600 w-16 h-16 group-hover:text-blue-500 transition-colors group-hover:scale-110 duration-300" />
+                <span className="absolute bottom-4 right-4 bg-black/80 px-2 py-1 rounded text-xs text-white font-mono">{video.length}</span>
+                <span className="absolute top-4 left-4 text-neutral-700 font-mono text-xs">VIDEO_PLACEHOLDER_{idx + 1}.MP4</span>
+              </div>
+              <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">{video.title}</h3>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Pricing Table */}
+      <section className="bg-gradient-to-b from-neutral-900 to-neutral-950 p-8 md:p-12 rounded-3xl border border-neutral-800">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold text-white mb-4">ตารางราคาล่วงหน้า (Pre-Order Pricing)</h2>
+          <p className="text-neutral-400">สำหรับลูกค้าที่ลงชื่อสนใจในช่วงทดสอบ จะได้รับสิทธิพิเศษราคาพิเศษ</p>
+        </div>
+        <div className="max-w-4xl mx-auto overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b-2 border-neutral-800 text-neutral-300">
+                <th className="p-4 font-bold text-lg">แพ็กเกจ (Package)</th>
+                <th className="p-4 font-bold text-lg">รายละเอียด</th>
+                <th className="p-4 font-bold text-lg text-right">ราคา (บาท)</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-800 text-neutral-400">
+              <tr className="hover:bg-neutral-800/50 transition-colors">
+                <td className="p-4 font-bold text-white">Single Speaker Unit</td>
+                <td className="p-4">ลำโพงเดี่ยว + กล่องคอนโทรล + แอปพลิเคชัน (เหมาะสำหรับรถเก๋ง/SUV ทั่วไป)</td>
+                <td className="p-4 text-right font-bold text-blue-400">XX,XXX.-</td>
+              </tr>
+              <tr className="hover:bg-neutral-800/50 transition-colors">
+                <td className="p-4 font-bold text-white">Dual Speaker Unit (Pro)</td>
+                <td className="p-4">ลำโพงคู่ + กล่องคอนโทรล + แอปพลิเคชัน (เพิ่มมิติและความดัง เหมาะสำหรับรถคันใหญ่)</td>
+                <td className="p-4 text-right font-bold text-blue-400">XX,XXX.-</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-12 text-center">
+          <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-all">
+            ลงชื่อแสดงความสนใจ / จองคิวล่วงหน้า
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>
+);
+
+// --- PAGE 5: PARTNER RECRUITMENT ---
+const PartnerPage = () => (
+  <div className="pb-24">
+    <div className="bg-gradient-to-r from-orange-950 to-neutral-900 border-b border-orange-900/50 py-24 px-6 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
+      <div className="max-w-4xl mx-auto text-center relative z-10">
+        <UserPlus className="text-orange-500 w-20 h-20 mx-auto mb-6" />
+        <h1 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight uppercase">Join Our Network</h1>
+        <p className="text-xl md:text-2xl text-orange-200/80 mb-8 font-light">
+          รับสมัครพาร์ทเนอร์ อู่พันธมิตร และทีมงาน <br className="hidden md:block" />
+          ทั้งในกรุงเทพฯ และต่างจังหวัด
+        </p>
+      </div>
+    </div>
+
+    <div className="max-w-5xl mx-auto px-6 lg:px-8 mt-16">
+      {/* Why join */}
+      <div className="text-center mb-16">
+        <h2 className="text-3xl font-bold text-white mb-6">ทำไมถึงควรเป็น Partner กับ Shiftup?</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+          {[
+            { n: "1", title: "ขยายฐานลูกค้า", desc: "เรามีฐานลูกค้าจากส่วนกลางที่พร้อมส่งต่องานติดตั้งหรือบริการให้คุณในพื้นที่ของคุณ" },
+            { n: "2", title: "สินค้าและซอฟต์แวร์คุณภาพ", desc: "เข้าถึงไฟล์จูนระดับมืออาชีพ และสินค้าราคาตัวแทนจำหน่าย (เช่น HKS, Panthera)" },
+            { n: "3", title: "Support จากส่วนกลาง", desc: "มีทีมเทคนิคคอยให้คำปรึกษาตลอดการทำงาน พร้อมสื่อการตลาดช่วยเหลือ" },
+          ].map((item) => (
+            <div key={item.n} className="bg-neutral-900 p-8 rounded-2xl border border-neutral-800">
+              <div className="w-12 h-12 bg-orange-500/20 text-orange-500 rounded-full flex items-center justify-center font-bold text-xl mb-4">{item.n}</div>
+              <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
+              <p className="text-neutral-400 text-sm">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Requirements */}
+      <div className="bg-neutral-900 rounded-3xl border border-neutral-800 p-8 md:p-12 mb-16 shadow-2xl">
+        <h2 className="text-2xl font-bold text-white mb-8 border-l-4 border-orange-500 pl-4">สิ่งที่เรามองหาในตัว Partner</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+          <ul className="space-y-4">
+            <li className="flex items-start gap-3">
+              <CheckCircle2 className="text-orange-500 shrink-0 mt-1" size={20} />
+              <span className="text-neutral-300">อู่ซ่อมรถยนต์ หรือร้านติดตั้งอุปกรณ์ตกแต่งรถยนต์ ที่มีหน้าร้านชัดเจน</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <CheckCircle2 className="text-orange-500 shrink-0 mt-1" size={20} />
+              <span className="text-neutral-300">มีความรู้ความเข้าใจพื้นฐานด้านเครื่องยนต์ และระบบไฟฟ้า (สำหรับงานติดตั้ง)</span>
+            </li>
+          </ul>
+          <ul className="space-y-4">
+            <li className="flex items-start gap-3">
+              <CheckCircle2 className="text-orange-500 shrink-0 mt-1" size={20} />
+              <span className="text-neutral-300">ช่างเทคนิคอิสระ (Freelance) ที่มีเครื่องมือพร้อมรับงานนอกสถานที่ (เฉพาะบางพื้นที่)</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <CheckCircle2 className="text-orange-500 shrink-0 mt-1" size={20} />
+              <span className="text-neutral-300">มีความซื่อสัตย์ ตรงต่อเวลา และใส่ใจในความปลอดภัยของรถลูกค้าเป็นอันดับแรก</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      {/* Application Form */}
+      <div className="bg-neutral-950 p-8 md:p-12 rounded-3xl border border-neutral-800 border-t-4 border-t-orange-500">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-white mb-2">ฟอร์มสมัครพาร์ทเนอร์</h2>
+          <p className="text-neutral-400">กรอกข้อมูลเบื้องต้นเพื่อให้ทีมงานของเราติดต่อกลับไปพูดคุยรายละเอียด</p>
+        </div>
+        <form className="space-y-6 max-w-2xl mx-auto" onSubmit={(e) => { e.preventDefault(); alert('ระบบจำลอง: ข้อมูลการสมัครถูกส่งเรียบร้อยแล้ว'); }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-neutral-400 mb-2">ชื่อร้าน / อู่ (ถ้ามี)</label>
+              <input type="text" className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500" placeholder="ระบุชื่อร้าน" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-400 mb-2">ชื่อผู้ติดต่อ *</label>
+              <input type="text" required className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500" placeholder="ระบุชื่อผู้ติดต่อ" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-400 mb-2">เบอร์โทรศัพท์ *</label>
+              <input type="text" required className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500" placeholder="เบอร์โทรติดต่อ" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-400 mb-2">LINE ID</label>
+              <input type="text" className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500" placeholder="ไอดีไลน์" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-neutral-400 mb-2">จังหวัดที่ให้บริการ *</label>
+              <input type="text" required className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500" placeholder="เช่น กรุงเทพฯ, เชียงใหม่" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-400 mb-2">ความถนัดหลัก</label>
+              <select className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500 appearance-none">
+                <option>รับรีแมป (มีเครื่องมือ/ไม่มีเครื่องมือ)</option>
+                <option>ติดตั้งท่อไอเสีย</option>
+                <option>ติดตั้งระบบไฟ/เครื่องเสียง (เหมาะกับ Panthera)</option>
+                <option>ทำได้ทุกอย่างข้างต้น</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-400 mb-2">ลิงก์เพจ Facebook ร้าน (ถ้ามี)</label>
+            <input type="url" className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500" placeholder="https://facebook.com/..." />
+          </div>
+          <button type="submit" className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-4 rounded-xl transition-colors mt-4 text-lg">
+            ส่งข้อมูลการสมัคร
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+);
+
+export default ShiftupApp;
