@@ -167,13 +167,13 @@ const HomePage = ({ navigateTo, lineUrl }) => {
               <span className="text-xs font-semibold tracking-wider text-neutral-300 uppercase">Performance by P2W Interplus</span>
             </div>
             <h1 className="text-5xl lg:text-7xl font-black text-white leading-[1.1] tracking-tighter mb-6">
-              UNLEASH THE <br />
+              Shiftup<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">
-                TRUE POTENTIAL.
+                Performance
               </span>
             </h1>
             <p className="text-lg lg:text-xl text-neutral-400 mb-10 max-w-2xl leading-relaxed">
-              ไม่ใช่แค่การจูนรถ แต่คือการสร้างคาแรกเตอร์ใหม่ให้สอดรับกับสไตล์คุณ ปลดล็อกสมรรถนะที่ซ่อนอยู่ด้วยการทำ <strong>ECU Remap</strong> พร้อมยกระดับสุ้มเสียงด้วย <strong>HKS Exhaust</strong> และนวัตกรรม <strong>Active Sound</strong> สำหรับ EV
+              ไม่ใช่แค่การจูนรถ แต่คือการสร้างคาแรกเตอร์ใหม่ให้สอดรับกับสไตล์คุณ ปลดล็อกสมรรถนะที่ซ่อนอยู่ด้วยการทำ <strong>ECU Remap</strong> พร้อมยกระดับสุ้มเสียงด้วย <strong>HKS Exhaust</strong> และนวัตกรรม <strong>Active Exhaust Sound</strong> สำหรับ รถน้ำมัน และรถEV
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <a href={lineUrl} target="_blank" rel="noreferrer" className="bg-white text-black hover:bg-neutral-200 px-8 py-4 rounded-full font-bold text-center transition-colors flex items-center justify-center gap-2">
@@ -284,7 +284,7 @@ const HomePage = ({ navigateTo, lineUrl }) => {
               </div>
               <h4 className="text-2xl font-bold text-white mb-3">Panthera EV Sound</h4>
               <p className="text-neutral-400 mb-6 leading-relaxed">
-                เปิดมิติใหม่แห่งเสียงให้กับรถยนต์ไฟฟ้า (EV) ด้วยระบบ Active Sound จาก Panthera สร้างความเร้าใจในทุกอัตราเร่ง (ปัจจุบันอยู่ในช่วงทดสอบ)
+                เปิดมิติใหม่แห่งเสียงให้กับรถน้ำมัน และรถ EV ด้วยระบบ Active Exhaust Sound จาก Panthera สร้างความเร้าใจในทุกอัตราเร่ง (ปัจจุบันอยู่ในช่วงทดสอบ)
               </p>
               <ul className="space-y-2 mb-8 text-sm text-neutral-300">
                 <li className="flex items-center gap-2"><ShieldCheck size={16} className="text-green-500" /> ลงชื่อสนใจรับข้อเสนอพิเศษตอนเปิดตัว</li>
@@ -511,9 +511,9 @@ const PantheraPage = () => (
       </div>
       <div className="max-w-4xl mx-auto text-center relative z-10">
         <Volume2 className="text-blue-500 w-16 h-16 mx-auto mb-6" />
-        <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">Panthera Active Sound</h1>
+        <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">Panthera Active Exhaust Sound</h1>
         <p className="text-xl text-neutral-400">
-          เติมเต็มอรรถรสการขับขี่ให้ยนตรกรรมไฟฟ้า (EV) ด้วยมิติแห่งเสียงที่เลือกได้ <br />
+          เติมเต็มอรรถรสการขับขี่ให้รถน้ำมัน และยนตรกรรมไฟฟ้า (EV) ด้วยมิติแห่งเสียงที่เลือกได้ <br />
           สร้างคาแรกเตอร์ตั้งแต่เสียงยานอวกาศล้ำอนาคต ไปจนถึงเสียง V8 สุดดุดัน
         </p>
         <div className="mt-8 inline-block bg-blue-900/30 border border-blue-500/50 text-blue-400 px-4 py-2 rounded-full text-sm font-bold animate-pulse">
