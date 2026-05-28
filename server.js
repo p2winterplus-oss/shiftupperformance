@@ -1,15 +1,21 @@
-const express = require('express');
-const path = require('path');
+import express from 'express';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = dirname(__filename);
+
+const app  = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve the Vite build output
+app.use(express.static(join(__dirname, 'dist')));
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// SPA fallback — all routes return index.html
+app.get('*', (_req, res) => {
+  res.sendFile(join(__dirname, 'dist', 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Shiftup Performance server running on port ${PORT}`);
 });
