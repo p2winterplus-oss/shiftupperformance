@@ -277,7 +277,7 @@ const HomePage = ({ navigateTo, lineUrl }) => {
                 ยกระดับสุ้มเสียงและภาพลักษณ์ ด้วยระบบท่อไอเสียแบรนด์ระดับโลก HKS เราช่วยเลือกสเปคที่พอดีกับรถคุณ ทั้งขับใช้งานประจำวันหรือสายซิ่ง
               </p>
               <ul className="space-y-2 mb-8 text-sm text-neutral-300">
-                <li className="flex items-center gap-2"><ShieldCheck size={16} className="text-green-500" /> สินค้าตรงรุ่น ไม่ต้องดัดแปลง</li>
+                <li className="flex items-center gap-2"><ShieldCheck size={16} className="text-green-500" /> สินค้าตรงรุ่น ติดตั้งง่าย ไม่ต้องดัดแปลง</li>
                 <li className="flex items-center gap-2"><ShieldCheck size={16} className="text-green-500" /> รับประกันสินค้า 2 ปีเต็มจากโรงงาน</li>
               </ul>
               <div className="text-orange-500 font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
