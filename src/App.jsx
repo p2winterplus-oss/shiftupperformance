@@ -210,8 +210,8 @@ const HomePage = ({ navigateTo, lineUrl }) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-neutral-800">
             <div className="flex flex-col items-center pt-4 md:pt-0">
               <Settings className="text-red-500 mb-3" size={32} />
-              <h3 className="text-white font-bold text-lg mb-1">Mazda Specialist</h3>
-              <p className="text-sm text-neutral-400">เชี่ยวชาญพิเศษ เริ่มต้นจาก Mazda สู่สมรรถนะที่เหนือกว่า</p>
+              <h3 className="text-white font-bold text-lg mb-1">Engineer Specialist</h3>
+              <p className="text-sm text-neutral-400">เชี่ยวชาญพิเศษ ประสบการณ์ตรง สู่สมรรถนะที่เหนือกว่า</p>
             </div>
             <div className="flex flex-col items-center pt-8 md:pt-0">
               <Activity className="text-red-500 mb-3" size={32} />
@@ -232,7 +232,7 @@ const HomePage = ({ navigateTo, lineUrl }) => {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-red-500 font-bold tracking-widest text-sm uppercase mb-3">Core Services</h2>
-            <h3 className="text-3xl md:text-5xl font-black text-white mb-6 tracking-tight">รถคันเดิม ประสบการณ์ใหม่.</h3>
+            <h3 className="text-3xl md:text-5xl font-black text-white mb-6 tracking-tight">รถคันเดิม แต่ประสบการณ์ที่เหนือกว่าเดิม</h3>
             <p className="text-neutral-400 text-lg">คลิกที่บริการด้านล่างเพื่อดูรายละเอียดเชิงลึก ผลงาน และราคา</p>
           </div>
 
@@ -250,7 +250,7 @@ const HomePage = ({ navigateTo, lineUrl }) => {
               </div>
               <h4 className="text-2xl font-bold text-white mb-3">ECU Remap</h4>
               <p className="text-neutral-400 mb-6 leading-relaxed">
-                ปรับจูนทะลุขีดจำกัดผ่านพอร์ต OBD2 ออกแบบกราฟเครื่องยนต์ใหม่ตามสภาพรถและสไตล์การขับขี่ของคุณโดยเฉพาะ (เน้นรถ Mazda ในระยะแรก)
+                ปรับจูนให้เหนือขีดจำกัดยิ่งกว่าเดิมผ่านพอร์ต OBD2 ออกแบบกราฟเครื่องยนต์ใหม่ตามสภาพรถและสไตล์การขับขี่ของคุณโดยเฉพาะ (ลืมปัญหาเดิมๆไปได้เลย)
               </p>
               <ul className="space-y-2 mb-8 text-sm text-neutral-300">
                 <li className="flex items-center gap-2"><ShieldCheck size={16} className="text-green-500" /> สื่อสารโจทย์ชัดเจนก่อนเริ่มงาน</li>
@@ -277,8 +277,8 @@ const HomePage = ({ navigateTo, lineUrl }) => {
                 ยกระดับสุ้มเสียงและภาพลักษณ์ ด้วยระบบท่อไอเสียแบรนด์ระดับโลก HKS เราช่วยเลือกสเปคที่พอดีกับรถคุณ ทั้งขับใช้งานประจำวันหรือสายซิ่ง
               </p>
               <ul className="space-y-2 mb-8 text-sm text-neutral-300">
-                <li className="flex items-center gap-2"><ShieldCheck size={16} className="text-green-500" /> ตรวจสอบ Fitment ก่อนสั่งซื้อ</li>
-                <li className="flex items-center gap-2"><ShieldCheck size={16} className="text-green-500" /> เชื่อมโยงสต็อกโดยตรงกับ Pingstores</li>
+                <li className="flex items-center gap-2"><ShieldCheck size={16} className="text-green-500" /> สินค้าตรงรุ่น ไม่ต้องดัดแปลง</li>
+                <li className="flex items-center gap-2"><ShieldCheck size={16} className="text-green-500" /> รับประกันสินค้า 2 ปีเต็มจากโรงงาน</li>
               </ul>
               <div className="text-orange-500 font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
                 ดูรุ่นท่อและรายละเอียด <ChevronRight size={16} />
@@ -298,10 +298,10 @@ const HomePage = ({ navigateTo, lineUrl }) => {
               </div>
               <h4 className="text-2xl font-bold text-white mb-3">Panthera Active Exhaust Sound</h4>
               <p className="text-neutral-400 mb-6 leading-relaxed">
-                เปิดมิติใหม่แห่งเสียงให้กับรถน้ำมัน และรถ EV ด้วยระบบ Active Exhaust Sound จาก Panthera สร้างความเร้าใจในทุกอัตราเร่ง (ปัจจุบันอยู่ในช่วงทดสอบ)
+                เปิดมิติใหม่แห่งเสียงให้กับรถน้ำมัน และรถ EV ด้วยระบบ Active Exhaust Sound จาก Panthera สร้างความเร้าใจในทุกอัตราเร่ง
               </p>
               <ul className="space-y-2 mb-8 text-sm text-neutral-300">
-                <li className="flex items-center gap-2"><ShieldCheck size={16} className="text-green-500" /> ลงชื่อสนใจรับข้อเสนอพิเศษตอนเปิดตัว</li>
+                <li className="flex items-center gap-2"><ShieldCheck size={16} className="text-green-500" /> ไม่มีการตัดต่อสายไฟ ประกันไม่ขาด</li>
                 <li className="flex items-center gap-2"><ShieldCheck size={16} className="text-green-500" /> ปรับแต่งเสียงได้หลากหลายคาแรกเตอร์</li>
               </ul>
               <div className="text-blue-500 font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
