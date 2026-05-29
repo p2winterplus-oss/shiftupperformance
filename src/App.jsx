@@ -301,138 +301,387 @@ const HomePage = ({ navigateTo, lineUrl }) => {
   );
 };
 
-// --- PAGE 2: ECU REMAP ---
-const RemapPage = () => (
-  <div className="pb-24">
-    <div className="bg-neutral-900 border-b border-neutral-800 py-20 px-6">
-      <div className="max-w-4xl mx-auto text-center">
-        <Zap className="text-red-500 w-16 h-16 mx-auto mb-6" />
-        <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">ECU Remap</h1>
-        <p className="text-xl text-neutral-400">ปลดล็อกพลังแฝง ปรับจูนให้ตรงสไตล์คุณ ขับสนุกขึ้น ประหยัดขึ้น ในแบบที่คุณสัมผัสได้ทันที</p>
-      </div>
-    </div>
+// ─── Remap Content Data Layer ────────────────────────────────────────────────
+const REMAP_KEY = 'shiftup_remap_v1';
 
-    <div className="max-w-7xl mx-auto px-6 lg:px-8 space-y-24 mt-16">
+const DEFAULT_REMAP = {
+  articles: [
+    { id: 1, imgUrl: '', tag: 'KNOWLEDGE', title: 'ทำไมต้อง Fit Before Flash? ขั้นตอนสำคัญที่หลายคนมองข้าม', excerpt: 'การเช็คความพร้อมของฮาร์ดแวร์ก่อนปรับจูนซอฟต์แวร์ คือหัวใจสำคัญของความทนทาน...' },
+    { id: 2, imgUrl: '', tag: 'KNOWLEDGE', title: 'ทำไมต้อง Fit Before Flash? ขั้นตอนสำคัญที่หลายคนมองข้าม', excerpt: 'การเช็คความพร้อมของฮาร์ดแวร์ก่อนปรับจูนซอฟต์แวร์ คือหัวใจสำคัญของความทนทาน...' },
+    { id: 3, imgUrl: '', tag: 'KNOWLEDGE', title: 'ทำไมต้อง Fit Before Flash? ขั้นตอนสำคัญที่หลายคนมองข้าม', excerpt: 'การเช็คความพร้อมของฮาร์ดแวร์ก่อนปรับจูนซอฟต์แวร์ คือหัวใจสำคัญของความทนทาน...' },
+  ],
+  portfolio: [
+    { id: 1, imgUrl: '', caption: 'Mazda 3 Skyactiv-G' },
+    { id: 2, imgUrl: '', caption: 'Mazda 2 Diesel' },
+    { id: 3, imgUrl: '', caption: 'Mazda CX-30' },
+    { id: 4, imgUrl: '', caption: 'Mazda CX-5' },
+    { id: 5, imgUrl: '', caption: 'Mazda 3 BM' },
+    { id: 6, imgUrl: '', caption: 'Mazda 6' },
+    { id: 7, imgUrl: '', caption: 'Mazda 2 Gasoline' },
+    { id: 8, imgUrl: '', caption: 'Mazda MX-5' },
+  ],
+  reviews: [
+    { id: 1, stars: 5, text: 'คันเร่งเบาขึ้นชัดเจน อาการรอรอบตอนออกตัวหายไปเลย ช่างอธิบายละเอียดมากว่ากราฟเดิมเป็นยังไง คุ้มค่าครับ', name: 'คุณ K.', car: 'Mazda 2 Diesel' },
+    { id: 2, stars: 5, text: 'คันเร่งเบาขึ้นชัดเจน อาการรอรอบตอนออกตัวหายไปเลย ช่างอธิบายละเอียดมากว่ากราฟเดิมเป็นยังไง คุ้มค่าครับ', name: 'คุณ K.', car: 'Mazda 2 Diesel' },
+    { id: 3, stars: 5, text: 'คันเร่งเบาขึ้นชัดเจน อาการรอรอบตอนออกตัวหายไปเลย ช่างอธิบายละเอียดมากว่ากราฟเดิมเป็นยังไง คุ้มค่าครับ', name: 'คุณ K.', car: 'Mazda 2 Diesel' },
+  ],
+  packages: [
+    { id: 1, name: 'Stage 1 Remap', desc: 'สำหรับรถเดิมๆ ที่ต้องการอัตราเร่งที่ดีขึ้น', price: '฿ XX,XXX' },
+    { id: 2, name: 'Custom Tune',   desc: 'สำหรับรถที่มีการอัปเกรดฮาร์ดแวร์มาแล้ว',  price: 'สอบถาม'  },
+  ],
+  perks: ['ฟรี! ตรวจเช็คค่าต่างๆ ก่อนจูน', 'รับประกันซอฟต์แวร์ตลอดอายุการใช้งาน'],
+};
 
-      {/* Articles */}
-      <section>
-        <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">บทความ & ความรู้ก่อนรีแมป</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-800 hover:border-neutral-600 transition-colors">
-              <div className="h-48 bg-neutral-800 flex items-center justify-center">
-                <span className="text-neutral-600">รูปภาพปกบทความ {i}</span>
-              </div>
-              <div className="p-6">
-                <div className="text-red-500 text-xs font-bold mb-2">KNOWLEDGE</div>
-                <h3 className="text-lg font-bold text-white mb-2">ทำไมต้อง Fit Before Flash? ขั้นตอนสำคัญที่หลายคนมองข้าม</h3>
-                <p className="text-neutral-400 text-sm">การเช็คความพร้อมของฮาร์ดแวร์ก่อนปรับจูนซอฟต์แวร์ คือหัวใจสำคัญของความทนทาน...</p>
-              </div>
-            </div>
+function loadRemap() {
+  try { const s = localStorage.getItem(REMAP_KEY); return s ? JSON.parse(s) : DEFAULT_REMAP; }
+  catch { return DEFAULT_REMAP; }
+}
+function saveRemap(d) { localStorage.setItem(REMAP_KEY, JSON.stringify(d)); }
+
+// ─── Admin Panel ──────────────────────────────────────────────────────────────
+const AdminPanel = ({ data, onSave, onClose }) => {
+  const [tab, setTab] = useState('articles');
+  const [draft, setDraft] = useState(() => JSON.parse(JSON.stringify(data)));
+
+  const updateArticle = (i, field, val) => {
+    const a = [...draft.articles]; a[i] = { ...a[i], [field]: val };
+    setDraft({ ...draft, articles: a });
+  };
+  const updatePortfolio = (i, field, val) => {
+    const p = [...draft.portfolio]; p[i] = { ...p[i], [field]: val };
+    setDraft({ ...draft, portfolio: p });
+  };
+  const updateReview = (i, field, val) => {
+    const r = [...draft.reviews]; r[i] = { ...r[i], [field]: val };
+    setDraft({ ...draft, reviews: r });
+  };
+  const updatePackage = (i, field, val) => {
+    const p = [...draft.packages]; p[i] = { ...p[i], [field]: val };
+    setDraft({ ...draft, packages: p });
+  };
+  const updatePerk = (i, val) => {
+    const p = [...draft.perks]; p[i] = val; setDraft({ ...draft, perks: p });
+  };
+
+  const inputCls = 'w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500 placeholder-neutral-600';
+  const tabs = [
+    { key: 'articles',  label: '📝 บทความ' },
+    { key: 'portfolio', label: '🖼️ Portfolio' },
+    { key: 'reviews',   label: '⭐ รีวิว' },
+    { key: 'pricing',   label: '💰 ราคา' },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-sm overflow-auto">
+      <div className="max-w-4xl mx-auto p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6 border-b border-neutral-800 pb-6">
+          <div>
+            <h2 className="text-2xl font-black text-white">⚙️ Admin Panel — ECU Remap</h2>
+            <p className="text-neutral-500 text-sm mt-1">แก้ไขเนื้อหา แล้วกด "บันทึก" เพื่ออัปเดตหน้าเว็บ</p>
+          </div>
+          <button onClick={onClose} className="text-neutral-400 hover:text-white text-2xl leading-none px-2">✕</button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-2 mb-8 flex-wrap">
+          {tabs.map(t => (
+            <button key={t.key} onClick={() => setTab(t.key)}
+              className={`px-4 py-2 rounded-full text-sm font-bold transition-colors ${tab === t.key ? 'bg-red-600 text-white' : 'bg-neutral-800 text-neutral-400 hover:text-white'}`}>
+              {t.label}
+            </button>
           ))}
         </div>
-      </section>
 
-      {/* Portfolio */}
-      <section>
-        <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">ผลงานรีแมป (Portfolio)</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="aspect-square bg-neutral-900 rounded-xl border border-neutral-800 flex items-center justify-center hover:border-red-500 transition-colors cursor-pointer group relative overflow-hidden">
-              <span className="text-neutral-600 z-10 relative">ภาพผลงานรถที่ {i}</span>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4 z-20">
-                <span className="text-white font-bold text-sm">Mazda 3 Skyactiv-G</span>
+        {/* ── Articles ── */}
+        {tab === 'articles' && draft.articles.map((a, i) => (
+          <div key={a.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 mb-4">
+            <p className="text-red-400 font-bold text-xs mb-4">บทความที่ {i + 1}</p>
+            <div className="space-y-3">
+              <div>
+                <label className="text-neutral-400 text-xs mb-1 block">รูปภาพปก (URL)</label>
+                <input className={inputCls} value={a.imgUrl} onChange={e => updateArticle(i,'imgUrl',e.target.value)} placeholder="https://... หรือ /images/article1.jpg" />
+              </div>
+              <div>
+                <label className="text-neutral-400 text-xs mb-1 block">Tag</label>
+                <input className={inputCls} value={a.tag} onChange={e => updateArticle(i,'tag',e.target.value)} placeholder="KNOWLEDGE" />
+              </div>
+              <div>
+                <label className="text-neutral-400 text-xs mb-1 block">หัวข้อบทความ</label>
+                <input className={inputCls} value={a.title} onChange={e => updateArticle(i,'title',e.target.value)} />
+              </div>
+              <div>
+                <label className="text-neutral-400 text-xs mb-1 block">เนื้อหาย่อ</label>
+                <textarea rows={2} className={inputCls} value={a.excerpt} onChange={e => updateArticle(i,'excerpt',e.target.value)} />
               </div>
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
+        ))}
 
-      {/* Reviews */}
-      <section>
-        <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">รีวิวจากผู้ใช้จริง</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-neutral-900 p-8 rounded-2xl border border-neutral-800">
-              <div className="flex text-yellow-500 mb-4">
-                {[...Array(5)].map((_, s) => <Star key={s} fill="currentColor" size={20} />)}
+        {/* ── Portfolio ── */}
+        {tab === 'portfolio' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {draft.portfolio.map((p, i) => (
+              <div key={p.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
+                <p className="text-neutral-500 text-xs mb-3">ภาพที่ {i + 1}</p>
+                <div className="space-y-2">
+                  <div>
+                    <label className="text-neutral-400 text-xs mb-1 block">URL รูปภาพ</label>
+                    <input className={inputCls} value={p.imgUrl} onChange={e => updatePortfolio(i,'imgUrl',e.target.value)} placeholder="https://... หรือ /images/port1.jpg" />
+                  </div>
+                  <div>
+                    <label className="text-neutral-400 text-xs mb-1 block">คำบรรยาย (hover)</label>
+                    <input className={inputCls} value={p.caption} onChange={e => updatePortfolio(i,'caption',e.target.value)} placeholder="เช่น Mazda 3 Skyactiv-G" />
+                  </div>
+                </div>
               </div>
-              <p className="text-neutral-300 mb-6 font-medium italic">"คันเร่งเบาขึ้นชัดเจน อาการรอรอบตอนออกตัวหายไปเลย ช่างอธิบายละเอียดมากว่ากราฟเดิมเป็นยังไง คุ้มค่าครับ"</p>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-neutral-800 rounded-full" />
+            ))}
+          </div>
+        )}
+
+        {/* ── Reviews ── */}
+        {tab === 'reviews' && draft.reviews.map((r, i) => (
+          <div key={r.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 mb-4">
+            <p className="text-neutral-500 text-xs mb-4">รีวิวที่ {i + 1}</p>
+            <div className="space-y-3">
+              <div>
+                <label className="text-neutral-400 text-xs mb-1 block">ข้อความรีวิว</label>
+                <textarea rows={3} className={inputCls} value={r.text} onChange={e => updateReview(i,'text',e.target.value)} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <h4 className="text-white font-bold text-sm">คุณ K.</h4>
-                  <p className="text-neutral-500 text-xs">Mazda 2 Diesel</p>
+                  <label className="text-neutral-400 text-xs mb-1 block">ชื่อผู้รีวิว</label>
+                  <input className={inputCls} value={r.name} onChange={e => updateReview(i,'name',e.target.value)} placeholder="คุณ K." />
+                </div>
+                <div>
+                  <label className="text-neutral-400 text-xs mb-1 block">รุ่นรถ</label>
+                  <input className={inputCls} value={r.car} onChange={e => updateReview(i,'car',e.target.value)} placeholder="Mazda 2 Diesel" />
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
+        ))}
 
-      {/* Pricing + Contact Form */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-        <section className="bg-gradient-to-br from-neutral-900 to-neutral-950 p-8 rounded-3xl border border-neutral-800">
-          <h2 className="text-3xl font-bold text-white mb-2">อัตราค่าบริการ (Pricing)</h2>
-          <p className="text-neutral-400 mb-8">ราคามาตรฐาน พร้อมบริการเช็คความพร้อมก่อนและหลังจูน</p>
-          <div className="space-y-4">
-            <div className="bg-neutral-950 p-6 rounded-2xl border border-neutral-800 flex justify-between items-center">
-              <div>
-                <h3 className="text-xl font-bold text-white">Stage 1 Remap</h3>
-                <p className="text-sm text-neutral-500">สำหรับรถเดิมๆ ที่ต้องการอัตราเร่งที่ดีขึ้น</p>
-              </div>
-              <div className="text-2xl font-black text-red-500">฿ XX,XXX</div>
+        {/* ── Pricing ── */}
+        {tab === 'pricing' && (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-white font-bold mb-3">แพ็กเกจ</h3>
+              {draft.packages.map((pkg, i) => (
+                <div key={pkg.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 mb-3">
+                  <p className="text-neutral-500 text-xs mb-3">แพ็กเกจที่ {i + 1}</p>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-neutral-400 text-xs mb-1 block">ชื่อ</label>
+                      <input className={inputCls} value={pkg.name} onChange={e => updatePackage(i,'name',e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="text-neutral-400 text-xs mb-1 block">คำอธิบาย</label>
+                      <input className={inputCls} value={pkg.desc} onChange={e => updatePackage(i,'desc',e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="text-neutral-400 text-xs mb-1 block">ราคา</label>
+                      <input className={inputCls} value={pkg.price} onChange={e => updatePackage(i,'price',e.target.value)} placeholder="฿ XX,XXX หรือ สอบถาม" />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="bg-neutral-950 p-6 rounded-2xl border border-neutral-800 flex justify-between items-center">
-              <div>
-                <h3 className="text-xl font-bold text-white">Custom Tune</h3>
-                <p className="text-sm text-neutral-500">สำหรับรถที่มีการอัปเกรดฮาร์ดแวร์มาแล้ว</p>
-              </div>
-              <div className="text-2xl font-black text-red-500">สอบถาม</div>
+            <div>
+              <h3 className="text-white font-bold mb-3">สิ่งที่รวมอยู่ในราคา (✓)</h3>
+              {draft.perks.map((perk, i) => (
+                <div key={i} className="mb-2">
+                  <input className={inputCls} value={perk} onChange={e => updatePerk(i, e.target.value)} />
+                </div>
+              ))}
             </div>
           </div>
-          <ul className="mt-8 space-y-2 text-sm text-neutral-400">
-            <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500" /> ฟรี! ตรวจเช็คค่าต่างๆ ก่อนจูน</li>
-            <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500" /> รับประกันซอฟต์แวร์ตลอดอายุการใช้งาน</li>
-          </ul>
-        </section>
+        )}
 
-        <section className="bg-neutral-900 p-8 rounded-3xl border border-neutral-800 shadow-2xl">
-          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-            <MessageCircle className="text-red-500" /> ประเมินรถของคุณฟรี
-          </h2>
-          <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); alert('ระบบจำลอง: ข้อมูลถูกส่งเรียบร้อยแล้ว'); }}>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-neutral-400 mb-1">ชื่อ - นามสกุล *</label>
-                <input type="text" required className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="ระบุชื่อ" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-400 mb-1">เบอร์ติดต่อ / LINE ID *</label>
-                <input type="text" required className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="เบอร์โทร หรือไอดีไลน์" />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-neutral-400 mb-1">รุ่นรถ และ ปี (เช่น Mazda 2 ดีเซล 2018) *</label>
-              <input type="text" required className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="ยี่ห้อ / รุ่น / เครื่องยนต์ / ปี" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-neutral-400 mb-1">สถานที่ / เขตที่พักอาศัย</label>
-              <input type="text" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="เพื่อประเมินการเดินทาง" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-neutral-400 mb-1">รายละเอียดที่ต้องการ / อาการปัจจุบัน</label>
-              <textarea required className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 h-24 resize-none" placeholder="เช่น อยากได้ต้นจัดขึ้น, ปัจจุบันรถมีอาการอืดตอนออกตัว, มีของแต่งอะไรใส่มาบ้างแล้ว" />
-            </div>
-            <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors">
-              <Send size={18} /> ส่งข้อมูลเพื่อรับคำปรึกษา
-            </button>
-          </form>
-        </section>
+        {/* Save / Cancel */}
+        <div className="flex gap-4 mt-10 pt-6 border-t border-neutral-800">
+          <button
+            onClick={() => { onSave(draft); }}
+            className="bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-3 rounded-xl flex items-center gap-2 transition-colors">
+            <CheckCircle2 size={18} /> บันทึกและอัปเดตหน้าเว็บ
+          </button>
+          <button onClick={onClose} className="bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold px-8 py-3 rounded-xl transition-colors">
+            ยกเลิก
+          </button>
+          <button
+            onClick={() => { if (window.confirm('รีเซ็ตเนื้อหากลับค่าเริ่มต้น?')) { onSave(DEFAULT_REMAP); } }}
+            className="ml-auto text-neutral-600 hover:text-red-500 text-sm transition-colors">
+            รีเซ็ตเป็นค่าเริ่มต้น
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
+
+// --- PAGE 2: ECU REMAP ---
+const RemapPage = () => {
+  const [data, setData] = useState(loadRemap);
+  const [showAdmin, setShowAdmin] = useState(false);
+
+  const handleSave = (newData) => {
+    saveRemap(newData);
+    setData(newData);
+    setShowAdmin(false);
+  };
+
+  return (
+    <div className="pb-24 relative">
+      {/* ── Admin Panel Overlay ── */}
+      {showAdmin && <AdminPanel data={data} onSave={handleSave} onClose={() => setShowAdmin(false)} />}
+
+      {/* ── Hero ── */}
+      <div className="bg-neutral-900 border-b border-neutral-800 py-20 px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <Zap className="text-red-500 w-16 h-16 mx-auto mb-6" />
+          <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">ECU Remap</h1>
+          <p className="text-xl text-neutral-400">ปลดล็อกพลังแฝง ปรับจูนให้ตรงสไตล์คุณ ขับสนุกขึ้น ประหยัดขึ้น ในแบบที่คุณสัมผัสได้ทันที</p>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 space-y-24 mt-16">
+
+        {/* ── Articles ── */}
+        <section>
+          <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">บทความ & ความรู้ก่อนรีแมป</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {data.articles.map((art) => (
+              <div key={art.id} className="bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-800 hover:border-neutral-600 transition-colors cursor-pointer group">
+                <div className="h-48 bg-neutral-800 flex items-center justify-center overflow-hidden">
+                  {art.imgUrl
+                    ? <img src={art.imgUrl} alt={art.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    : <span className="text-neutral-600 text-sm">รูปภาพปกบทความ {art.id}</span>
+                  }
+                </div>
+                <div className="p-6">
+                  <div className="text-red-500 text-xs font-bold mb-2 tracking-widest">{art.tag}</div>
+                  <h3 className="text-base font-bold text-white mb-2 leading-snug">{art.title}</h3>
+                  <p className="text-neutral-400 text-sm leading-relaxed">{art.excerpt}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Portfolio ── */}
+        <section>
+          <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">ผลงานรีแมป (Portfolio)</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {data.portfolio.map((item) => (
+              <div key={item.id} className="aspect-square bg-neutral-900 rounded-xl border border-neutral-800 flex items-center justify-center hover:border-red-500/60 transition-colors cursor-pointer group relative overflow-hidden">
+                {item.imgUrl
+                  ? <img src={item.imgUrl} alt={item.caption} className="absolute inset-0 w-full h-full object-cover" />
+                  : <span className="text-neutral-600 text-sm z-10 relative text-center px-2">ภาพผลงานรถที่ {item.id}</span>
+                }
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4 z-20">
+                  <span className="text-white font-bold text-sm">{item.caption}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Reviews ── */}
+        <section>
+          <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">รีวิวจากผู้ใช้จริง</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {data.reviews.map((rev) => (
+              <div key={rev.id} className="bg-neutral-900 p-8 rounded-2xl border border-neutral-800">
+                <div className="flex text-yellow-500 mb-4">
+                  {[...Array(rev.stars)].map((_, s) => <Star key={s} fill="currentColor" size={20} />)}
+                </div>
+                <p className="text-neutral-300 mb-6 font-medium italic">"{rev.text}"</p>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-neutral-800 rounded-full flex items-center justify-center text-neutral-500 font-bold">
+                    {rev.name.charAt(rev.name.length - 1)}
+                  </div>
+                  <div>
+                    <h4 className="text-white font-bold text-sm">{rev.name}</h4>
+                    <p className="text-neutral-500 text-xs">{rev.car}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Pricing + Form ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+          <section className="bg-gradient-to-br from-neutral-900 to-neutral-950 p-8 rounded-3xl border border-neutral-800">
+            <h2 className="text-3xl font-bold text-white mb-2">อัตราค่าบริการ (Pricing)</h2>
+            <p className="text-neutral-400 mb-8">ราคามาตรฐาน พร้อมบริการเช็คความพร้อมก่อนและหลังจูน</p>
+            <div className="space-y-4">
+              {data.packages.map((pkg) => (
+                <div key={pkg.id} className="bg-neutral-950 p-6 rounded-2xl border border-neutral-800 flex justify-between items-center">
+                  <div>
+                    <h3 className="text-xl font-bold text-white">{pkg.name}</h3>
+                    <p className="text-sm text-neutral-500">{pkg.desc}</p>
+                  </div>
+                  <div className="text-2xl font-black text-red-500 ml-4 shrink-0">{pkg.price}</div>
+                </div>
+              ))}
+            </div>
+            <ul className="mt-8 space-y-2 text-sm text-neutral-400">
+              {data.perks.map((perk, i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <CheckCircle2 size={16} className="text-green-500 shrink-0" /> {perk}
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="bg-neutral-900 p-8 rounded-3xl border border-neutral-800 shadow-2xl">
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+              <MessageCircle className="text-red-500" /> ประเมินรถของคุณฟรี
+            </h2>
+            <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); alert('ส่งข้อมูลเรียบร้อย ทีมงานจะติดต่อกลับเร็วๆ นี้ครับ'); }}>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-400 mb-1">ชื่อ - นามสกุล *</label>
+                  <input type="text" required className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="ระบุชื่อ" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-400 mb-1">เบอร์ติดต่อ / LINE ID *</label>
+                  <input type="text" required className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="เบอร์โทร หรือไอดีไลน์" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-neutral-400 mb-1">รุ่นรถ และ ปี (เช่น Mazda 2 ดีเซล 2018) *</label>
+                <input type="text" required className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="ยี่ห้อ / รุ่น / เครื่องยนต์ / ปี" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-neutral-400 mb-1">สถานที่ / เขตที่พักอาศัย</label>
+                <input type="text" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="เพื่อประเมินการเดินทาง" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-neutral-400 mb-1">รายละเอียดที่ต้องการ / อาการปัจจุบัน</label>
+                <textarea className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 h-28 resize-none" placeholder="เช่น อยากได้ต้นจัดขึ้น, ปัจจุบันรถมีอาการอืดตอนออกตัว, มีของแต่งอะไรใส่มาบ้างแล้ว" />
+              </div>
+              <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors">
+                <Send size={18} /> ส่งข้อมูลเพื่อรับคำปรึกษา
+              </button>
+            </form>
+          </section>
+        </div>
+      </div>
+
+      {/* ── Hidden Admin Button (bottom-right corner) ── */}
+      <button
+        onClick={() => setShowAdmin(true)}
+        title="Admin"
+        className="fixed bottom-6 right-6 w-9 h-9 rounded-full bg-neutral-900/40 hover:bg-neutral-700 border border-neutral-800/50 flex items-center justify-center text-neutral-700 hover:text-neutral-300 transition-all duration-300 z-50 opacity-30 hover:opacity-100"
+        style={{ fontSize: '14px' }}
+      >
+        ⚙
+      </button>
+    </div>
+  );
+};
 
 // --- PAGE 3: HKS EXHAUST ---
 const HKSPage = () => (
