@@ -210,7 +210,7 @@ const HomePage = ({ navigateTo, lineUrl }) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-neutral-800">
             <div className="flex flex-col items-center pt-4 md:pt-0">
               <Settings className="text-red-500 mb-3" size={32} />
-              <h3 className="text-white font-bold text-lg mb-1">Engineer Specialist</h3>
+              <h3 className="text-white font-bold text-lg mb-1">Engineering Specialist</h3>
               <p className="text-sm text-neutral-400">เชี่ยวชาญพิเศษ ประสบการณ์ตรง สู่สมรรถนะที่เหนือกว่า</p>
             </div>
             <div className="flex flex-col items-center pt-8 md:pt-0">
