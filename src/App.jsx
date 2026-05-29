@@ -519,10 +519,60 @@ const AdminPanel = ({ data, onSave, onClose }) => {
   );
 };
 
+// ─── Admin Password Gate ──────────────────────────────────────────────────────
+const ADMIN_PASS = 'Chev9872';
+
+const PasswordModal = ({ onSuccess, onClose }) => {
+  const [pw, setPw] = useState('');
+  const [err, setErr] = useState(false);
+  const [shake, setShake] = useState(false);
+
+  const submit = (e) => {
+    e.preventDefault();
+    if (pw === ADMIN_PASS) { onSuccess(); }
+    else {
+      setErr(true); setShake(true); setPw('');
+      setTimeout(() => setShake(false), 500);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center">
+      <div className={`bg-neutral-900 border ${err ? 'border-red-600' : 'border-neutral-700'} rounded-2xl p-8 w-full max-w-sm shadow-2xl transition-all ${shake ? 'animate-[shake_0.4s_ease]' : ''}`}
+        style={shake ? { animation: 'shake 0.4s ease' } : {}}>
+        <div className="text-center mb-6">
+          <span className="text-3xl">🔒</span>
+          <h3 className="text-white font-black text-xl mt-2">Admin Access</h3>
+          <p className="text-neutral-500 text-sm mt-1">กรอกรหัสผ่านเพื่อแก้ไขเนื้อหา</p>
+        </div>
+        <form onSubmit={submit}>
+          <input
+            type="password"
+            autoFocus
+            value={pw}
+            onChange={(e) => { setPw(e.target.value); setErr(false); }}
+            placeholder="รหัสผ่าน"
+            className={`w-full bg-neutral-950 border ${err ? 'border-red-500' : 'border-neutral-700'} rounded-xl px-4 py-3 text-white text-center text-lg tracking-widest focus:outline-none focus:border-red-500 mb-2`}
+          />
+          {err && <p className="text-red-500 text-xs text-center mb-3">รหัสผ่านไม่ถูกต้อง</p>}
+          <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl mt-2 transition-colors">
+            เข้าสู่ระบบ
+          </button>
+          <button type="button" onClick={onClose} className="w-full text-neutral-500 hover:text-neutral-300 text-sm mt-3 transition-colors">
+            ยกเลิก
+          </button>
+        </form>
+      </div>
+      <style>{`@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}`}</style>
+    </div>
+  );
+};
+
 // --- PAGE 2: ECU REMAP ---
 const RemapPage = () => {
   const [data, setData] = useState(loadRemap);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSave = (newData) => {
     saveRemap(newData);
@@ -530,8 +580,14 @@ const RemapPage = () => {
     setShowAdmin(false);
   };
 
+  const handleAdminClick = () => setShowPassword(true);
+  const handlePasswordSuccess = () => { setShowPassword(false); setShowAdmin(true); };
+
   return (
     <div className="pb-24 relative">
+      {/* ── Password Gate ── */}
+      {showPassword && <PasswordModal onSuccess={handlePasswordSuccess} onClose={() => setShowPassword(false)} />}
+
       {/* ── Admin Panel Overlay ── */}
       {showAdmin && <AdminPanel data={data} onSave={handleSave} onClose={() => setShowAdmin(false)} />}
 
@@ -672,7 +728,7 @@ const RemapPage = () => {
 
       {/* ── Hidden Admin Button (bottom-right corner) ── */}
       <button
-        onClick={() => setShowAdmin(true)}
+        onClick={handleAdminClick}
         title="Admin"
         className="fixed bottom-6 right-6 w-9 h-9 rounded-full bg-neutral-900/40 hover:bg-neutral-700 border border-neutral-800/50 flex items-center justify-center text-neutral-700 hover:text-neutral-300 transition-all duration-300 z-50 opacity-30 hover:opacity-100"
         style={{ fontSize: '14px' }}

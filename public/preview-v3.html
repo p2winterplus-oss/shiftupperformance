@@ -143,6 +143,53 @@
   .footer-col .line-link { color: #06C755; }
   .footer-col .partner-link { color: #f97316; }
   .footer-bottom { max-width: 1280px; margin: 0 auto; border-top: 1px solid var(--border); padding-top: 2rem; text-align: center; color: var(--muted); font-size: .78rem; }
+
+  /* REMAP PAGE SECTIONS */
+  .section-border-red { font-size:1.6rem;font-weight:800;color:#fff;border-left:4px solid var(--red);padding-left:1rem;margin-bottom:1.5rem; }
+  .remap-articles { display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem; }
+  .remap-article-card { background:var(--bg2);border:1px solid var(--border);border-radius:1rem;overflow:hidden;cursor:pointer;transition:border-color .2s; }
+  .remap-article-card:hover { border-color:#404040; }
+  .remap-article-thumb { height:180px;background:#1a1a1a;display:flex;align-items:center;justify-content:center;overflow:hidden; }
+  .remap-article-thumb img { width:100%;height:100%;object-fit:cover;transition:transform .5s; }
+  .remap-article-card:hover .remap-article-thumb img { transform:scale(1.05); }
+  .remap-article-body { padding:1.25rem; }
+  .remap-article-tag { color:var(--red);font-size:.7rem;font-weight:700;letter-spacing:.15em;margin-bottom:.5rem; }
+  .remap-article-title { color:#fff;font-weight:700;font-size:.92rem;line-height:1.4;margin-bottom:.5rem; }
+  .remap-article-excerpt { color:var(--muted);font-size:.8rem;line-height:1.6; }
+  .remap-portfolio { display:grid;grid-template-columns:repeat(4,1fr);gap:1rem; }
+  .remap-port-item { aspect-ratio:1;background:#141414;border:1px solid var(--border);border-radius:.75rem;position:relative;overflow:hidden;cursor:pointer;transition:border-color .2s;display:flex;align-items:center;justify-content:center; }
+  .remap-port-item:hover { border-color:rgba(220,38,38,.5); }
+  .remap-port-item img { position:absolute;inset:0;width:100%;height:100%;object-fit:cover; }
+  .remap-port-placeholder { color:#404040;font-size:.78rem;text-align:center;padding:.5rem;z-index:1;position:relative; }
+  .remap-port-caption { position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.85) 0%,transparent 60%);opacity:0;transition:opacity .2s;display:flex;align-items:flex-end;padding:.75rem;z-index:2; }
+  .remap-port-item:hover .remap-port-caption { opacity:1; }
+  .remap-port-caption span { color:#fff;font-weight:700;font-size:.8rem; }
+  .remap-reviews { display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem; }
+  .remap-review-card { background:var(--bg2);border:1px solid var(--border);border-radius:1rem;padding:1.75rem; }
+  .remap-stars { color:#eab308;font-size:1rem;margin-bottom:1rem;letter-spacing:2px; }
+  .remap-review-text { color:#d4d4d4;font-style:italic;margin-bottom:1.25rem;font-size:.88rem;line-height:1.65; }
+  .remap-reviewer { display:flex;align-items:center;gap:.75rem; }
+  .remap-avatar { width:44px;height:44px;border-radius:50%;background:#262626;display:flex;align-items:center;justify-content:center;color:#555;font-weight:700;font-size:.9rem;flex-shrink:0; }
+  .remap-reviewer-name { color:#fff;font-weight:700;font-size:.85rem; }
+  .remap-reviewer-car { color:#555;font-size:.75rem; }
+  .pricing-form-wrap { display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start; }
+  .pricing-box { background:linear-gradient(135deg,#141414,#0a0a0a);border:1px solid var(--border);border-radius:1.5rem;padding:2rem; }
+  .pkg-row { background:var(--bg);border:1px solid var(--border);border-radius:1rem;padding:1.25rem 1.5rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem; }
+  .pkg-name { color:#fff;font-weight:700;font-size:1.05rem; }
+  .pkg-desc { color:#555;font-size:.78rem;margin-top:.2rem; }
+  .pkg-price { color:var(--red);font-weight:900;font-size:1.3rem;flex-shrink:0;margin-left:1rem; }
+  .perk-item { display:flex;align-items:center;gap:.5rem;color:#aaa;font-size:.82rem;margin-bottom:.4rem; }
+  .perk-item::before { content:'✓';color:#22c55e;font-weight:700; }
+  .form-box { background:var(--bg2);border:1px solid var(--border);border-radius:1.5rem;padding:2rem; }
+  .adm-input { width:100%;background:#141414;border:1px solid #333;border-radius:.5rem;padding:.6rem .85rem;color:#e5e5e5;font-size:.85rem;font-family:inherit;outline:none;transition:border-color .2s;box-sizing:border-box; }
+  .adm-input:focus { border-color:var(--red); }
+  .adm-label { display:block;color:#666;font-size:.72rem;margin-bottom:.3rem; }
+  .adm-card { background:#141414;border:1px solid #262626;border-radius:.75rem;padding:1.25rem;margin-bottom:.75rem; }
+  .adm-card-title { color:#888;font-size:.75rem;font-weight:700;margin-bottom:.75rem; }
+  .adm-grid2 { display:grid;grid-template-columns:1fr 1fr;gap:.75rem; }
+  .adm-grid3 { display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem; }
+  .adm-tab-btn { padding:.5rem 1.25rem;border-radius:9999px;border:none;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;transition:all .2s; }
+  @keyframes pwShake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
 </style>
 </head>
 <body>
@@ -234,30 +281,89 @@
 
 <!-- ══════════════ REMAP PAGE ══════════════ -->
 <div id="page-remap" class="page">
+
+  <!-- Hero -->
   <div class="inner-hero">
     <span class="inner-hero-icon">⚡</span>
     <h1>ECU Remap</h1>
-    <p>ปรับจูนทะลุขีดจำกัดผ่านพอร์ต OBD2<br>ออกแบบกราฟเครื่องยนต์ใหม่ตามสภาพรถของคุณโดยเฉพาะ</p>
+    <p>ปลดล็อกพลังแฝง ปรับจูนให้ตรงสไตล์คุณ ขับสนุกขึ้น ประหยัดขึ้น ในแบบที่คุณสัมผัสได้ทันที</p>
   </div>
 
-  <div class="features-grid">
-    <div class="feature-card"><h3>Fit Before Flash</h3><p>วิเคราะห์โจทย์และสภาพรถอย่างละเอียดก่อนตัดสินใจจูน เพื่อให้ได้ผลลัพธ์ที่ตรงกับความต้องการ</p></div>
-    <div class="feature-card"><h3>OBD2 Port</h3><p>ไม่ต้องถอดชิ้นส่วน ทำงานผ่านพอร์ต OBD2 มาตรฐาน ปลอดภัยและรวดเร็ว</p></div>
-    <div class="feature-card"><h3>Custom Map</h3><p>แมพเฉพาะสำหรับรถคุณ ไม่ใช่ base map ทั่วไป ปรับตามสภาพน้ำมันและอากาศในไทย</p></div>
+  <div style="max-width:1280px;margin:0 auto;padding:0 2rem;">
+
+    <!-- Articles -->
+    <section style="margin:4rem 0;">
+      <h2 class="section-border-red">บทความ & ความรู้ก่อนรีแมป</h2>
+      <div class="remap-articles" id="articles-grid"></div>
+    </section>
+
+    <!-- Portfolio -->
+    <section style="margin:4rem 0;">
+      <h2 class="section-border-red">ผลงานรีแมป (Portfolio)</h2>
+      <div class="remap-portfolio" id="portfolio-grid"></div>
+    </section>
+
+    <!-- Reviews -->
+    <section style="margin:4rem 0;">
+      <h2 class="section-border-red">รีวิวจากผู้ใช้จริง</h2>
+      <div class="remap-reviews" id="reviews-grid"></div>
+    </section>
+
+    <!-- Pricing + Form -->
+    <div class="pricing-form-wrap" style="margin:4rem 0 6rem;">
+      <div class="pricing-box">
+        <h2 style="font-size:1.6rem;font-weight:800;color:#fff;margin-bottom:.5rem;">อัตราค่าบริการ (Pricing)</h2>
+        <p style="color:var(--muted);font-size:.85rem;margin-bottom:1.5rem;">ราคามาตรฐาน พร้อมบริการเช็คความพร้อมก่อนและหลังจูน</p>
+        <div id="packages-list"></div>
+        <ul id="perks-list" style="margin-top:1.5rem;list-style:none;display:flex;flex-direction:column;gap:.5rem;"></ul>
+      </div>
+      <div class="form-box">
+        <h2 style="font-size:1.3rem;font-weight:800;color:#fff;margin-bottom:1.5rem;display:flex;align-items:center;gap:.5rem;">
+          💬 ประเมินรถของคุณฟรี
+        </h2>
+        <form onsubmit="event.preventDefault();alert('ส่งข้อมูลเรียบร้อย ทีมงานจะติดต่อกลับเร็วๆ นี้ครับ');" style="display:flex;flex-direction:column;gap:1rem;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="form-group"><label>ชื่อ - นามสกุล *</label><input type="text" required placeholder="ระบุชื่อ"></div>
+            <div class="form-group"><label>เบอร์ติดต่อ / LINE ID *</label><input type="text" required placeholder="เบอร์โทร หรือไอดีไลน์"></div>
+          </div>
+          <div class="form-group"><label>รุ่นรถ และ ปี (เช่น Mazda 2 ดีเซล 2018) *</label><input type="text" required placeholder="ยี่ห้อ / รุ่น / เครื่องยนต์ / ปี"></div>
+          <div class="form-group"><label>สถานที่ / เขตที่พักอาศัย</label><input type="text" placeholder="เพื่อประเมินการเดินทาง"></div>
+          <div class="form-group"><label>รายละเอียดที่ต้องการ / อาการปัจจุบัน</label><textarea placeholder="เช่น อยากได้ต้นจัดขึ้น, ปัจจุบันรถมีอาการอืดตอนออกตัว, มีของแต่งอะไรใส่มาบ้างแล้ว"></textarea></div>
+          <button type="submit" style="background:#dc2626;color:#fff;border:none;padding:1rem;border-radius:.75rem;font-weight:700;font-size:1rem;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:background .2s;" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">
+            ✈ ส่งข้อมูลเพื่อรับคำปรึกษา
+          </button>
+        </form>
+      </div>
+    </div>
   </div>
 
-  <div class="price-section">
-    <h2>ราคาและแพ็กเกจ</h2>
-    <table class="price-table">
-      <thead><tr><th>บริการ</th><th>รุ่นรถ</th><th>ราคาเริ่มต้น</th></tr></thead>
-      <tbody>
-        <tr><td>ECU Remap (Stage 1)</td><td>Mazda 2, 3, CX-30</td><td class="price-tag">ติดต่อสอบถาม</td></tr>
-        <tr><td>ECU Remap (Stage 2)</td><td>Mazda CX-5, CX-8</td><td class="price-tag">ติดต่อสอบถาม</td></tr>
-        <tr><td>Throttle Response Tune</td><td>ทุกรุ่น Mazda</td><td class="price-tag">ติดต่อสอบถาม</td></tr>
-      </tbody>
-    </table>
-    <div style="margin-top:2rem;text-align:center">
-      <a class="btn-white" href="https://lin.ee/nZOMcph" target="_blank">สอบถามราคาผ่าน LINE →</a>
+  <!-- Hidden Admin Button -->
+  <button onclick="openAdmin()" id="admin-btn" title="Admin Panel"
+    style="position:fixed;bottom:1.5rem;right:1.5rem;width:2.25rem;height:2.25rem;border-radius:50%;background:rgba(20,20,20,.5);border:1px solid rgba(80,80,80,.4);color:#555;font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:.25;transition:opacity .3s;z-index:60;"
+    onmouseover="this.style.opacity='1';this.style.color='#ccc'" onmouseout="this.style.opacity='.25';this.style.color='#555'">
+    ⚙
+  </button>
+</div>
+
+<!-- ══════════════ ADMIN PANEL ══════════════ -->
+<div id="admin-panel" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.96);overflow:auto;backdrop-filter:blur(4px);">
+  <div style="max-width:900px;margin:0 auto;padding:2rem;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #262626;padding-bottom:1.5rem;margin-bottom:2rem;">
+      <div>
+        <h2 style="font-size:1.5rem;font-weight:900;color:#fff;margin-bottom:.25rem;">⚙️ Admin Panel — ECU Remap</h2>
+        <p style="color:#555;font-size:.8rem;">แก้ไขเนื้อหา แล้วกด "บันทึก" เพื่ออัปเดตหน้าเว็บ (บันทึกใน browser)</p>
+      </div>
+      <button onclick="closeAdmin()" style="background:none;border:none;color:#555;font-size:1.5rem;cursor:pointer;padding:.25rem;">✕</button>
+    </div>
+    <!-- Admin Tabs -->
+    <div style="display:flex;gap:.5rem;margin-bottom:2rem;flex-wrap:wrap;" id="admin-tabs"></div>
+    <!-- Admin Content -->
+    <div id="admin-content"></div>
+    <!-- Save/Cancel -->
+    <div style="display:flex;gap:1rem;margin-top:2rem;padding-top:1.5rem;border-top:1px solid #262626;flex-wrap:wrap;align-items:center;">
+      <button onclick="saveAdmin()" style="background:#dc2626;color:#fff;border:none;padding:.75rem 2rem;border-radius:.75rem;font-weight:700;font-size:.9rem;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:.5rem;">✓ บันทึกและอัปเดตหน้าเว็บ</button>
+      <button onclick="closeAdmin()" style="background:#262626;color:#aaa;border:none;padding:.75rem 2rem;border-radius:.75rem;font-weight:700;font-size:.9rem;font-family:inherit;cursor:pointer;">ยกเลิก</button>
+      <button onclick="if(confirm('รีเซ็ตกลับค่าเริ่มต้น?')){remapData=JSON.parse(JSON.stringify(DEFAULT_REMAP));saveAdmin();}" style="margin-left:auto;background:none;border:none;color:#555;font-size:.8rem;cursor:pointer;font-family:inherit;">รีเซ็ตค่าเริ่มต้น</button>
     </div>
   </div>
 </div>
@@ -400,6 +506,286 @@ function showPage(name) {
   });
   // Scroll to top
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Update URL hash
+  window.location.hash = name === 'home' ? '' : name;
+}
+
+// On load: read hash to navigate directly
+(function() {
+  const hash = window.location.hash.replace('#','');
+  const valid = ['home','remap','hks','panthera','partner'];
+  if (hash && valid.includes(hash)) showPage(hash);
+})();
+
+// ═══════════════════════════════════════════════════════
+//  REMAP DATA LAYER
+// ═══════════════════════════════════════════════════════
+const REMAP_KEY = 'shiftup_remap_v1';
+const DEFAULT_REMAP = {
+  articles: [
+    { id:1, imgUrl:'', tag:'KNOWLEDGE', title:'ทำไมต้อง Fit Before Flash? ขั้นตอนสำคัญที่หลายคนมองข้าม', excerpt:'การเช็คความพร้อมของฮาร์ดแวร์ก่อนปรับจูนซอฟต์แวร์ คือหัวใจสำคัญของความทนทาน...' },
+    { id:2, imgUrl:'', tag:'KNOWLEDGE', title:'ทำไมต้อง Fit Before Flash? ขั้นตอนสำคัญที่หลายคนมองข้าม', excerpt:'การเช็คความพร้อมของฮาร์ดแวร์ก่อนปรับจูนซอฟต์แวร์ คือหัวใจสำคัญของความทนทาน...' },
+    { id:3, imgUrl:'', tag:'KNOWLEDGE', title:'ทำไมต้อง Fit Before Flash? ขั้นตอนสำคัญที่หลายคนมองข้าม', excerpt:'การเช็คความพร้อมของฮาร์ดแวร์ก่อนปรับจูนซอฟต์แวร์ คือหัวใจสำคัญของความทนทาน...' },
+  ],
+  portfolio: [
+    { id:1, imgUrl:'', caption:'Mazda 3 Skyactiv-G' },
+    { id:2, imgUrl:'', caption:'Mazda 2 Diesel' },
+    { id:3, imgUrl:'', caption:'Mazda CX-30' },
+    { id:4, imgUrl:'', caption:'Mazda CX-5' },
+    { id:5, imgUrl:'', caption:'Mazda 3 BM' },
+    { id:6, imgUrl:'', caption:'Mazda 6' },
+    { id:7, imgUrl:'', caption:'Mazda 2 Gasoline' },
+    { id:8, imgUrl:'', caption:'Mazda MX-5' },
+  ],
+  reviews: [
+    { id:1, stars:5, text:'คันเร่งเบาขึ้นชัดเจน อาการรอรอบตอนออกตัวหายไปเลย ช่างอธิบายละเอียดมากว่ากราฟเดิมเป็นยังไง คุ้มค่าครับ', name:'คุณ K.', car:'Mazda 2 Diesel' },
+    { id:2, stars:5, text:'คันเร่งเบาขึ้นชัดเจน อาการรอรอบตอนออกตัวหายไปเลย ช่างอธิบายละเอียดมากว่ากราฟเดิมเป็นยังไง คุ้มค่าครับ', name:'คุณ K.', car:'Mazda 2 Diesel' },
+    { id:3, stars:5, text:'คันเร่งเบาขึ้นชัดเจน อาการรอรอบตอนออกตัวหายไปเลย ช่างอธิบายละเอียดมากว่ากราฟเดิมเป็นยังไง คุ้มค่าครับ', name:'คุณ K.', car:'Mazda 2 Diesel' },
+  ],
+  packages: [
+    { id:1, name:'Stage 1 Remap', desc:'สำหรับรถเดิมๆ ที่ต้องการอัตราเร่งที่ดีขึ้น', price:'฿ XX,XXX' },
+    { id:2, name:'Custom Tune',   desc:'สำหรับรถที่มีการอัปเกรดฮาร์ดแวร์มาแล้ว',  price:'สอบถาม'  },
+  ],
+  perks: ['ฟรี! ตรวจเช็คค่าต่างๆ ก่อนจูน','รับประกันซอฟต์แวร์ตลอดอายุการใช้งาน'],
+};
+
+let remapData = (function(){
+  try { const s=localStorage.getItem(REMAP_KEY); return s?JSON.parse(s):JSON.parse(JSON.stringify(DEFAULT_REMAP)); }
+  catch { return JSON.parse(JSON.stringify(DEFAULT_REMAP)); }
+})();
+
+// ── Render Remap Page ───────────────────────────────────
+function renderRemap() {
+  const d = remapData;
+
+  // Articles
+  document.getElementById('articles-grid').innerHTML = d.articles.map(a => `
+    <div class="remap-article-card">
+      <div class="remap-article-thumb">
+        ${a.imgUrl ? `<img src="${a.imgUrl}" alt="">` : `<span style="color:#3a3a3a;font-size:.8rem;">รูปภาพปกบทความ ${a.id}</span>`}
+      </div>
+      <div class="remap-article-body">
+        <div class="remap-article-tag">${a.tag}</div>
+        <div class="remap-article-title">${a.title}</div>
+        <div class="remap-article-excerpt">${a.excerpt}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Portfolio
+  document.getElementById('portfolio-grid').innerHTML = d.portfolio.map(p => `
+    <div class="remap-port-item">
+      ${p.imgUrl ? `<img src="${p.imgUrl}" alt="">` : `<div class="remap-port-placeholder">ภาพผลงานรถที่ ${p.id}</div>`}
+      <div class="remap-port-caption"><span>${p.caption}</span></div>
+    </div>
+  `).join('');
+
+  // Reviews
+  document.getElementById('reviews-grid').innerHTML = d.reviews.map(r => `
+    <div class="remap-review-card">
+      <div class="remap-stars">${'★'.repeat(r.stars)}</div>
+      <div class="remap-review-text">"${r.text}"</div>
+      <div class="remap-reviewer">
+        <div class="remap-avatar">${r.name.slice(-1)}</div>
+        <div>
+          <div class="remap-reviewer-name">${r.name}</div>
+          <div class="remap-reviewer-car">${r.car}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Packages
+  document.getElementById('packages-list').innerHTML = d.packages.map(pkg => `
+    <div class="pkg-row">
+      <div><div class="pkg-name">${pkg.name}</div><div class="pkg-desc">${pkg.desc}</div></div>
+      <div class="pkg-price">${pkg.price}</div>
+    </div>
+  `).join('');
+
+  // Perks
+  document.getElementById('perks-list').innerHTML = d.perks.map(p => `
+    <li class="perk-item">${p}</li>
+  `).join('');
+}
+
+// Call once on load
+renderRemap();
+
+// ── Admin Panel ─────────────────────────────────────────
+const ADMIN_TABS = [
+  { key:'articles',  label:'📝 บทความ' },
+  { key:'portfolio', label:'🖼️ Portfolio' },
+  { key:'reviews',   label:'⭐ รีวิว' },
+  { key:'pricing',   label:'💰 ราคา' },
+];
+let adminTab = 'articles';
+let adminDraft = {};
+
+const ADMIN_PASS = 'Chev9872';
+
+function openAdmin() {
+  // Show password modal first
+  showPasswordModal();
+}
+
+function showPasswordModal() {
+  const existing = document.getElementById('pw-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'pw-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.85);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML = `
+    <div id="pw-box" style="background:#171717;border:1px solid #333;border-radius:1.25rem;padding:2.5rem 2rem;width:100%;max-width:360px;box-shadow:0 25px 60px rgba(0,0,0,.6);text-align:center;">
+      <div style="font-size:2.5rem;margin-bottom:.75rem;">🔒</div>
+      <h3 style="color:#fff;font-weight:900;font-size:1.25rem;margin-bottom:.25rem;">Admin Access</h3>
+      <p style="color:#555;font-size:.82rem;margin-bottom:1.75rem;">กรอกรหัสผ่านเพื่อแก้ไขเนื้อหา</p>
+      <form onsubmit="checkAdminPass(event)">
+        <input id="pw-input" type="password" autofocus placeholder="รหัสผ่าน"
+          style="width:100%;background:#0a0a0a;border:1px solid #333;border-radius:.75rem;padding:.85rem 1rem;color:#fff;font-size:1.1rem;text-align:center;letter-spacing:.2em;font-family:inherit;outline:none;margin-bottom:.5rem;box-sizing:border-box;"
+          oninput="document.getElementById('pw-err').style.display='none';this.style.borderColor='#333';">
+        <div id="pw-err" style="display:none;color:#ef4444;font-size:.78rem;margin-bottom:.5rem;">รหัสผ่านไม่ถูกต้อง</div>
+        <button type="submit" style="width:100%;background:#dc2626;color:#fff;border:none;padding:.85rem;border-radius:.75rem;font-weight:700;font-size:.95rem;font-family:inherit;cursor:pointer;margin-top:.25rem;">เข้าสู่ระบบ</button>
+        <button type="button" onclick="document.getElementById('pw-modal').remove()" style="width:100%;background:none;border:none;color:#555;padding:.6rem;font-size:.82rem;font-family:inherit;cursor:pointer;margin-top:.25rem;">ยกเลิก</button>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  setTimeout(() => document.getElementById('pw-input')?.focus(), 100);
+}
+
+function checkAdminPass(e) {
+  e.preventDefault();
+  const input = document.getElementById('pw-input');
+  if (input.value === ADMIN_PASS) {
+    document.getElementById('pw-modal').remove();
+    // Open admin
+    adminDraft = JSON.parse(JSON.stringify(remapData));
+    document.getElementById('admin-panel').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    renderAdminTabs();
+    renderAdminContent();
+  } else {
+    // Wrong password — shake + red border
+    const box = document.getElementById('pw-box');
+    const inp = document.getElementById('pw-input');
+    const err = document.getElementById('pw-err');
+    inp.value = '';
+    inp.style.borderColor = '#ef4444';
+    err.style.display = 'block';
+    box.style.animation = 'pwShake .4s ease';
+    setTimeout(() => { box.style.animation = ''; }, 400);
+    inp.focus();
+  }
+}
+function closeAdmin() {
+  document.getElementById('admin-panel').style.display = 'none';
+  document.body.style.overflow = '';
+}
+function saveAdmin() {
+  // collect current form values
+  collectAdminForm();
+  remapData = JSON.parse(JSON.stringify(adminDraft));
+  try { localStorage.setItem(REMAP_KEY, JSON.stringify(remapData)); } catch(e){}
+  renderRemap();
+  closeAdmin();
+}
+
+function renderAdminTabs() {
+  document.getElementById('admin-tabs').innerHTML = ADMIN_TABS.map(t => `
+    <button class="adm-tab-btn" onclick="switchAdminTab('${t.key}')"
+      style="${adminTab===t.key ? 'background:#dc2626;color:#fff;' : 'background:#1a1a1a;color:#888;'}">
+      ${t.label}
+    </button>
+  `).join('');
+}
+function switchAdminTab(key) {
+  collectAdminForm();
+  adminTab = key;
+  renderAdminTabs();
+  renderAdminContent();
+}
+
+function collectAdminForm() {
+  // read all .adm-input values back into adminDraft
+  document.querySelectorAll('[data-adm]').forEach(el => {
+    const [section, idx, field] = el.dataset.adm.split('|');
+    const val = el.value;
+    if (section === 'articles')  adminDraft.articles[idx][field]  = val;
+    if (section === 'portfolio') adminDraft.portfolio[idx][field] = val;
+    if (section === 'reviews')   adminDraft.reviews[idx][field]   = field==='stars' ? +val : val;
+    if (section === 'packages')  adminDraft.packages[idx][field]  = val;
+    if (section === 'perks')     adminDraft.perks[idx]            = val;
+  });
+}
+
+function inp(section, idx, field, value, placeholder='') {
+  return `<input class="adm-input" data-adm="${section}|${idx}|${field}" value="${value.replace(/"/g,'&quot;')}" placeholder="${placeholder}">`;
+}
+function textarea(section, idx, field, value) {
+  return `<textarea class="adm-input" data-adm="${section}|${idx}|${field}" rows="2" style="resize:vertical;">${value}</textarea>`;
+}
+
+function renderAdminContent() {
+  const d = adminDraft;
+  let html = '';
+
+  if (adminTab === 'articles') {
+    html = d.articles.map((a,i) => `
+      <div class="adm-card">
+        <div class="adm-card-title">บทความที่ ${i+1}</div>
+        <label class="adm-label">รูปภาพปก (URL)</label>${inp('articles',i,'imgUrl',a.imgUrl,'https://... หรือ /images/article.jpg')}<br><br>
+        <label class="adm-label">Tag</label>${inp('articles',i,'tag',a.tag,'KNOWLEDGE')}<br><br>
+        <label class="adm-label">หัวข้อบทความ</label>${inp('articles',i,'title',a.title)}<br><br>
+        <label class="adm-label">เนื้อหาย่อ</label>${textarea('articles',i,'excerpt',a.excerpt)}
+      </div>
+    `).join('');
+  }
+
+  if (adminTab === 'portfolio') {
+    html = '<div class="adm-grid2">' + d.portfolio.map((p,i) => `
+      <div class="adm-card">
+        <div class="adm-card-title">ภาพที่ ${i+1}</div>
+        <label class="adm-label">URL รูปภาพ</label>${inp('portfolio',i,'imgUrl',p.imgUrl,'https://...')}<br><br>
+        <label class="adm-label">คำบรรยาย</label>${inp('portfolio',i,'caption',p.caption,'เช่น Mazda 3')}
+      </div>
+    `).join('') + '</div>';
+  }
+
+  if (adminTab === 'reviews') {
+    html = d.reviews.map((r,i) => `
+      <div class="adm-card">
+        <div class="adm-card-title">รีวิวที่ ${i+1}</div>
+        <label class="adm-label">ข้อความรีวิว</label>${textarea('reviews',i,'text',r.text)}<br>
+        <div class="adm-grid2" style="margin-top:.75rem;">
+          <div><label class="adm-label">ชื่อผู้รีวิว</label>${inp('reviews',i,'name',r.name,'คุณ K.')}</div>
+          <div><label class="adm-label">รุ่นรถ</label>${inp('reviews',i,'car',r.car,'Mazda 2 Diesel')}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  if (adminTab === 'pricing') {
+    html = '<div style="margin-bottom:1.5rem;"><h3 style="color:#fff;font-weight:700;margin-bottom:.75rem;">แพ็กเกจ</h3>'
+      + d.packages.map((pkg,i) => `
+        <div class="adm-card">
+          <div class="adm-card-title">แพ็กเกจที่ ${i+1}</div>
+          <div class="adm-grid3">
+            <div><label class="adm-label">ชื่อ</label>${inp('packages',i,'name',pkg.name)}</div>
+            <div><label class="adm-label">คำอธิบาย</label>${inp('packages',i,'desc',pkg.desc)}</div>
+            <div><label class="adm-label">ราคา</label>${inp('packages',i,'price',pkg.price,'฿ XX,XXX หรือ สอบถาม')}</div>
+          </div>
+        </div>
+      `).join('')
+      + '</div><div><h3 style="color:#fff;font-weight:700;margin-bottom:.75rem;">สิ่งที่รวมอยู่ (✓)</h3>'
+      + d.perks.map((perk,i) => `
+        <div style="margin-bottom:.5rem;"><label class="adm-label">รายการที่ ${i+1}</label>${inp('perks',i,'',perk)}</div>
+      `).join('')
+      + '</div>';
+  }
+
+  document.getElementById('admin-content').innerHTML = html;
 }
 </script>
 
