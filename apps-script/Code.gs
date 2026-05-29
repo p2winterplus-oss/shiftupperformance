@@ -74,7 +74,7 @@ function setupSheets() {
     const headers = ['วันที่-เวลา', 'ชื่อ-นามสกุล', 'เบอร์/LINE ID', 'รุ่นรถ', 'สถานที่', 'รายละเอียด'];
     remapSheet.appendRow(headers);
     styleHeader(remapSheet, headers.length, '#cc2200');
-    remapSheet.setColumnWidths(1, 6, [150, 140, 140, 150, 120, 280]);
+    [150, 140, 140, 150, 120, 280].forEach((w, i) => remapSheet.setColumnWidth(i + 1, w));
     remapSheet.setFrozenRows(1);
   }
 
@@ -85,7 +85,7 @@ function setupSheets() {
     const headers = ['วันที่-เวลา', 'ชื่อร้าน/อู่', 'ชื่อผู้ติดต่อ', 'เบอร์โทร', 'LINE ID', 'จังหวัด', 'ความถนัด', 'Facebook'];
     partnerSheet.appendRow(headers);
     styleHeader(partnerSheet, headers.length, '#cc5500');
-    partnerSheet.setColumnWidths(1, 8, [150, 150, 130, 120, 120, 120, 200, 200]);
+    [150, 150, 130, 120, 120, 120, 200, 200].forEach((w, i) => partnerSheet.setColumnWidth(i + 1, w));
     partnerSheet.setFrozenRows(1);
   }
 
