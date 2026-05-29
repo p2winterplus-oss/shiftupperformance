@@ -14,6 +14,9 @@
 
 const SPREADSHEET_ID = '1Su-nW33_bmmE-RUDy0xVf7ppiee4g9RuuA5HcIgyN6E';
 
+// ★ ใส่ email ที่ต้องการรับการแจ้งเตือน (ใส่ได้มากกว่า 1 คั่นด้วย ,)
+const NOTIFY_EMAIL = 'your@email.com';
+
 // ── รับ POST request จากเว็บ ──────────────────────────────────────────────────
 function doPost(e) {
   try {
@@ -29,6 +32,22 @@ function doPost(e) {
         data.location || '',
         data.detail   || '',
       ]);
+
+      // ── แจ้งเตือน Email — Remap ──────────────────────────────────────────
+      sendEmail(
+        '🔧 [Shiftup] ลูกค้าใหม่ขอประเมิน Remap!',
+        '📋 ข้อมูลลูกค้าใหม่ — ECU Remap\n' +
+        '─────────────────────────────────\n' +
+        '⏰ เวลา     : ' + (data.timestamp || new Date().toLocaleString('th-TH')) + '\n' +
+        '👤 ชื่อ     : ' + (data.name     || '-') + '\n' +
+        '📞 ติดต่อ   : ' + (data.contact  || '-') + '\n' +
+        '🚗 รุ่นรถ   : ' + (data.car      || '-') + '\n' +
+        '📍 สถานที่  : ' + (data.location || '-') + '\n' +
+        '📝 รายละเอียด: ' + (data.detail  || '-') + '\n' +
+        '─────────────────────────────────\n' +
+        '→ ดูข้อมูลทั้งหมด: https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID
+      );
+
     } else if (data.source === 'partner') {
       appendRow(ss, 'Partner Applications', [
         data.timestamp   || new Date().toLocaleString('th-TH'),
@@ -40,11 +59,42 @@ function doPost(e) {
         data.expertise   || '',
         data.facebook    || '',
       ]);
+
+      // ── แจ้งเตือน Email — Partner ────────────────────────────────────────
+      sendEmail(
+        '🤝 [Shiftup] มีผู้สมัคร Partner ใหม่!',
+        '📋 ข้อมูลผู้สมัคร Partner\n' +
+        '─────────────────────────────────\n' +
+        '⏰ เวลา      : ' + (data.timestamp   || new Date().toLocaleString('th-TH')) + '\n' +
+        '🏪 ชื่อร้าน  : ' + (data.shopName    || '-') + '\n' +
+        '👤 ผู้ติดต่อ : ' + (data.contactName || '-') + '\n' +
+        '📞 เบอร์โทร  : ' + (data.phone       || '-') + '\n' +
+        '💬 LINE ID   : ' + (data.lineId      || '-') + '\n' +
+        '📍 จังหวัด   : ' + (data.province    || '-') + '\n' +
+        '🔧 ความถนัด  : ' + (data.expertise   || '-') + '\n' +
+        '📘 Facebook  : ' + (data.facebook    || '-') + '\n' +
+        '─────────────────────────────────\n' +
+        '→ ดูข้อมูลทั้งหมด: https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID
+      );
     }
 
     return jsonResponse({ success: true });
   } catch (err) {
     return jsonResponse({ success: false, error: err.toString() });
+  }
+}
+
+// ── ส่ง Email แจ้งเตือน ───────────────────────────────────────────────────────
+function sendEmail(subject, body) {
+  if (!NOTIFY_EMAIL || NOTIFY_EMAIL === 'your@email.com') return;
+  try {
+    MailApp.sendEmail({
+      to:      NOTIFY_EMAIL,
+      subject: subject,
+      body:    body,
+    });
+  } catch (err) {
+    Logger.log('Email error: ' + err.toString());
   }
 }
 
