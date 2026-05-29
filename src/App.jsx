@@ -338,6 +338,19 @@ function loadRemap() {
 }
 function saveRemap(d) { localStorage.setItem(REMAP_KEY, JSON.stringify(d)); }
 
+// ─── HKS Content Data Layer ───────────────────────────────────────────────────
+const HKS_KEY    = 'shiftup_hks_v1';
+const HKS_BRANDS = ['Ford', 'BMW', 'Honda', 'Isuzu', 'Mazda', 'Mitsubishi', 'Toyota', 'Nissan'];
+const HKS_PER_PAGE = 12;
+
+const DEFAULT_HKS = { pipes: [] };
+
+function loadHKS() {
+  try { const s = localStorage.getItem(HKS_KEY); return s ? JSON.parse(s) : DEFAULT_HKS; }
+  catch { return DEFAULT_HKS; }
+}
+function saveHKS(d) { localStorage.setItem(HKS_KEY, JSON.stringify(d)); }
+
 // ─── Admin Panel ──────────────────────────────────────────────────────────────
 const AdminPanel = ({ data, onSave, onClose }) => {
   const [tab, setTab] = useState('articles');
@@ -739,73 +752,277 @@ const RemapPage = () => {
   );
 };
 
-// --- PAGE 3: HKS EXHAUST ---
-const HKSPage = () => (
-  <div className="pb-24">
-    {/* Hero with product background image */}
-    <div className="border-b border-neutral-800 py-20 px-6 relative overflow-hidden" style={{ background: '#0d1116' }}>
-      <img
-        src={PROD_BG}
-        alt="HKS Exhaust Products"
-        className="absolute inset-0 w-full h-full object-cover opacity-25"
-      />
-      {/* dark overlay to keep text readable */}
-      <div className="absolute inset-0 bg-gradient-to-r from-neutral-950/95 via-neutral-950/70 to-neutral-950/40" />
-      <div className="absolute right-0 top-0 opacity-10 pointer-events-none w-1/2 h-full flex items-center justify-end">
-        <div className="w-[500px] h-[200px] border-[20px] border-orange-500 rounded-l-[100px] mr-[-100px]" />
-      </div>
-      <div className="max-w-4xl mx-auto text-center relative z-10">
-        <Wrench className="text-orange-500 w-16 h-16 mx-auto mb-6" />
-        <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">HKS Exhaust Systems</h1>
-        <p className="text-xl text-neutral-400 mb-8">
-          นิยามใหม่ของเสียงและสมรรถนะระดับโลก ยกระดับภาพลักษณ์พร้อมปลดปล่อยความดุดันในสไตล์ที่เป็นคุณ <br />
-          เราคือตัวกลางที่ช่วยคุณเลือกสเปคที่ตรงรุ่นแบบ <span className="text-orange-500 font-bold">100% Fitment</span>
-        </p>
+// ─── HKS Admin Panel ──────────────────────────────────────────────────────────
+const HKSAdminPanel = ({ data, onSave, onClose }) => {
+  const [draft, setDraft] = useState(() => JSON.parse(JSON.stringify(data)));
+
+  const inputCls = 'w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500 placeholder-neutral-600';
+
+  const updatePipe = (i, field, val) => {
+    const pipes = [...draft.pipes];
+    pipes[i] = { ...pipes[i], [field]: val };
+    setDraft({ ...draft, pipes });
+  };
+
+  const addPipe = () => {
+    const newId = Date.now();
+    setDraft({ ...draft, pipes: [...draft.pipes, { id: newId, brand: 'Mazda', model: '', type: '', desc: '', price: '', imgUrl: '' }] });
+  };
+
+  const deletePipe = (i) => {
+    if (!window.confirm('ลบรายการนี้?')) return;
+    setDraft({ ...draft, pipes: draft.pipes.filter((_, idx) => idx !== i) });
+  };
+
+  return (
+    <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-sm overflow-auto">
+      <div className="max-w-4xl mx-auto p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6 border-b border-neutral-800 pb-6">
+          <div>
+            <h2 className="text-2xl font-black text-white">⚙️ Admin Panel — HKS Exhaust</h2>
+            <p className="text-neutral-500 text-sm mt-1">จัดการรายการท่อ · กรอกข้อมูลให้ครบ (ยี่ห้อ + รุ่นรถ + ชื่อท่อ) ถึงจะแสดงบนหน้าเว็บ</p>
+          </div>
+          <button onClick={onClose} className="text-neutral-400 hover:text-white text-2xl leading-none px-2">✕</button>
+        </div>
+
+        {/* Pipe list */}
+        <div className="space-y-4 mb-6">
+          {draft.pipes.length === 0 && (
+            <p className="text-center text-neutral-600 py-8">ยังไม่มีรายการท่อ — กด "เพิ่มท่อใหม่" ด้านล่าง</p>
+          )}
+          {draft.pipes.map((pipe, i) => (
+            <div key={pipe.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-orange-400 font-bold text-xs">รายการที่ {i + 1} {pipe.model ? `— ${pipe.brand} ${pipe.model}` : '(ยังไม่กรอกข้อมูล)'}</p>
+                <button onClick={() => deletePipe(i)} className="text-neutral-600 hover:text-red-500 text-xs transition-colors">🗑 ลบ</button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-neutral-400 text-xs mb-1 block">ยี่ห้อรถ (Brand) *</label>
+                  <select className={inputCls} value={pipe.brand} onChange={e => updatePipe(i, 'brand', e.target.value)}>
+                    {HKS_BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-neutral-400 text-xs mb-1 block">รุ่นรถ (Model) *</label>
+                  <input className={inputCls} value={pipe.model} onChange={e => updatePipe(i, 'model', e.target.value)} placeholder="เช่น Mazda 3 (BP) หรือ Civic FE" />
+                </div>
+                <div>
+                  <label className="text-neutral-400 text-xs mb-1 block">ชื่อท่อ HKS (Type) *</label>
+                  <input className={inputCls} value={pipe.type} onChange={e => updatePipe(i, 'type', e.target.value)} placeholder="เช่น Legamax Premium" />
+                </div>
+                <div>
+                  <label className="text-neutral-400 text-xs mb-1 block">ราคา</label>
+                  <input className={inputCls} value={pipe.price} onChange={e => updatePipe(i, 'price', e.target.value)} placeholder="เช่น ฿XX,XXX หรือ สอบถาม" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-neutral-400 text-xs mb-1 block">รายละเอียด</label>
+                  <textarea rows={2} className={inputCls} value={pipe.desc} onChange={e => updatePipe(i, 'desc', e.target.value)} placeholder="คำอธิบายสั้นๆ เกี่ยวกับท่อรุ่นนี้" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-neutral-400 text-xs mb-1 block">URL รูปภาพ</label>
+                  <input className={inputCls} value={pipe.imgUrl} onChange={e => updatePipe(i, 'imgUrl', e.target.value)} placeholder="https://... หรือ /images/hks1.jpg" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Add button */}
+        <button
+          onClick={addPipe}
+          className="w-full py-4 border-2 border-dashed border-neutral-700 hover:border-orange-500 rounded-2xl text-neutral-500 hover:text-orange-500 transition-colors font-bold mb-8">
+          + เพิ่มท่อใหม่
+        </button>
+
+        {/* Save / Cancel */}
+        <div className="flex gap-4 pt-6 border-t border-neutral-800">
+          <button
+            onClick={() => onSave(draft)}
+            className="bg-orange-600 hover:bg-orange-700 text-white font-bold px-8 py-3 rounded-xl flex items-center gap-2 transition-colors">
+            <CheckCircle2 size={18} /> บันทึกและอัปเดตหน้าเว็บ
+          </button>
+          <button onClick={onClose} className="bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold px-8 py-3 rounded-xl transition-colors">
+            ยกเลิก
+          </button>
+          <button
+            onClick={() => { if (window.confirm('รีเซ็ตรายการท่อทั้งหมด?')) { onSave(DEFAULT_HKS); } }}
+            className="ml-auto text-neutral-600 hover:text-red-500 text-sm transition-colors">
+            รีเซ็ตทั้งหมด
+          </button>
+        </div>
       </div>
     </div>
+  );
+};
 
-    <div className="max-w-7xl mx-auto px-6 lg:px-8 mt-16">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl font-bold text-white mb-4">เลือกรุ่นรถเพื่อดูสินค้า</h2>
-        <div className="flex flex-wrap justify-center gap-4">
-          <button className="px-6 py-2 rounded-full bg-orange-600 text-white font-bold">Mazda</button>
-          <button className="px-6 py-2 rounded-full bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-600">Honda</button>
-          <button className="px-6 py-2 rounded-full bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-600">Toyota</button>
-          <button className="px-6 py-2 rounded-full bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-600">Subaru</button>
+// --- PAGE 3: HKS EXHAUST ---
+const HKSPage = () => {
+  const [data, setData]               = useState(loadHKS);
+  const [activeBrand, setActiveBrand] = useState('ทั้งหมด');
+  const [page, setPage]               = useState(1);
+  const [showAdmin, setShowAdmin]     = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleSave = (newData) => { saveHKS(newData); setData(newData); setShowAdmin(false); };
+  const handleAdminClick = () => setShowPassword(true);
+  const handlePasswordSuccess = () => { setShowPassword(false); setShowAdmin(true); };
+
+  // Only show pipes that have brand + model + type filled in
+  const filledPipes = data.pipes.filter(p => p.brand && p.model.trim() && p.type.trim());
+
+  // Filter by brand
+  const brandFiltered = activeBrand === 'ทั้งหมด'
+    ? filledPipes
+    : filledPipes.filter(p => p.brand === activeBrand);
+
+  // Pagination
+  const totalPages  = Math.max(1, Math.ceil(brandFiltered.length / HKS_PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const displayed   = brandFiltered.slice((currentPage - 1) * HKS_PER_PAGE, currentPage * HKS_PER_PAGE);
+
+  const handleBrandChange = (brand) => { setActiveBrand(brand); setPage(1); };
+
+  return (
+    <div className="pb-24 relative">
+      {showPassword && <PasswordModal onSuccess={handlePasswordSuccess} onClose={() => setShowPassword(false)} />}
+      {showAdmin    && <HKSAdminPanel data={data} onSave={handleSave} onClose={() => setShowAdmin(false)} />}
+
+      {/* ── Hero ── */}
+      <div className="border-b border-neutral-800 py-20 px-6 relative overflow-hidden" style={{ background: '#0d1116' }}>
+        <img src={PROD_BG} alt="HKS Exhaust Products" className="absolute inset-0 w-full h-full object-cover opacity-25" />
+        <div className="absolute inset-0 bg-gradient-to-r from-neutral-950/95 via-neutral-950/70 to-neutral-950/40" />
+        <div className="absolute right-0 top-0 opacity-10 pointer-events-none w-1/2 h-full flex items-center justify-end">
+          <div className="w-[500px] h-[200px] border-[20px] border-orange-500 rounded-l-[100px] mr-[-100px]" />
+        </div>
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <Wrench className="text-orange-500 w-16 h-16 mx-auto mb-6" />
+          <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">HKS Exhaust Systems</h1>
+          <p className="text-xl text-neutral-400 mb-8">
+            นิยามใหม่ของเสียงและสมรรถนะระดับโลก ยกระดับภาพลักษณ์พร้อมปลดปล่อยความดุดันในสไตล์ที่เป็นคุณ<br />
+            เราคือตัวกลางที่ช่วยคุณเลือกสเปคที่ตรงรุ่นแบบ <span className="text-orange-500 font-bold">100% Fitment</span>
+          </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {[
-          { model: "Mazda 3 (BP)",  type: "Legamax Premium",    desc: "ปลายท่อคู่สแตนเลส เสียงนุ่มลึก ไม่หนวกหูตอนเดินทางไกล" },
-          { model: "Mazda 2 (DJ)",  type: "Silent Hi-Power",    desc: "ดีไซน์สปอร์ตปลายคาร์บอน เพิ่มแรงม้าและแรงบิดชัดเจน" },
-          { model: "Mazda CX-30",   type: "Legamax Sports",     desc: "ตรงรุ่นเป๊ะ ไม่ต้องดัดแปลง เสียงทุ้มแน่นสไตล์ SUV" },
-          { model: "Mazda CX-5",    type: "Touring Spec-L",     desc: "หรูหรา เสียงผู้ดี เหมาะกับรถครอบครัวที่แอบซิ่ง" },
-          { model: "MX-5 (ND)",     type: "Hi-Power SPEC-L II", desc: "น้ำหนักเบาพิเศษ เสียงลั่นเร้าใจสาย Track" },
-          { model: "Mazda 3 (BM)",  type: "Legamax Premium",    desc: "รุ่นยอดฮิตของบอดี้เก่า อัปเกรดความหล่อได้ทันที" },
-        ].map((item, idx) => (
-          <div key={idx} className="bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-800 group hover:border-orange-500/50 transition-colors">
-            <div className="h-64 bg-neutral-950 flex flex-col items-center justify-center p-4 relative">
-              <div className="w-3/4 h-8 bg-neutral-800 rounded-full mb-2" />
-              <div className="w-1/2 h-8 bg-neutral-800 rounded-full flex items-center justify-end pr-2">
-                <div className="w-10 h-10 bg-orange-900/50 rounded-full" />
-              </div>
-              <span className="absolute bottom-4 right-4 text-neutral-700 font-mono text-xs">IMG_HKS_{idx + 1}.JPG</span>
-            </div>
-            <div className="p-6">
-              <h3 className="text-xl font-bold text-white group-hover:text-orange-500 transition-colors mb-1">{item.model}</h3>
-              <p className="text-orange-400 text-sm font-bold mb-3">{item.type}</p>
-              <p className="text-neutral-400 text-sm mb-6">{item.desc}</p>
-              <button className="w-full py-3 rounded-lg border border-neutral-700 hover:bg-white hover:text-black transition-colors font-bold text-sm">
-                เช็คสต็อกและราคา
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 mt-16">
+
+        {/* ── Brand Filter ── */}
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-white mb-6">เลือกยี่ห้อรถเพื่อดูสินค้า</h2>
+          <div className="flex flex-wrap justify-center gap-3">
+            {['ทั้งหมด', ...HKS_BRANDS].map(brand => (
+              <button
+                key={brand}
+                onClick={() => handleBrandChange(brand)}
+                className={`px-5 py-2 rounded-full font-bold text-sm transition-all ${
+                  activeBrand === brand
+                    ? 'bg-orange-600 text-white shadow-[0_0_15px_rgba(234,88,12,0.4)]'
+                    : 'bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-600'
+                }`}>
+                {brand}
               </button>
-            </div>
+            ))}
           </div>
-        ))}
+        </div>
+
+        {/* ── Product Grid ── */}
+        {displayed.length === 0 ? (
+          <div className="text-center py-24 text-neutral-600">
+            <Wrench size={48} className="mx-auto mb-4 opacity-30" />
+            <p className="text-lg font-bold mb-2">
+              {filledPipes.length === 0
+                ? 'ยังไม่มีรายการท่อในระบบ'
+                : `ไม่มีรายการสำหรับ ${activeBrand}`}
+            </p>
+            <p className="text-sm text-neutral-700">กรุณาเพิ่มข้อมูลผ่านระบบ Admin (ปุ่ม ⚙ มุมล่างขวา)</p>
+          </div>
+        ) : (
+          <>
+            {/* count */}
+            <p className="text-neutral-600 text-sm mb-6">
+              แสดง {(currentPage - 1) * HKS_PER_PAGE + 1}–{Math.min(currentPage * HKS_PER_PAGE, brandFiltered.length)} จาก {brandFiltered.length} รายการ
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+              {displayed.map((item) => (
+                <div key={item.id} className="bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-800 group hover:border-orange-500/50 transition-colors">
+                  {/* Product image */}
+                  <div className="h-56 bg-neutral-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+                    {item.imgUrl ? (
+                      <img src={item.imgUrl} alt={item.model} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <>
+                        <div className="w-3/4 h-8 bg-neutral-800 rounded-full mb-2" />
+                        <div className="w-1/2 h-8 bg-neutral-800 rounded-full flex items-center justify-end pr-2">
+                          <div className="w-10 h-10 bg-orange-900/50 rounded-full" />
+                        </div>
+                        <span className="absolute bottom-3 right-3 text-neutral-700 font-mono text-xs">HKS_{item.brand.toUpperCase()}</span>
+                      </>
+                    )}
+                    {/* Brand badge */}
+                    <span className="absolute top-3 left-3 bg-orange-600/90 text-white text-xs font-bold px-2 py-1 rounded-full z-10">{item.brand}</span>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-white group-hover:text-orange-500 transition-colors mb-1">{item.model}</h3>
+                    <p className="text-orange-400 text-sm font-bold mb-3">{item.type}</p>
+                    {item.desc  && <p className="text-neutral-400 text-sm mb-4 leading-relaxed">{item.desc}</p>}
+                    {item.price && <p className="text-white font-black text-lg mb-4">{item.price}</p>}
+                    <button className="w-full py-3 rounded-lg border border-neutral-700 hover:bg-white hover:text-black transition-colors font-bold text-sm">
+                      เช็คสต็อกและราคา
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ── Pagination ── */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-6 pb-4">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-6 py-2.5 rounded-full border border-neutral-700 text-neutral-400 hover:text-white hover:border-neutral-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all font-bold text-sm">
+                  ← ก่อนหน้า
+                </button>
+                <div className="flex items-center gap-2">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+                    <button
+                      key={n}
+                      onClick={() => setPage(n)}
+                      className={`w-9 h-9 rounded-full text-sm font-bold transition-all ${
+                        n === currentPage
+                          ? 'bg-orange-600 text-white'
+                          : 'text-neutral-500 hover:text-white'
+                      }`}>
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-6 py-2.5 rounded-full border border-neutral-700 text-neutral-400 hover:text-white hover:border-neutral-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all font-bold text-sm">
+                  ถัดไป →
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
+
+      {/* ── Hidden Admin Button (bottom-right) ── */}
+      <button
+        onClick={handleAdminClick}
+        title="Admin"
+        className="fixed bottom-6 right-6 w-9 h-9 rounded-full bg-neutral-900/40 hover:bg-neutral-700 border border-neutral-800/50 flex items-center justify-center text-neutral-700 hover:text-neutral-300 transition-all duration-300 z-50 opacity-30 hover:opacity-100"
+        style={{ fontSize: '14px' }}>
+        ⚙
+      </button>
     </div>
-  </div>
-);
+  );
+};
 
 // --- PAGE 4: PANTHERA EV SOUND ---
 const PantheraPage = () => (
