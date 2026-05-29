@@ -10,7 +10,7 @@ const HERO_BG  = 'https://drive.google.com/thumbnail?id=1G3y845m2OTvSpoDjUG4v59T
 const PROD_BG  = 'https://drive.google.com/thumbnail?id=1Fw5aLkbJZvHxIeu7NtegJnRSE_aO1UiA&sz=w2400';
 const LINE_URL  = 'https://lin.ee/nZOMcph';
 // ↓ วาง URL ของ Google Apps Script Web App หลัง Deploy แล้ว
-const GOOGLE_SCRIPT_URL = '';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbysWSiUxrHxIimDCTeawZH9IT8htPUHALBmu26FaIBdhaBaZQs-NyPZJZdr8PAcCeBy7w/exec';
 
 async function submitToSheets(payload) {
   if (!GOOGLE_SCRIPT_URL) return;
