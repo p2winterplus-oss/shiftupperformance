@@ -1,0 +1,143 @@
+/**
+ * Shiftup Performance — Google Apps Script Web App
+ * Sheet ID: 1Su-nW33_bmmE-RUDy0xVf7ppiee4g9RuuA5HcIgyN6E
+ *
+ * วิธีใช้:
+ * 1. เปิด https://script.google.com → New project
+ * 2. วาง code นี้ทับ Code.gs เดิม
+ * 3. กด Deploy → New deployment → Web App
+ *    - Execute as: Me
+ *    - Who has access: Anyone
+ * 4. Copy URL ที่ได้ → วางใน src/App.jsx ที่ GOOGLE_SCRIPT_URL = '...'
+ * 5. กด setupSheets() ครั้งแรกเพื่อสร้าง Sheet headers + Dashboard
+ */
+
+const SPREADSHEET_ID = '1Su-nW33_bmmE-RUDy0xVf7ppiee4g9RuuA5HcIgyN6E';
+
+// ── รับ POST request จากเว็บ ──────────────────────────────────────────────────
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+    if (data.source === 'remap') {
+      appendRow(ss, 'Remap Leads', [
+        data.timestamp || new Date().toLocaleString('th-TH'),
+        data.name     || '',
+        data.contact  || '',
+        data.car      || '',
+        data.location || '',
+        data.detail   || '',
+      ]);
+    } else if (data.source === 'partner') {
+      appendRow(ss, 'Partner Applications', [
+        data.timestamp   || new Date().toLocaleString('th-TH'),
+        data.shopName    || '',
+        data.contactName || '',
+        data.phone       || '',
+        data.lineId      || '',
+        data.province    || '',
+        data.expertise   || '',
+        data.facebook    || '',
+      ]);
+    }
+
+    return jsonResponse({ success: true });
+  } catch (err) {
+    return jsonResponse({ success: false, error: err.toString() });
+  }
+}
+
+function appendRow(ss, sheetName, values) {
+  let sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    setupSheets(); // สร้าง sheets ถ้ายังไม่มี
+    sheet = ss.getSheetByName(sheetName);
+  }
+  sheet.appendRow(values);
+}
+
+function jsonResponse(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ── สร้าง Sheets + หัวคอลัมน์ (รันครั้งแรกครั้งเดียว) ────────────────────────
+function setupSheets() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+  // ── Remap Leads ──────────────────────────────────────────────────────────────
+  let remapSheet = ss.getSheetByName('Remap Leads');
+  if (!remapSheet) {
+    remapSheet = ss.insertSheet('Remap Leads');
+    const headers = ['วันที่-เวลา', 'ชื่อ-นามสกุล', 'เบอร์/LINE ID', 'รุ่นรถ', 'สถานที่', 'รายละเอียด'];
+    remapSheet.appendRow(headers);
+    styleHeader(remapSheet, headers.length, '#cc2200');
+    remapSheet.setColumnWidths(1, 6, [150, 140, 140, 150, 120, 280]);
+    remapSheet.setFrozenRows(1);
+  }
+
+  // ── Partner Applications ──────────────────────────────────────────────────────
+  let partnerSheet = ss.getSheetByName('Partner Applications');
+  if (!partnerSheet) {
+    partnerSheet = ss.insertSheet('Partner Applications');
+    const headers = ['วันที่-เวลา', 'ชื่อร้าน/อู่', 'ชื่อผู้ติดต่อ', 'เบอร์โทร', 'LINE ID', 'จังหวัด', 'ความถนัด', 'Facebook'];
+    partnerSheet.appendRow(headers);
+    styleHeader(partnerSheet, headers.length, '#cc5500');
+    partnerSheet.setColumnWidths(1, 8, [150, 150, 130, 120, 120, 120, 200, 200]);
+    partnerSheet.setFrozenRows(1);
+  }
+
+  // ── Dashboard ────────────────────────────────────────────────────────────────
+  let dash = ss.getSheetByName('Dashboard');
+  if (!dash) {
+    dash = ss.insertSheet('Dashboard', 0); // วางไว้หน้าแรก
+    buildDashboard(dash);
+  }
+
+  return '✅ Setup complete!';
+}
+
+function styleHeader(sheet, colCount, bgColor) {
+  const range = sheet.getRange(1, 1, 1, colCount);
+  range.setBackground(bgColor)
+       .setFontColor('#ffffff')
+       .setFontWeight('bold')
+       .setFontSize(11);
+}
+
+function buildDashboard(dash) {
+  dash.getRange('A1').setValue('📊  Shiftup Performance — Dashboard');
+  dash.getRange('A1').setFontSize(18).setFontWeight('bold').setFontColor('#ffffff');
+  dash.getRange('A1:E1').merge().setBackground('#1a1a1a');
+
+  // Summary cards
+  const summaryData = [
+    ['', 'หมวด', 'จำนวน (Leads/สมัคร)', 'Link'],
+    ['🔧', 'Remap Leads',         "=COUNTA('Remap Leads'!A:A)-1",         "=HYPERLINK(\"#gid=\"&'Remap Leads'!A1,\"→ ดูข้อมูล\")"],
+    ['🤝', 'Partner Applications', "=COUNTA('Partner Applications'!A:A)-1", "=HYPERLINK(\"#gid=\"&'Partner Applications'!A1,\"→ ดูข้อมูล\")"],
+    ['📈', 'รวมทั้งหมด',           '=B3+B4',                                ''],
+  ];
+  dash.getRange(3, 1, summaryData.length, summaryData[0].length).setValues(summaryData);
+  dash.getRange('A3:D3').setBackground('#333333').setFontColor('#ffffff').setFontWeight('bold');
+  dash.getRange('B4:B6').setFontSize(20).setFontWeight('bold').setFontColor('#ff5533');
+
+  // Monthly breakdown header
+  dash.getRange('A9').setValue('📅  รายการล่าสุด (Remap Leads)');
+  dash.getRange('A9').setFontSize(13).setFontWeight('bold');
+  dash.getRange('A10:F10').setValues([['วันที่', 'ชื่อ', 'เบอร์/LINE', 'รุ่นรถ', 'สถานที่', 'รายละเอียด']]);
+  dash.getRange('A10:F10').setBackground('#cc2200').setFontColor('#ffffff').setFontWeight('bold');
+  dash.getRange('A11').setFormula("=IFERROR(SORT('Remap Leads'!A2:F,1,FALSE),\"\")");
+
+  dash.getRange('A20').setValue('📅  รายการล่าสุด (Partner)');
+  dash.getRange('A20').setFontSize(13).setFontWeight('bold');
+  dash.getRange('A21:H21').setValues([['วันที่', 'ร้าน', 'ผู้ติดต่อ', 'เบอร์', 'LINE', 'จังหวัด', 'ความถนัด', 'Facebook']]);
+  dash.getRange('A21:H21').setBackground('#cc5500').setFontColor('#ffffff').setFontWeight('bold');
+  dash.getRange('A22').setFormula("=IFERROR(SORT('Partner Applications'!A2:H,1,FALSE),\"\")");
+
+  dash.setColumnWidth(1, 30);
+  dash.setColumnWidth(2, 160);
+  dash.setColumnWidth(3, 100);
+  dash.setColumnWidth(4, 100);
+}
