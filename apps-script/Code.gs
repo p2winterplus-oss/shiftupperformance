@@ -15,7 +15,7 @@
 const SPREADSHEET_ID = '1Su-nW33_bmmE-RUDy0xVf7ppiee4g9RuuA5HcIgyN6E';
 
 // ★ ใส่ email ที่ต้องการรับการแจ้งเตือน (ใส่ได้มากกว่า 1 คั่นด้วย ,)
-const NOTIFY_EMAIL = 'your@email.com';
+const NOTIFY_EMAIL = 'p2w.interplus@gmail.com';
 
 // ── รับ POST request จากเว็บ ──────────────────────────────────────────────────
 function doPost(e) {
