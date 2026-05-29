@@ -339,16 +339,43 @@ const DEFAULT_REMAP = {
     { id: 2, stars: 5, text: 'คันเร่งเบาขึ้นชัดเจน อาการรอรอบตอนออกตัวหายไปเลย ช่างอธิบายละเอียดมากว่ากราฟเดิมเป็นยังไง คุ้มค่าครับ', name: 'คุณ K.', car: 'Mazda 2 Diesel' },
     { id: 3, stars: 5, text: 'คันเร่งเบาขึ้นชัดเจน อาการรอรอบตอนออกตัวหายไปเลย ช่างอธิบายละเอียดมากว่ากราฟเดิมเป็นยังไง คุ้มค่าครับ', name: 'คุณ K.', car: 'Mazda 2 Diesel' },
   ],
-  packages: [
-    { id: 1, name: 'Stage 1 Remap', desc: 'สำหรับรถเดิมๆ ที่ต้องการอัตราเร่งที่ดีขึ้น', price: '฿ XX,XXX' },
-    { id: 2, name: 'Custom Tune',   desc: 'สำหรับรถที่มีการอัปเกรดฮาร์ดแวร์มาแล้ว',  price: 'สอบถาม'  },
+  brandPricing: [
+    {
+      id: 1, brand: 'Mazda',
+      packages: [
+        { id: 1, name: 'Custom Tune เบนซิน', desc: 'สำหรับ Mazda 2', price: '3,900' },
+        { id: 2, name: 'Custom Tune เบนซิน', desc: 'สำหรับ Mz3, Cx-3, Cx-30, Cx-5', price: '4,200' },
+        { id: 3, name: 'Custom Tune เบนซิน', desc: 'สำหรับ Cx-8', price: '4,500' },
+        { id: 4, name: 'Custom Tune ดีเซล',  desc: 'สำหรับรถดีเซล Mz2, Cx-3, Cx-5, Cx-8', price: '5,000' },
+        { id: 5, name: 'Plus POP&BANG',      desc: 'สำหรับลูกค้าที่ต้องการเสียงเพาะๆ จับใจ', price: '+1,500' },
+        { id: 6, name: 'Plus EGR DPF OFF',   desc: 'สำหรับรถที่ตัด DPF คิดเพิ่มจากราคาปกติ', price: '+3,000' },
+      ],
+    },
+    {
+      id: 2, brand: 'Honda',
+      packages: [
+        { id: 1, name: 'Custom Tune เบนซิน', desc: 'สำหรับ Civic, Jazz, City', price: 'สอบถาม' },
+      ],
+    },
+    {
+      id: 3, brand: 'Toyota',
+      packages: [
+        { id: 1, name: 'Custom Tune เบนซิน', desc: 'สำหรับ Yaris, Corolla, Camry', price: 'สอบถาม' },
+      ],
+    },
   ],
-  perks: ['ฟรี! ตรวจเช็คค่าต่างๆ ก่อนจูน', 'รับประกันซอฟต์แวร์ตลอดอายุการใช้งาน'],
+  perks: ['ฟรี! ตรวจเช็คค่าต่างๆ ก่อนจูน', 'On-Site Service'],
 };
 
 function loadRemap() {
-  try { const s = localStorage.getItem(REMAP_KEY); return s ? JSON.parse(s) : DEFAULT_REMAP; }
-  catch { return DEFAULT_REMAP; }
+  try {
+    const s = localStorage.getItem(REMAP_KEY);
+    if (!s) return DEFAULT_REMAP;
+    const d = JSON.parse(s);
+    // migrate old packages[] → brandPricing[]
+    if (!d.brandPricing) d.brandPricing = DEFAULT_REMAP.brandPricing;
+    return d;
+  } catch { return DEFAULT_REMAP; }
 }
 function saveRemap(d) { localStorage.setItem(REMAP_KEY, JSON.stringify(d)); }
 
@@ -395,8 +422,7 @@ const AdminPanel = ({ data, onSave, onClose }) => {
   const upArt  = (i,f,v) => { const a=[...draft.articles];  a[i]={...a[i],[f]:v}; setDraft({...draft,articles:a}); };
   const upPort = (i,f,v) => { const p=[...draft.portfolio]; p[i]={...p[i],[f]:v}; setDraft({...draft,portfolio:p}); };
   const upRev  = (i,f,v) => { const r=[...draft.reviews];   r[i]={...r[i],[f]:v}; setDraft({...draft,reviews:r}); };
-  const upPkg  = (i,f,v) => { const p=[...draft.packages];  p[i]={...p[i],[f]:v}; setDraft({...draft,packages:p}); };
-  const upPerk = (i,v)   => { const p=[...draft.perks]; p[i]=v; setDraft({...draft,perks:p}); };
+  const upPerk = (i,v) => { const p=[...draft.perks]; p[i]=v; setDraft({...draft,perks:p}); };
 
   const addArt  = ()  => setDraft({...draft, articles:  [...draft.articles,  {id:Date.now(),imgUrl:'',tag:'KNOWLEDGE',title:'',excerpt:''}]});
   const delArt  = (i) => { if(!window.confirm('ลบบทความนี้?'))return; setDraft({...draft, articles:  draft.articles.filter((_,j)=>j!==i)}); };
@@ -404,10 +430,16 @@ const AdminPanel = ({ data, onSave, onClose }) => {
   const delPort = (i) => { if(!window.confirm('ลบภาพนี้?'))return;    setDraft({...draft, portfolio: draft.portfolio.filter((_,j)=>j!==i)}); };
   const addRev  = ()  => setDraft({...draft, reviews:   [...draft.reviews,   {id:Date.now(),stars:5,text:'',name:'',car:''}]});
   const delRev  = (i) => { if(!window.confirm('ลบรีวิวนี้?'))return;   setDraft({...draft, reviews:   draft.reviews.filter((_,j)=>j!==i)}); };
-  const addPkg  = ()  => setDraft({...draft, packages:  [...draft.packages,  {id:Date.now(),name:'',desc:'',price:''}]});
-  const delPkg  = (i) => { if(!window.confirm('ลบแพ็กเกจนี้?'))return; setDraft({...draft, packages:  draft.packages.filter((_,j)=>j!==i)}); };
   const addPerk = ()  => setDraft({...draft, perks: [...draft.perks, '']});
   const delPerk = (i) => setDraft({...draft, perks: draft.perks.filter((_,j)=>j!==i)});
+
+  // brand-pricing helpers
+  const upBrand     = (bi,f,v) => { const bp=[...draft.brandPricing]; bp[bi]={...bp[bi],[f]:v}; setDraft({...draft,brandPricing:bp}); };
+  const addBrand    = ()       => setDraft({...draft, brandPricing:[...(draft.brandPricing||[]),{id:Date.now(),brand:'ยี่ห้อใหม่',packages:[]}]});
+  const delBrand    = (bi)     => { if(!window.confirm('ลบยี่ห้อนี้?'))return; setDraft({...draft,brandPricing:draft.brandPricing.filter((_,j)=>j!==bi)}); };
+  const upBrandPkg  = (bi,pi,f,v) => { const bp=[...draft.brandPricing]; const pkgs=[...bp[bi].packages]; pkgs[pi]={...pkgs[pi],[f]:v}; bp[bi]={...bp[bi],packages:pkgs}; setDraft({...draft,brandPricing:bp}); };
+  const addBrandPkg = (bi)     => { const bp=[...draft.brandPricing]; bp[bi]={...bp[bi],packages:[...bp[bi].packages,{id:Date.now(),name:'',desc:'',price:''}]}; setDraft({...draft,brandPricing:bp}); };
+  const delBrandPkg = (bi,pi)  => { if(!window.confirm('ลบรายการนี้?'))return; const bp=[...draft.brandPricing]; bp[bi]={...bp[bi],packages:bp[bi].packages.filter((_,j)=>j!==pi)}; setDraft({...draft,brandPricing:bp}); };
 
   const inputCls = 'w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500 placeholder-neutral-600';
   const addBtn   = (label, fn) => (
@@ -515,28 +547,48 @@ const AdminPanel = ({ data, onSave, onClose }) => {
           </>
         )}
 
-        {/* ── Pricing ── */}
+        {/* ── Pricing (Brand-based) ── */}
         {tab === 'pricing' && (
           <div className="space-y-6">
             <div>
-              <h3 className="text-white font-bold mb-3">แพ็กเกจ</h3>
-              {draft.packages.map((pkg, i) => (
-                <div key={pkg.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 mb-3">
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-neutral-500 text-xs">แพ็กเกจที่ {i + 1}</p>
-                    <button onClick={() => delPkg(i)} className="text-neutral-600 hover:text-red-500 text-xs transition-colors">🗑 ลบ</button>
+              <h3 className="text-white font-bold mb-3">ราคาตามยี่ห้อรถ</h3>
+              {(draft.brandPricing||[]).map((bp, bi) => (
+                <div key={bp.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 mb-4">
+                  {/* Brand name row */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex-1">
+                      <label className="text-neutral-400 text-xs mb-1 block">ยี่ห้อรถ</label>
+                      <input className={inputCls + ' font-bold'} value={bp.brand}
+                        onChange={e => upBrand(bi,'brand',e.target.value)} placeholder="เช่น Mazda, Honda" />
+                    </div>
+                    <button onClick={() => delBrand(bi)}
+                      className="text-neutral-600 hover:text-red-500 text-xs transition-colors mt-4 shrink-0">🗑 ลบยี่ห้อ</button>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div><label className="text-neutral-400 text-xs mb-1 block">ชื่อ</label>
-                      <input className={inputCls} value={pkg.name} onChange={e => upPkg(i,'name',e.target.value)} /></div>
-                    <div><label className="text-neutral-400 text-xs mb-1 block">คำอธิบาย</label>
-                      <input className={inputCls} value={pkg.desc} onChange={e => upPkg(i,'desc',e.target.value)} /></div>
-                    <div><label className="text-neutral-400 text-xs mb-1 block">ราคา</label>
-                      <input className={inputCls} value={pkg.price} onChange={e => upPkg(i,'price',e.target.value)} placeholder="฿ XX,XXX" /></div>
-                  </div>
+                  {/* Packages for this brand */}
+                  {bp.packages.map((pkg, pi) => (
+                    <div key={pkg.id} className="bg-neutral-950 border border-neutral-700 rounded-xl p-4 mb-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-neutral-500 text-xs">รายการที่ {pi + 1}</p>
+                        <button onClick={() => delBrandPkg(bi,pi)}
+                          className="text-neutral-600 hover:text-red-500 text-xs transition-colors">🗑 ลบ</button>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div><label className="text-neutral-400 text-xs mb-1 block">ชื่อ</label>
+                          <input className={inputCls} value={pkg.name} onChange={e => upBrandPkg(bi,pi,'name',e.target.value)} /></div>
+                        <div><label className="text-neutral-400 text-xs mb-1 block">คำอธิบาย</label>
+                          <input className={inputCls} value={pkg.desc} onChange={e => upBrandPkg(bi,pi,'desc',e.target.value)} /></div>
+                        <div><label className="text-neutral-400 text-xs mb-1 block">ราคา</label>
+                          <input className={inputCls} value={pkg.price} onChange={e => upBrandPkg(bi,pi,'price',e.target.value)} placeholder="3,900 หรือ +1,500" /></div>
+                      </div>
+                    </div>
+                  ))}
+                  <button onClick={() => addBrandPkg(bi)}
+                    className="w-full py-2 mt-2 border border-dashed border-neutral-700 hover:border-red-500 rounded-xl text-neutral-500 hover:text-red-400 transition-colors text-sm font-bold">
+                    + เพิ่มรายการราคา
+                  </button>
                 </div>
               ))}
-              {addBtn('+ เพิ่มแพ็กเกจ', addPkg)}
+              {addBtn('+ เพิ่มยี่ห้อรถ', addBrand)}
             </div>
             <div>
               <h3 className="text-white font-bold mb-3">สิ่งที่รวมอยู่ในราคา (✓)</h3>
@@ -623,11 +675,16 @@ const RemapPage = () => {
   const [data, setData] = useState(loadRemap);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedBrand, setSelectedBrand] = useState(() => loadRemap().brandPricing?.[0]?.brand || '');
 
   const handleSave = (newData) => {
     saveRemap(newData);
     setData(newData);
     setShowAdmin(false);
+    // ถ้า brand ที่เลือกอยู่ถูกลบไป ให้ reset ไปอันแรก
+    if (!newData.brandPricing?.find(b => b.brand === selectedBrand)) {
+      setSelectedBrand(newData.brandPricing?.[0]?.brand || '');
+    }
   };
 
   const handleAdminClick = () => setShowPassword(true);
@@ -728,18 +785,38 @@ const RemapPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           <section className="bg-gradient-to-br from-neutral-900 to-neutral-950 p-8 rounded-3xl border border-neutral-800">
             <h2 className="text-3xl font-bold text-white mb-2">อัตราค่าบริการ (Pricing)</h2>
-            <p className="text-neutral-400 mb-8">ราคามาตรฐาน พร้อมบริการเช็คความพร้อมก่อนและหลังจูน</p>
-            <div className="space-y-4">
-              {data.packages.map((pkg) => (
-                <div key={pkg.id} className="bg-neutral-950 p-6 rounded-2xl border border-neutral-800 flex justify-between items-center">
+            <p className="text-neutral-400 mb-5">ราคามาตรฐาน พร้อมบริการเช็คความพร้อมก่อนและหลังจูน</p>
+
+            {/* Brand tabs */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {(data.brandPricing||[]).map(bp => (
+                <button key={bp.id}
+                  onClick={() => setSelectedBrand(bp.brand)}
+                  className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${
+                    selectedBrand === bp.brand
+                      ? 'bg-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.4)]'
+                      : 'bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700'
+                  }`}>
+                  {bp.brand}
+                </button>
+              ))}
+            </div>
+
+            {/* Packages for selected brand */}
+            <div className="space-y-3">
+              {((data.brandPricing||[]).find(bp => bp.brand === selectedBrand)?.packages || []).map((pkg) => (
+                <div key={pkg.id} className="bg-neutral-950 px-6 py-4 rounded-2xl border border-neutral-800 flex justify-between items-center">
                   <div>
-                    <h3 className="text-xl font-bold text-white">{pkg.name}</h3>
+                    <h3 className="text-lg font-bold text-white">{pkg.name}</h3>
                     <p className="text-sm text-neutral-500">{pkg.desc}</p>
                   </div>
-                  <div className="text-2xl font-black text-red-500 ml-4 shrink-0">{pkg.price}</div>
+                  <div className="text-2xl font-black text-red-500 ml-4 shrink-0 whitespace-nowrap">
+                    {pkg.price.startsWith('+') || pkg.price === 'สอบถาม' ? pkg.price : `฿ ${pkg.price}`}
+                  </div>
                 </div>
               ))}
             </div>
+
             <ul className="mt-8 space-y-2 text-sm text-neutral-400">
               {data.perks.map((perk, i) => (
                 <li key={i} className="flex items-center gap-2">
