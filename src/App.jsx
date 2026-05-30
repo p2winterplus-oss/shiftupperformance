@@ -316,8 +316,6 @@ const HomePage = ({ navigateTo, lineUrl }) => {
 };
 
 // ─── Remap Content Data Layer ────────────────────────────────────────────────
-const REMAP_KEY = 'shiftup_remap_v1';
-
 const DEFAULT_REMAP = {
   articles: [
     { id: 1, imgUrl: '', tag: 'KNOWLEDGE', title: 'ทำไมต้อง Fit Before Flash? ขั้นตอนสำคัญที่หลายคนมองข้าม', excerpt: 'การเช็คความพร้อมของฮาร์ดแวร์ก่อนปรับจูนซอฟต์แวร์ คือหัวใจสำคัญของความทนทาน...' },
@@ -367,34 +365,24 @@ const DEFAULT_REMAP = {
   perks: ['ฟรี! ตรวจเช็คค่าต่างๆ ก่อนจูน', 'On-Site Service'],
 };
 
-function loadRemap() {
+// ── บันทึกเนื้อหาไป GitHub ผ่าน server ───────────────────────────────────────
+async function saveContent(section, data) {
   try {
-    const s = localStorage.getItem(REMAP_KEY);
-    if (!s) return DEFAULT_REMAP;
-    const d = JSON.parse(s);
-    // migrate old packages[] → brandPricing[]
-    if (!d.brandPricing) d.brandPricing = DEFAULT_REMAP.brandPricing;
-    return d;
-  } catch { return DEFAULT_REMAP; }
+    await fetch('/api/save-content', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ section, data }),
+    });
+  } catch (_) {}
 }
-function saveRemap(d) { localStorage.setItem(REMAP_KEY, JSON.stringify(d)); }
 
 // ─── HKS Content Data Layer ───────────────────────────────────────────────────
-const HKS_KEY    = 'shiftup_hks_v1';
 const HKS_BRANDS = ['Ford', 'BMW', 'Honda', 'Isuzu', 'Mazda', 'Mitsubishi', 'Toyota', 'Nissan'];
 const HKS_PER_PAGE = 12;
 
 const DEFAULT_HKS = { pipes: [] };
 
-function loadHKS() {
-  try { const s = localStorage.getItem(HKS_KEY); return s ? JSON.parse(s) : DEFAULT_HKS; }
-  catch { return DEFAULT_HKS; }
-}
-function saveHKS(d) { localStorage.setItem(HKS_KEY, JSON.stringify(d)); }
-
 // ─── Panthera Content Data Layer ─────────────────────────────────────────────
-const PANTHERA_KEY = 'shiftup_panthera_v1';
-
 const DEFAULT_PANTHERA = {
   videos: [
     { id: 1, title: 'ทดสอบเสียง V8 Muscle ในรถ BYD Seal',       youtubeUrl: '', length: '03:45' },
@@ -408,11 +396,6 @@ const DEFAULT_PANTHERA = {
   ],
 };
 
-function loadPanthera() {
-  try { const s = localStorage.getItem(PANTHERA_KEY); return s ? JSON.parse(s) : DEFAULT_PANTHERA; }
-  catch { return DEFAULT_PANTHERA; }
-}
-function savePanthera(d) { localStorage.setItem(PANTHERA_KEY, JSON.stringify(d)); }
 
 // ─── Admin Panel ──────────────────────────────────────────────────────────────
 const AdminPanel = ({ data, onSave, onClose }) => {
@@ -672,19 +655,30 @@ const PasswordModal = ({ onSuccess, onClose }) => {
 
 // --- PAGE 2: ECU REMAP ---
 const RemapPage = () => {
-  const [data, setData] = useState(loadRemap);
+  const [data, setData] = useState(DEFAULT_REMAP);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedBrand, setSelectedBrand] = useState(() => loadRemap().brandPricing?.[0]?.brand || '');
+  const [selectedBrand, setSelectedBrand] = useState('');
+
+  useEffect(() => {
+    fetch('/content.json')
+      .then(r => r.json())
+      .then(d => {
+        if (d.remap) {
+          setData(d.remap);
+          setSelectedBrand(d.remap.brandPricing?.[0]?.brand || '');
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSave = (newData) => {
-    saveRemap(newData);
     setData(newData);
     setShowAdmin(false);
-    // ถ้า brand ที่เลือกอยู่ถูกลบไป ให้ reset ไปอันแรก
     if (!newData.brandPricing?.find(b => b.brand === selectedBrand)) {
       setSelectedBrand(newData.brandPricing?.[0]?.brand || '');
     }
+    saveContent('remap', newData);
   };
 
   const handleAdminClick = () => setShowPassword(true);
@@ -987,13 +981,20 @@ const HKSAdminPanel = ({ data, onSave, onClose }) => {
 
 // --- PAGE 3: HKS EXHAUST ---
 const HKSPage = () => {
-  const [data, setData]               = useState(loadHKS);
+  const [data, setData]               = useState(DEFAULT_HKS);
   const [activeBrand, setActiveBrand] = useState('ทั้งหมด');
   const [page, setPage]               = useState(1);
   const [showAdmin, setShowAdmin]     = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSave = (newData) => { saveHKS(newData); setData(newData); setShowAdmin(false); };
+  useEffect(() => {
+    fetch('/content.json')
+      .then(r => r.json())
+      .then(d => { if (d.hks) setData(d.hks); })
+      .catch(() => {});
+  }, []);
+
+  const handleSave = (newData) => { setData(newData); setShowAdmin(false); saveContent('hks', newData); };
   const handleAdminClick = () => setShowPassword(true);
   const handlePasswordSuccess = () => { setShowPassword(false); setShowAdmin(true); };
 
@@ -1261,12 +1262,19 @@ const PantheraAdminPanel = ({ data, initialTab = 'videos', onSave, onClose }) =>
 
 // --- PAGE 4: PANTHERA ---
 const PantheraPage = () => {
-  const [data, setData]                 = useState(loadPanthera);
+  const [data, setData]                 = useState(DEFAULT_PANTHERA);
   const [showAdmin, setShowAdmin]       = useState(false);
   const [adminTab, setAdminTab]         = useState('videos');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSave    = (nd) => { savePanthera(nd); setData(nd); setShowAdmin(false); };
+  useEffect(() => {
+    fetch('/content.json')
+      .then(r => r.json())
+      .then(d => { if (d.panthera) setData(d.panthera); })
+      .catch(() => {});
+  }, []);
+
+  const handleSave    = (nd) => { setData(nd); setShowAdmin(false); saveContent('panthera', nd); };
   const openAdmin     = (tab = 'videos') => { setAdminTab(tab); setShowPassword(true); };
   const onPassSuccess = () => { setShowPassword(false); setShowAdmin(true); };
 

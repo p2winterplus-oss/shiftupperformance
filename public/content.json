@@ -1,0 +1,65 @@
+{
+  "remap": {
+    "articles": [
+      { "id": 1, "imgUrl": "", "tag": "KNOWLEDGE", "title": "ทำไมต้อง Fit Before Flash? ขั้นตอนสำคัญที่หลายคนมองข้าม", "excerpt": "การเช็คความพร้อมของฮาร์ดแวร์ก่อนปรับจูนซอฟต์แวร์ คือหัวใจสำคัญของความทนทาน..." },
+      { "id": 2, "imgUrl": "", "tag": "KNOWLEDGE", "title": "ทำไมต้อง Fit Before Flash? ขั้นตอนสำคัญที่หลายคนมองข้าม", "excerpt": "การเช็คความพร้อมของฮาร์ดแวร์ก่อนปรับจูนซอฟต์แวร์ คือหัวใจสำคัญของความทนทาน..." },
+      { "id": 3, "imgUrl": "", "tag": "KNOWLEDGE", "title": "ทำไมต้อง Fit Before Flash? ขั้นตอนสำคัญที่หลายคนมองข้าม", "excerpt": "การเช็คความพร้อมของฮาร์ดแวร์ก่อนปรับจูนซอฟต์แวร์ คือหัวใจสำคัญของความทนทาน..." }
+    ],
+    "portfolio": [
+      { "id": 1, "imgUrl": "", "caption": "Mazda 3 Skyactiv-G" },
+      { "id": 2, "imgUrl": "", "caption": "Mazda 2 Diesel" },
+      { "id": 3, "imgUrl": "", "caption": "Mazda CX-30" },
+      { "id": 4, "imgUrl": "", "caption": "Mazda CX-5" },
+      { "id": 5, "imgUrl": "", "caption": "Mazda 3 BM" },
+      { "id": 6, "imgUrl": "", "caption": "Mazda 6" },
+      { "id": 7, "imgUrl": "", "caption": "Mazda 2 Gasoline" },
+      { "id": 8, "imgUrl": "", "caption": "Mazda MX-5" }
+    ],
+    "reviews": [
+      { "id": 1, "stars": 5, "text": "คันเร่งเบาขึ้นชัดเจน อาการรอรอบตอนออกตัวหายไปเลย ช่างอธิบายละเอียดมากว่ากราฟเดิมเป็นยังไง คุ้มค่าครับ", "name": "คุณ K.", "car": "Mazda 2 Diesel" },
+      { "id": 2, "stars": 5, "text": "คันเร่งเบาขึ้นชัดเจน อาการรอรอบตอนออกตัวหายไปเลย ช่างอธิบายละเอียดมากว่ากราฟเดิมเป็นยังไง คุ้มค่าครับ", "name": "คุณ K.", "car": "Mazda 2 Diesel" },
+      { "id": 3, "stars": 5, "text": "คันเร่งเบาขึ้นชัดเจน อาการรอรอบตอนออกตัวหายไปเลย ช่างอธิบายละเอียดมากว่ากราฟเดิมเป็นยังไง คุ้มค่าครับ", "name": "คุณ K.", "car": "Mazda 2 Diesel" }
+    ],
+    "brandPricing": [
+      {
+        "id": 1, "brand": "Mazda",
+        "packages": [
+          { "id": 1, "name": "Custom Tune เบนซิน", "desc": "สำหรับ Mazda 2", "price": "3,900" },
+          { "id": 2, "name": "Custom Tune เบนซิน", "desc": "สำหรับ Mz3, Cx-3, Cx-30, Cx-5", "price": "4,200" },
+          { "id": 3, "name": "Custom Tune เบนซิน", "desc": "สำหรับ Cx-8", "price": "4,500" },
+          { "id": 4, "name": "Custom Tune ดีเซล",  "desc": "สำหรับรถดีเซล Mz2, Cx-3, Cx-5, Cx-8", "price": "5,000" },
+          { "id": 5, "name": "Plus POP&BANG",      "desc": "สำหรับลูกค้าที่ต้องการเสียงเพาะๆ จับใจ", "price": "+1,500" },
+          { "id": 6, "name": "Plus EGR DPF OFF",   "desc": "สำหรับรถที่ตัด DPF คิดเพิ่มจากราคาปกติ", "price": "+3,000" }
+        ]
+      },
+      {
+        "id": 2, "brand": "Honda",
+        "packages": [
+          { "id": 1, "name": "Custom Tune เบนซิน", "desc": "สำหรับ Civic, Jazz, City", "price": "สอบถาม" }
+        ]
+      },
+      {
+        "id": 3, "brand": "Toyota",
+        "packages": [
+          { "id": 1, "name": "Custom Tune เบนซิน", "desc": "สำหรับ Yaris, Corolla, Camry", "price": "สอบถาม" }
+        ]
+      }
+    ],
+    "perks": ["ฟรี! ตรวจเช็คค่าต่างๆ ก่อนจูน", "On-Site Service"]
+  },
+  "hks": {
+    "pipes": []
+  },
+  "panthera": {
+    "videos": [
+      { "id": 1, "title": "ทดสอบเสียง V8 Muscle ในรถ BYD Seal",       "youtubeUrl": "", "length": "03:45" },
+      { "id": 2, "title": "Panthera App Walkthrough สอนปรับจูนเสียง",  "youtubeUrl": "", "length": "05:20" },
+      { "id": 3, "title": "รีวิวขับจริง อารมณ์เปลี่ยนไปแค่ไหน?",    "youtubeUrl": "", "length": "08:15" },
+      { "id": 4, "title": "เสียงสไตล์ Futuristic Hypercar",            "youtubeUrl": "", "length": "02:30" }
+    ],
+    "pricing": [
+      { "id": 1, "name": "Single Speaker Unit",     "desc": "ลำโพงเดี่ยว + กล่องคอนโทรล + แอปพลิเคชัน (เหมาะสำหรับรถเก๋ง/SUV ทั่วไป)",                     "price": "XX,XXX.-" },
+      { "id": 2, "name": "Dual Speaker Unit (Pro)", "desc": "ลำโพงคู่ + กล่องคอนโทรล + แอปพลิเคชัน (เพิ่มมิติและความดัง เหมาะสำหรับรถคันใหญ่)", "price": "XX,XXX.-" }
+    ]
+  }
+}
