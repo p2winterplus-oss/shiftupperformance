@@ -181,19 +181,19 @@
             "id": 1,
             "name": "Custom Tune เบนซิน",
             "desc": "Year < 2020",
-            "price": "3900"
+            "price": "3,900"
           },
           {
             "id": 1780114848057,
             "name": "Custom Tune เบนซิน ",
             "desc": "Year > 2020",
-            "price": "4500"
+            "price": "4,500"
           },
           {
             "id": 1780114851499,
             "name": "Custom Tune เบนซิน Turbo",
             "desc": "เฉพาะรถ Turbo",
-            "price": "5900"
+            "price": "5,900"
           },
           {
             "id": 1780114852969,
