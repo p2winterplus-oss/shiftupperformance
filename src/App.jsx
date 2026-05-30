@@ -1619,7 +1619,7 @@ const DashboardPage = ({ onBack }) => {
   });
 
   useEffect(() => {
-    fetch(GOOGLE_SCRIPT_URL)
+    fetch('/api/get-leads')
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false); })
       .catch(() => { setError('โหลดข้อมูลไม่ได้ กรุณาตรวจสอบการเชื่อมต่อ'); setLoading(false); });

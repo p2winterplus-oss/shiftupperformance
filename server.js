@@ -13,6 +13,18 @@ app.use(express.json({ limit: '2mb' }));
 // Serve the Vite build output
 app.use(express.static(join(__dirname, 'dist')));
 
+// ── Proxy GET → Google Apps Script (หลีกเลี่ยง CORS) ────────────────────────
+app.get('/api/get-leads', async (req, res) => {
+  const scriptUrl = 'https://script.google.com/macros/s/AKfycbxGc0JZJkZ0MtW73_MldOdcc-ILttkvcA5G_16-0MwhjrLtWLSFTlQrMdD3W-g-dmqIDg/exec';
+  try {
+    const r    = await fetch(scriptUrl, { redirect: 'follow' });
+    const data = await r.json();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.toString(), remapLeads: [], partnerApplications: [], counts: { remap: 0, partner: 0 } });
+  }
+});
+
 // ── Save content → commit to GitHub ──────────────────────────────────────────
 app.post('/api/save-content', async (req, res) => {
   try {
