@@ -17,6 +17,34 @@ const SPREADSHEET_ID = '1Su-nW33_bmmE-RUDy0xVf7ppiee4g9RuuA5HcIgyN6E';
 // ★ ใส่ email ที่ต้องการรับการแจ้งเตือน (ใส่ได้มากกว่า 1 คั่นด้วย ,)
 const NOTIFY_EMAIL = 'p2w.interplus@gmail.com';
 
+// ── รับ GET request — ส่งข้อมูลกลับให้ Dashboard ────────────────────────────
+function doGet(e) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+    const remapSheet  = ss.getSheetByName('Remap Leads');
+    const remapVals   = remapSheet ? remapSheet.getDataRange().getValues() : [[]];
+    const remapLeads  = (remapVals.length > 1 ? remapVals.slice(1) : []).map(r => ({
+      timestamp: r[0], name: r[1], contact: r[2], car: r[3], location: r[4], detail: r[5]
+    }));
+
+    const partnerSheet = ss.getSheetByName('Partner Applications');
+    const partnerVals  = partnerSheet ? partnerSheet.getDataRange().getValues() : [[]];
+    const partnerApplications = (partnerVals.length > 1 ? partnerVals.slice(1) : []).map(r => ({
+      timestamp: r[0], shopName: r[1], contactName: r[2], phone: r[3],
+      lineId: r[4], province: r[5], expertise: r[6], facebook: r[7]
+    }));
+
+    return jsonResponse({
+      remapLeads,
+      partnerApplications,
+      counts: { remap: remapLeads.length, partner: partnerApplications.length }
+    });
+  } catch (err) {
+    return jsonResponse({ error: err.toString(), remapLeads: [], partnerApplications: [], counts: { remap: 0, partner: 0 } });
+  }
+}
+
 // ── รับ POST request จากเว็บ ──────────────────────────────────────────────────
 function doPost(e) {
   try {

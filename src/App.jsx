@@ -28,6 +28,7 @@ const ShiftupApp = () => {
   const [activePage, setActivePage] = useState('home');
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showDashPw, setShowDashPw]         = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -46,8 +47,22 @@ const ShiftupApp = () => {
     setMobileMenuOpen(false);
   };
 
+  if (activePage === 'dashboard') {
+    return (
+      <div className="min-h-screen bg-neutral-950 text-neutral-200 font-sans">
+        <DashboardPage onBack={() => navigateTo('home')} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-200 font-sans selection:bg-red-600 selection:text-white">
+      {showDashPw && (
+        <PasswordModal
+          onSuccess={() => { setShowDashPw(false); setActivePage('dashboard'); }}
+          onClose={() => setShowDashPw(false)}
+        />
+      )}
 
       {/* ── Shared Navigation ── */}
       <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-neutral-950/90 backdrop-blur-md border-b border-neutral-800 shadow-lg' : 'bg-neutral-950/50 backdrop-blur-sm'}`}>
@@ -152,6 +167,17 @@ const ShiftupApp = () => {
           </div>
         </div>
       </footer>
+
+      {/* ── Hidden Dashboard gear — หน้าแรกเท่านั้น ── */}
+      {activePage === 'home' && (
+        <button
+          onClick={() => setShowDashPw(true)}
+          title="Admin Dashboard"
+          className="fixed bottom-6 right-6 w-9 h-9 rounded-full bg-neutral-900/40 hover:bg-neutral-700 border border-neutral-800/50 flex items-center justify-center text-neutral-700 hover:text-neutral-300 transition-all duration-300 z-50 opacity-30 hover:opacity-100"
+          style={{ fontSize: '14px' }}>
+          ⚙
+        </button>
+      )}
     </div>
   );
 };
@@ -1522,5 +1548,213 @@ const PartnerPage = () => (
     </div>
   </div>
 );
+
+// ─── Pie Chart ────────────────────────────────────────────────────────────────
+const PieChart = ({ remapCount, partnerCount }) => {
+  const total = remapCount + partnerCount;
+  if (total === 0) {
+    return (
+      <div className="flex flex-col items-center py-8">
+        <div className="w-48 h-48 rounded-full border-4 border-dashed border-neutral-800 flex items-center justify-center">
+          <span className="text-neutral-600 text-sm">ยังไม่มีข้อมูล</span>
+        </div>
+      </div>
+    );
+  }
+
+  const cx = 120, cy = 120, r = 100;
+  const toXY = (deg) => {
+    const rad = (deg - 90) * Math.PI / 180;
+    return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+  };
+
+  const remapPct   = remapCount / total;
+  const remapAngle = remapPct * 360;
+
+  let remapPath, partnerPath;
+  if (remapCount === 0) {
+    partnerPath = `M ${cx},${cy - r} A ${r},${r} 0 1,1 ${cx - 0.01},${cy - r} Z`;
+    remapPath   = null;
+  } else if (partnerCount === 0) {
+    remapPath   = `M ${cx},${cy - r} A ${r},${r} 0 1,1 ${cx - 0.01},${cy - r} Z`;
+    partnerPath = null;
+  } else {
+    const [x1, y1] = toXY(0);
+    const [x2, y2] = toXY(remapAngle);
+    const largeR = remapAngle > 180 ? 1 : 0;
+    const largeP = remapAngle <= 180 ? 1 : 0;
+    remapPath   = `M ${cx},${cy} L ${x1},${y1} A ${r},${r} 0 ${largeR},1 ${x2},${y2} Z`;
+    partnerPath = `M ${cx},${cy} L ${x2},${y2} A ${r},${r} 0 ${largeP},1 ${x1},${y1} Z`;
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-6">
+      <svg width="240" height="240" viewBox="0 0 240 240">
+        {remapPath   && <path d={remapPath}   fill="#ef4444" />}
+        {partnerPath && <path d={partnerPath} fill="#f97316" />}
+        <circle cx={cx} cy={cy} r={44} fill="#111827" />
+        <text x={cx} y={cy - 8}  textAnchor="middle" fill="#ffffff" fontSize="24" fontWeight="bold">{total}</text>
+        <text x={cx} y={cy + 14} textAnchor="middle" fill="#9ca3af" fontSize="11">รวมทั้งหมด</text>
+      </svg>
+      <div className="flex flex-wrap justify-center gap-6">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-red-500 shrink-0" />
+          <span className="text-neutral-300 text-sm">ECU Remap ({remapCount}) — {Math.round(remapPct * 100)}%</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-orange-500 shrink-0" />
+          <span className="text-neutral-300 text-sm">Partner ({partnerCount}) — {Math.round((1 - remapPct) * 100)}%</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Dashboard Page ───────────────────────────────────────────────────────────
+const DashboardPage = ({ onBack }) => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(null);
+  const [data, setData]       = useState({
+    remapLeads: [], partnerApplications: [], counts: { remap: 0, partner: 0 }
+  });
+
+  useEffect(() => {
+    fetch(GOOGLE_SCRIPT_URL)
+      .then(r => r.json())
+      .then(d => { setData(d); setLoading(false); })
+      .catch(() => { setError('โหลดข้อมูลไม่ได้ กรุณาตรวจสอบการเชื่อมต่อ'); setLoading(false); });
+  }, []);
+
+  const { remapLeads, partnerApplications, counts } = data;
+  const total = counts.remap + counts.partner;
+  const thCls = 'px-4 py-3 text-left text-xs font-bold text-neutral-400 uppercase tracking-wider';
+  const tdCls = 'px-4 py-3 text-sm';
+
+  return (
+    <div className="min-h-screen bg-neutral-950 text-neutral-200">
+      {/* Header */}
+      <div className="bg-neutral-900 border-b border-neutral-800 px-6 py-4 flex items-center gap-4 sticky top-0 z-10">
+        <button onClick={onBack} className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors text-sm font-medium">
+          ← กลับหน้าหลัก
+        </button>
+        <span className="text-neutral-700">|</span>
+        <h1 className="text-white font-bold">🔐 Admin Dashboard</h1>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-12 space-y-12">
+
+        {loading && (
+          <div className="text-center text-neutral-500 py-32">
+            <div className="text-4xl mb-4 animate-pulse">⏳</div>
+            <p>กำลังโหลดข้อมูลจาก Google Sheets...</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="text-center text-red-400 py-32">
+            <div className="text-4xl mb-4">⚠️</div>
+            <p>{error}</p>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center">
+                <p className="text-neutral-500 text-sm mb-3 uppercase tracking-wider">ECU Remap Leads</p>
+                <p className="text-6xl font-black text-red-500">{counts.remap}</p>
+              </div>
+              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center">
+                <p className="text-neutral-500 text-sm mb-3 uppercase tracking-wider">Partner Applications</p>
+                <p className="text-6xl font-black text-orange-500">{counts.partner}</p>
+              </div>
+              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center">
+                <p className="text-neutral-500 text-sm mb-3 uppercase tracking-wider">รวมทั้งหมด</p>
+                <p className="text-6xl font-black text-white">{total}</p>
+              </div>
+            </div>
+
+            {/* Pie Chart */}
+            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 md:p-12">
+              <h2 className="text-white font-bold text-xl mb-8 text-center">สัดส่วน Leads ทั้งหมด</h2>
+              <PieChart remapCount={counts.remap} partnerCount={counts.partner} />
+            </div>
+
+            {/* Remap Leads Table */}
+            <div>
+              <h2 className="text-white font-bold text-xl mb-4 border-l-4 border-red-500 pl-4">
+                ECU Remap Leads <span className="text-neutral-500 font-normal text-base ml-2">({counts.remap} รายการ)</span>
+              </h2>
+              <div className="overflow-x-auto rounded-2xl border border-neutral-800">
+                <table className="w-full">
+                  <thead className="bg-neutral-900 border-b border-neutral-800">
+                    <tr>
+                      <th className={thCls}>วันที่</th>
+                      <th className={thCls}>ชื่อ</th>
+                      <th className={thCls}>ติดต่อ</th>
+                      <th className={thCls}>รุ่นรถ</th>
+                      <th className={thCls}>สถานที่</th>
+                      <th className={thCls}>รายละเอียด</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-900">
+                    {remapLeads.length === 0 ? (
+                      <tr><td colSpan={6} className="px-4 py-12 text-center text-neutral-600">ยังไม่มีข้อมูล</td></tr>
+                    ) : [...remapLeads].reverse().map((row, i) => (
+                      <tr key={i} className="bg-neutral-950 hover:bg-neutral-900 transition-colors">
+                        <td className={`${tdCls} text-neutral-500 whitespace-nowrap`}>{String(row.timestamp)}</td>
+                        <td className={`${tdCls} text-white font-medium`}>{row.name}</td>
+                        <td className={`${tdCls} text-neutral-300`}>{row.contact}</td>
+                        <td className={`${tdCls} text-neutral-300`}>{row.car}</td>
+                        <td className={`${tdCls} text-neutral-400`}>{row.location}</td>
+                        <td className={`${tdCls} text-neutral-400 max-w-xs truncate`}>{row.detail}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Partner Table */}
+            <div>
+              <h2 className="text-white font-bold text-xl mb-4 border-l-4 border-orange-500 pl-4">
+                Partner Applications <span className="text-neutral-500 font-normal text-base ml-2">({counts.partner} รายการ)</span>
+              </h2>
+              <div className="overflow-x-auto rounded-2xl border border-neutral-800">
+                <table className="w-full">
+                  <thead className="bg-neutral-900 border-b border-neutral-800">
+                    <tr>
+                      <th className={thCls}>วันที่</th>
+                      <th className={thCls}>ชื่อร้าน</th>
+                      <th className={thCls}>ผู้ติดต่อ</th>
+                      <th className={thCls}>เบอร์</th>
+                      <th className={thCls}>จังหวัด</th>
+                      <th className={thCls}>ความถนัด</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-900">
+                    {partnerApplications.length === 0 ? (
+                      <tr><td colSpan={6} className="px-4 py-12 text-center text-neutral-600">ยังไม่มีข้อมูล</td></tr>
+                    ) : [...partnerApplications].reverse().map((row, i) => (
+                      <tr key={i} className="bg-neutral-950 hover:bg-neutral-900 transition-colors">
+                        <td className={`${tdCls} text-neutral-500 whitespace-nowrap`}>{String(row.timestamp)}</td>
+                        <td className={`${tdCls} text-white font-medium`}>{row.shopName}</td>
+                        <td className={`${tdCls} text-neutral-300`}>{row.contactName}</td>
+                        <td className={`${tdCls} text-neutral-300`}>{row.phone}</td>
+                        <td className={`${tdCls} text-neutral-400`}>{row.province}</td>
+                        <td className={`${tdCls} text-neutral-400 text-xs`}>{row.expertise}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default ShiftupApp;
