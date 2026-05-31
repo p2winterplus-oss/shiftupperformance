@@ -35,10 +35,17 @@ function doGet(e) {
       lineId: r[4], province: r[5], expertise: r[6], facebook: r[7]
     }));
 
+    const visitsSheet = ss.getSheetByName('Visits');
+    const visitsVals  = visitsSheet ? visitsSheet.getDataRange().getValues() : [[]];
+    const visits = (visitsVals.length > 1 ? visitsVals.slice(1) : []).map(r => ({
+      isoTimestamp: r[0], timestamp: r[1], page: r[2], device: r[3], sessionId: r[4]
+    }));
+
     return jsonResponse({
       remapLeads,
       partnerApplications,
-      counts: { remap: remapLeads.length, partner: partnerApplications.length }
+      visits,
+      counts: { remap: remapLeads.length, partner: partnerApplications.length, visits: visits.length }
     });
   } catch (err) {
     return jsonResponse({ error: err.toString(), remapLeads: [], partnerApplications: [], counts: { remap: 0, partner: 0 } });
@@ -75,6 +82,15 @@ function doPost(e) {
         '─────────────────────────────────\n' +
         '→ ดูข้อมูลทั้งหมด: https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID
       );
+
+    } else if (data.source === 'visit') {
+      appendRow(ss, 'Visits', [
+        data.isoTimestamp || new Date().toISOString(),
+        data.timestamp    || new Date().toLocaleString('th-TH'),
+        data.page         || '',
+        data.device       || '',
+        data.sessionId    || '',
+      ]);
 
     } else if (data.source === 'partner') {
       appendRow(ss, 'Partner Applications', [
@@ -172,6 +188,17 @@ function setupSheets() {
   if (!dash) {
     dash = ss.insertSheet('Dashboard', 0); // วางไว้หน้าแรก
     buildDashboard(dash);
+  }
+
+  // ── Visits ───────────────────────────────────────────────────────────────────
+  let visitsSheet = ss.getSheetByName('Visits');
+  if (!visitsSheet) {
+    visitsSheet = ss.insertSheet('Visits');
+    const h = ['ISO Timestamp', 'วันที่-เวลา', 'หน้า', 'อุปกรณ์', 'Session ID'];
+    visitsSheet.appendRow(h);
+    styleHeader(visitsSheet, h.length, '#1a73e8');
+    [180, 160, 100, 80, 200].forEach((w, i) => visitsSheet.setColumnWidth(i + 1, w));
+    visitsSheet.setFrozenRows(1);
   }
 
   return '✅ Setup complete!';

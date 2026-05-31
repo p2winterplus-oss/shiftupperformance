@@ -40,6 +40,25 @@ const ShiftupApp = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // ── Track page visits ─────────────────────────────────────────────────────
+  useEffect(() => {
+    if (activePage === 'dashboard') return;
+    let sid = sessionStorage.getItem('su_sid');
+    if (!sid) {
+      sid = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      sessionStorage.setItem('su_sid', sid);
+    }
+    const device = /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST', mode: 'no-cors',
+      body: JSON.stringify({
+        source: 'visit', page: activePage, device, sessionId: sid,
+        isoTimestamp: new Date().toISOString(),
+        timestamp: new Date().toLocaleString('th-TH'),
+      }),
+    }).catch(() => {});
+  }, [activePage]);
+
   const lineUrl = "https://lin.ee/nZOMcph";
 
   const navigateTo = (page) => {
@@ -1549,6 +1568,172 @@ const PartnerPage = () => (
   </div>
 );
 
+// ─── Analytics Section ───────────────────────────────────────────────────────
+const AnalyticsSection = ({ visits = [] }) => {
+  const [rangeType, setRangeType] = useState('7d');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo]   = useState('');
+
+  const now        = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const weekStart  = new Date(todayStart.getTime() - 6 * 86400000);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const yearStart  = new Date(now.getFullYear(), 0, 1);
+
+  const safeDate = (iso) => { try { return new Date(iso); } catch { return null; } };
+
+  const getRangeStart = () => {
+    if (rangeType === '1d')    return todayStart;
+    if (rangeType === '7d')    return weekStart;
+    if (rangeType === '30d')   return new Date(todayStart.getTime() - 29 * 86400000);
+    if (rangeType === 'year')  return yearStart;
+    if (rangeType === 'custom' && customFrom) return new Date(customFrom);
+    return weekStart;
+  };
+  const getRangeEnd = () => {
+    if (rangeType === 'custom' && customTo) return new Date(customTo + 'T23:59:59');
+    return now;
+  };
+
+  const rangeStart = getRangeStart();
+  const rangeEnd   = getRangeEnd();
+
+  const inRange = (v) => { const d = safeDate(v.isoTimestamp); return d && d >= rangeStart && d <= rangeEnd; };
+  const filtered = visits.filter(inRange);
+
+  const todayCount  = visits.filter(v => { const d = safeDate(v.isoTimestamp); return d && d >= todayStart; }).length;
+  const weekCount   = visits.filter(v => { const d = safeDate(v.isoTimestamp); return d && d >= weekStart; }).length;
+  const monthCount  = visits.filter(v => { const d = safeDate(v.isoTimestamp); return d && d >= monthStart; }).length;
+  const yearCount   = visits.filter(v => { const d = safeDate(v.isoTimestamp); return d && d >= yearStart; }).length;
+
+  const uniqueSessions     = new Set(filtered.map(v => v.sessionId)).size;
+  const avgPages           = uniqueSessions > 0 ? (filtered.length / uniqueSessions).toFixed(1) : '0';
+
+  // Bar chart — daily counts in range
+  const days = [];
+  let cur = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), rangeStart.getDate());
+  const endDay = new Date(rangeEnd.getFullYear(), rangeEnd.getMonth(), rangeEnd.getDate());
+  while (cur <= endDay && days.length < 60) {
+    const ds = new Date(cur), de = new Date(cur.getTime() + 86400000 - 1);
+    days.push({
+      label: `${cur.getDate()}/${cur.getMonth() + 1}`,
+      count: filtered.filter(v => { const d = safeDate(v.isoTimestamp); return d && d >= ds && d <= de; }).length,
+    });
+    cur = new Date(cur.getTime() + 86400000);
+  }
+  const maxBar = Math.max(...days.map(d => d.count), 1);
+
+  // Page breakdown
+  const pageMap = {};
+  filtered.forEach(v => { pageMap[v.page] = (pageMap[v.page] || 0) + 1; });
+  const pageBreakdown = Object.entries(pageMap).sort((a, b) => b[1] - a[1]);
+  const PAGE_NAMES = { home: 'หน้าแรก', remap: 'ECU Remap', hks: 'HKS Exhaust', panthera: 'Panthera', partner: 'Partner' };
+
+  const mobileCount  = filtered.filter(v => v.device === 'mobile').length;
+  const desktopCount = filtered.filter(v => v.device === 'desktop').length;
+
+  const btnCls = (t) => `px-4 py-2 rounded-full text-sm font-bold transition-all ${rangeType === t ? 'bg-blue-600 text-white' : 'bg-neutral-800 text-neutral-400 hover:text-white'}`;
+
+  return (
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: 'วันนี้',      value: todayCount,  color: 'text-blue-400' },
+          { label: 'สัปดาห์นี้', value: weekCount,   color: 'text-cyan-400' },
+          { label: 'เดือนนี้',   value: monthCount,  color: 'text-teal-400' },
+          { label: 'ปีนี้',      value: yearCount,   color: 'text-green-400' },
+        ].map((s, i) => (
+          <div key={i} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 text-center">
+            <p className="text-neutral-500 text-xs uppercase tracking-wider mb-2">{s.label}</p>
+            <p className={`text-4xl font-black ${s.color}`}>{s.value}</p>
+            <p className="text-neutral-600 text-xs mt-1">การเข้าชม</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Filter */}
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+        <p className="text-neutral-400 text-sm mb-3 font-medium">เลือกช่วงเวลา</p>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {[{ k:'1d',label:'วันนี้'},{k:'7d',label:'7 วัน'},{k:'30d',label:'30 วัน'},{k:'year',label:'ปีนี้'},{k:'custom',label:'กำหนดเอง'}].map(b => (
+            <button key={b.k} onClick={() => setRangeType(b.k)} className={btnCls(b.k)}>{b.label}</button>
+          ))}
+        </div>
+        {rangeType === 'custom' && (
+          <div className="flex flex-wrap gap-3 items-center mt-3">
+            <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
+              className="bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500" />
+            <span className="text-neutral-500">ถึง</span>
+            <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
+              className="bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500" />
+          </div>
+        )}
+        <div className="flex flex-wrap gap-6 mt-4 text-sm border-t border-neutral-800 pt-4">
+          <span className="text-neutral-400">การเข้าชม: <span className="text-white font-bold">{filtered.length}</span></span>
+          <span className="text-neutral-400">Sessions: <span className="text-white font-bold">{uniqueSessions}</span></span>
+          <span className="text-neutral-400">เฉลี่ย: <span className="text-white font-bold">{avgPages}</span> หน้า/session</span>
+        </div>
+      </div>
+
+      {/* Bar Chart */}
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+        <h3 className="text-white font-bold mb-6">การเข้าชมรายวัน</h3>
+        {days.every(d => d.count === 0) ? (
+          <p className="text-neutral-600 text-center py-8">ยังไม่มีข้อมูลในช่วงนี้</p>
+        ) : (
+          <div className="overflow-x-auto pb-2">
+            <svg width={Math.max(days.length * 38, 300)} height="170">
+              {days.map((day, i) => {
+                const bh = Math.max((day.count / maxBar) * 120, day.count > 0 ? 6 : 0);
+                const x = i * 38 + 6;
+                return (
+                  <g key={i}>
+                    <rect x={x} y={130 - bh} width={26} height={bh} rx={4} fill={day.count > 0 ? '#3b82f6' : '#1f2937'} />
+                    {day.count > 0 && <text x={x+13} y={125 - bh} textAnchor="middle" fill="#93c5fd" fontSize="10">{day.count}</text>}
+                    <text x={x+13} y={148} textAnchor="middle" fill="#6b7280" fontSize="9">{day.label}</text>
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+        )}
+      </div>
+
+      {/* Page & Device */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+          <h3 className="text-white font-bold mb-5">หน้าที่เข้าชมมากสุด</h3>
+          {pageBreakdown.length === 0 ? <p className="text-neutral-600 text-sm">ยังไม่มีข้อมูล</p> :
+            pageBreakdown.map(([page, count]) => (
+              <div key={page} className="flex items-center gap-3 mb-3">
+                <span className="text-neutral-300 text-sm w-28 shrink-0">{PAGE_NAMES[page] || page}</span>
+                <div className="flex-1 bg-neutral-800 rounded-full h-2">
+                  <div className="bg-blue-500 h-2 rounded-full transition-all" style={{ width: `${filtered.length > 0 ? (count / filtered.length) * 100 : 0}%` }} />
+                </div>
+                <span className="text-neutral-400 text-sm w-6 text-right shrink-0">{count}</span>
+              </div>
+            ))}
+        </div>
+        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+          <h3 className="text-white font-bold mb-5">อุปกรณ์</h3>
+          {filtered.length === 0 ? <p className="text-neutral-600 text-sm">ยังไม่มีข้อมูล</p> :
+            [{ label: '📱 Mobile', count: mobileCount, color: 'bg-blue-500' },
+             { label: '💻 Desktop', count: desktopCount, color: 'bg-purple-500' }].map(d => (
+              <div key={d.label} className="flex items-center gap-3 mb-4">
+                <span className="text-neutral-300 text-sm w-28 shrink-0">{d.label}</span>
+                <div className="flex-1 bg-neutral-800 rounded-full h-2">
+                  <div className={`${d.color} h-2 rounded-full`} style={{ width: `${filtered.length > 0 ? (d.count / filtered.length) * 100 : 0}%` }} />
+                </div>
+                <span className="text-neutral-400 text-sm w-6 text-right shrink-0">{d.count}</span>
+              </div>
+            ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Pie Chart ────────────────────────────────────────────────────────────────
 const PieChart = ({ remapCount, partnerCount }) => {
   const total = remapCount + partnerCount;
@@ -1615,7 +1800,7 @@ const DashboardPage = ({ onBack }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
   const [data, setData]       = useState({
-    remapLeads: [], partnerApplications: [], counts: { remap: 0, partner: 0 }
+    remapLeads: [], partnerApplications: [], visits: [], counts: { remap: 0, partner: 0 }
   });
 
   useEffect(() => {
@@ -1659,6 +1844,12 @@ const DashboardPage = ({ onBack }) => {
 
         {!loading && !error && (
           <>
+            {/* Analytics */}
+            <div>
+              <h2 className="text-white font-bold text-xl mb-6 border-l-4 border-blue-500 pl-4">📊 Analytics — การเข้าชมเว็บไซต์</h2>
+              <AnalyticsSection visits={data.visits || []} />
+            </div>
+
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center">
