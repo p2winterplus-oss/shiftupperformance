@@ -26,43 +26,43 @@
     "portfolio": [
       {
         "id": 1,
-        "imgUrl": "",
-        "caption": "Mazda 3 Skyactiv-G"
+        "imgUrl": "https://drive.google.com/thumbnail?id=1JRRgxj-Fwwwi1xYG7OX0g2Q1EZ1MsTGx&sz=w1200",
+        "caption": "Mazda Cx-5 2.0L"
       },
       {
         "id": 2,
-        "imgUrl": "",
-        "caption": "Mazda 2 Diesel"
+        "imgUrl": "https://drive.google.com/thumbnail?id=17wMiIsW4pVDKT9EAklrP5d0Nl-qLV7RL&sz=w1200",
+        "caption": "Mazda 3 BP"
       },
       {
         "id": 3,
-        "imgUrl": "",
-        "caption": "Mazda CX-30"
+        "imgUrl": "https://drive.google.com/thumbnail?id=1cIHq00W2S_mGgcxu2FPeN347PVOBVPU6&sz=w1200",
+        "caption": "Honda Civic"
       },
       {
         "id": 4,
-        "imgUrl": "",
-        "caption": "Mazda CX-5"
+        "imgUrl": "https://drive.google.com/thumbnail?id=1Mw5cm1ZqIZ66XERonL8BrBi_ha-LppRr&sz=w1200",
+        "caption": "Mazda CX-5 2.0L"
       },
       {
         "id": 5,
-        "imgUrl": "",
-        "caption": "Mazda 3 BM"
+        "imgUrl": "https://drive.google.com/thumbnail?id=1p06U33O7Al2lhFn39b2W9UpTSrAQTu7o&sz=w1200",
+        "caption": "Honda Accord"
       },
       {
         "id": 6,
-        "imgUrl": "",
-        "caption": "Mazda 6"
+        "imgUrl": "https://drive.google.com/thumbnail?id=1lYpewWUVN9_JPvLYmWxburiE-jhErGfM&sz=w1200",
+        "caption": "Mazda Cx-30"
       },
       {
         "id": 7,
-        "imgUrl": "",
-        "caption": "Mazda 2 Gasoline"
+        "imgUrl": "https://drive.google.com/thumbnail?id=1We1bsQY0SVhpPApfg9GqbflU_vgul_JH&sz=w1200",
+        "caption": "Mazda 2 1.3L"
       },
       {
         "id": 8,
-        "imgUrl": "",
-        "caption": "Mazda MX-5"
+        "imgUrl": "https://drive.google.com/thumbnail?id=1UiME2ttmCkamSbuwZtnw8mdb5ked6-Xz&sz=w1200",
+        "caption": "Honda Accord"
       }
     ],
     "reviews": [
