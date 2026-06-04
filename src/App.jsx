@@ -28,6 +28,7 @@ const ShiftupApp = () => {
   const [activePage, setActivePage] = useState('home');
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showDashPw, setShowDashPw] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -46,8 +47,22 @@ const ShiftupApp = () => {
     setMobileMenuOpen(false);
   };
 
+  if (activePage === 'dashboard') {
+    return (
+      <div className="min-h-screen bg-neutral-950 text-neutral-200 font-sans">
+        <DashboardPage onBack={() => navigateTo('home')} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-200 font-sans selection:bg-red-600 selection:text-white">
+      {showDashPw && (
+        <PasswordModal
+          onSuccess={() => { setShowDashPw(false); setActivePage('dashboard'); }}
+          onClose={() => setShowDashPw(false)}
+        />
+      )}
 
       {/* ── Shared Navigation ── */}
       <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-neutral-950/90 backdrop-blur-md border-b border-neutral-800 shadow-lg' : 'bg-neutral-950/50 backdrop-blur-sm'}`}>
@@ -152,6 +167,17 @@ const ShiftupApp = () => {
           </div>
         </div>
       </footer>
+
+      {/* ── Hidden Dashboard gear — หน้าแรกเท่านั้น ── */}
+      {activePage === 'home' && (
+        <button
+          onClick={() => setShowDashPw(true)}
+          title="Admin Dashboard"
+          className="fixed bottom-6 right-6 w-9 h-9 rounded-full bg-neutral-900/40 hover:bg-neutral-700 border border-neutral-800/50 flex items-center justify-center text-neutral-700 hover:text-neutral-300 transition-all duration-300 z-50 opacity-30 hover:opacity-100"
+          style={{ fontSize: '14px' }}>
+          ⚙
+        </button>
+      )}
     </div>
   );
 };
