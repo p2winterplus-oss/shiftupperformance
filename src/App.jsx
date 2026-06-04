@@ -10,7 +10,7 @@ const HERO_BG  = 'https://drive.google.com/thumbnail?id=1G3y845m2OTvSpoDjUG4v59T
 const PROD_BG  = 'https://drive.google.com/thumbnail?id=1Fw5aLkbJZvHxIeu7NtegJnRSE_aO1UiA&sz=w2400';
 const LINE_URL  = 'https://lin.ee/nZOMcph';
 // ↓ วาง URL ของ Google Apps Script Web App หลัง Deploy แล้ว
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxGc0JZJkZ0MtW73_MldOdcc-ILttkvcA5G_16-0MwhjrLtWLSFTlQrMdD3W-g-dmqIDg/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwMrK1ip9KWPihhA0VAkUMbYrsHBIqRrcsne099n-t0HBkgAKlFtTvhLDl0asMciy0TWw/exec';
 
 async function submitToSheets(payload) {
   if (!GOOGLE_SCRIPT_URL) return;
@@ -28,7 +28,6 @@ const ShiftupApp = () => {
   const [activePage, setActivePage] = useState('home');
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showDashPw, setShowDashPw]         = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -40,25 +39,6 @@ const ShiftupApp = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // ── Track page visits ─────────────────────────────────────────────────────
-  useEffect(() => {
-    if (activePage === 'dashboard') return;
-    let sid = sessionStorage.getItem('su_sid');
-    if (!sid) {
-      sid = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      sessionStorage.setItem('su_sid', sid);
-    }
-    const device = /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
-    fetch(GOOGLE_SCRIPT_URL, {
-      method: 'POST', mode: 'no-cors',
-      body: JSON.stringify({
-        source: 'visit', page: activePage, device, sessionId: sid,
-        isoTimestamp: new Date().toISOString(),
-        timestamp: new Date().toLocaleString('th-TH'),
-      }),
-    }).catch(() => {});
-  }, [activePage]);
-
   const lineUrl = "https://lin.ee/nZOMcph";
 
   const navigateTo = (page) => {
@@ -66,22 +46,8 @@ const ShiftupApp = () => {
     setMobileMenuOpen(false);
   };
 
-  if (activePage === 'dashboard') {
-    return (
-      <div className="min-h-screen bg-neutral-950 text-neutral-200 font-sans">
-        <DashboardPage onBack={() => navigateTo('home')} />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-200 font-sans selection:bg-red-600 selection:text-white">
-      {showDashPw && (
-        <PasswordModal
-          onSuccess={() => { setShowDashPw(false); setActivePage('dashboard'); }}
-          onClose={() => setShowDashPw(false)}
-        />
-      )}
 
       {/* ── Shared Navigation ── */}
       <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-neutral-950/90 backdrop-blur-md border-b border-neutral-800 shadow-lg' : 'bg-neutral-950/50 backdrop-blur-sm'}`}>
@@ -186,17 +152,6 @@ const ShiftupApp = () => {
           </div>
         </div>
       </footer>
-
-      {/* ── Hidden Dashboard gear — หน้าแรกเท่านั้น ── */}
-      {activePage === 'home' && (
-        <button
-          onClick={() => setShowDashPw(true)}
-          title="Admin Dashboard"
-          className="fixed bottom-6 right-6 w-9 h-9 rounded-full bg-neutral-900/40 hover:bg-neutral-700 border border-neutral-800/50 flex items-center justify-center text-neutral-700 hover:text-neutral-300 transition-all duration-300 z-50 opacity-30 hover:opacity-100"
-          style={{ fontSize: '14px' }}>
-          ⚙
-        </button>
-      )}
     </div>
   );
 };
@@ -468,8 +423,8 @@ const Portfolio3DSlideshow = ({ items }) => {
       onMouseLeave={() => setHovered(false)}>
 
       {/* 3D Stage */}
-      <div className="relative h-52 sm:h-72 md:h-96 flex items-center justify-center"
-        style={{ perspective: '1200px' }}>
+      <div className="relative h-64 sm:h-80 md:h-[30rem] flex items-center justify-center"
+        style={{ perspective: '1400px' }}>
 
         {items.map((item, i) => {
           let off = i - current;
@@ -482,7 +437,7 @@ const Portfolio3DSlideshow = ({ items }) => {
             <div key={item.id}
               className="absolute rounded-2xl overflow-hidden border border-neutral-700 shadow-2xl"
               style={{
-                width: 'min(280px, 60vw)',
+                width: 'min(420px, 78vw)',
                 aspectRatio: '4/3',
                 cursor: abs === 0 ? 'default' : 'pointer',
                 transform: `rotateY(${off * 38}deg) translateX(${off * 50}%) translateZ(${-abs * 130}px) scale(${1 - abs * 0.18})`,
@@ -511,9 +466,9 @@ const Portfolio3DSlideshow = ({ items }) => {
 
       {/* Arrows */}
       <button onClick={() => goTo(current - 1)}
-        className="absolute left-0 top-[calc(50%-2rem)] z-20 w-10 h-10 rounded-full bg-neutral-900/80 hover:bg-red-600 border border-neutral-700 text-white flex items-center justify-center transition-all text-sm font-bold shadow-lg">◀</button>
+        className="absolute left-0 top-[calc(50%-2.5rem)] z-20 w-10 h-10 rounded-full bg-neutral-900/80 hover:bg-red-600 border border-neutral-700 text-white flex items-center justify-center transition-all text-sm font-bold shadow-lg">◀</button>
       <button onClick={() => goTo(current + 1)}
-        className="absolute right-0 top-[calc(50%-2rem)] z-20 w-10 h-10 rounded-full bg-neutral-900/80 hover:bg-red-600 border border-neutral-700 text-white flex items-center justify-center transition-all text-sm font-bold shadow-lg">▶</button>
+        className="absolute right-0 top-[calc(50%-2.5rem)] z-20 w-10 h-10 rounded-full bg-neutral-900/80 hover:bg-red-600 border border-neutral-700 text-white flex items-center justify-center transition-all text-sm font-bold shadow-lg">▶</button>
 
       {/* Dots */}
       <div className="flex justify-center gap-1.5 mt-5">
@@ -549,7 +504,7 @@ const ReviewsCarousel = ({ reviews }) => {
       <div className="flex pb-2" style={{
         gap: `${GAP}px`,
         width: `${totalW * 2}px`,
-        animation: `reviewScroll ${reviews.length * 5}s linear infinite`,
+        animation: `reviewScroll ${reviews.length * 9}s linear infinite`,
         animationPlayState: paused ? 'paused' : 'running',
       }}>
         {[...reviews, ...reviews].map((rev, i) => (
@@ -1671,385 +1626,5 @@ const PartnerPage = () => (
     </div>
   </div>
 );
-
-// ─── Analytics Section ───────────────────────────────────────────────────────
-const AnalyticsSection = ({ visits = [] }) => {
-  const [rangeType, setRangeType] = useState('7d');
-  const [customFrom, setCustomFrom] = useState('');
-  const [customTo, setCustomTo]   = useState('');
-
-  const now        = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const weekStart  = new Date(todayStart.getTime() - 6 * 86400000);
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const yearStart  = new Date(now.getFullYear(), 0, 1);
-
-  const safeDate = (iso) => { try { return new Date(iso); } catch { return null; } };
-
-  const getRangeStart = () => {
-    if (rangeType === '1d')    return todayStart;
-    if (rangeType === '7d')    return weekStart;
-    if (rangeType === '30d')   return new Date(todayStart.getTime() - 29 * 86400000);
-    if (rangeType === 'year')  return yearStart;
-    if (rangeType === 'custom' && customFrom) return new Date(customFrom);
-    return weekStart;
-  };
-  const getRangeEnd = () => {
-    if (rangeType === 'custom' && customTo) return new Date(customTo + 'T23:59:59');
-    return now;
-  };
-
-  const rangeStart = getRangeStart();
-  const rangeEnd   = getRangeEnd();
-
-  const inRange = (v) => { const d = safeDate(v.isoTimestamp); return d && d >= rangeStart && d <= rangeEnd; };
-  const filtered = visits.filter(inRange);
-
-  const todayCount  = visits.filter(v => { const d = safeDate(v.isoTimestamp); return d && d >= todayStart; }).length;
-  const weekCount   = visits.filter(v => { const d = safeDate(v.isoTimestamp); return d && d >= weekStart; }).length;
-  const monthCount  = visits.filter(v => { const d = safeDate(v.isoTimestamp); return d && d >= monthStart; }).length;
-  const yearCount   = visits.filter(v => { const d = safeDate(v.isoTimestamp); return d && d >= yearStart; }).length;
-
-  const uniqueSessions     = new Set(filtered.map(v => v.sessionId)).size;
-  const avgPages           = uniqueSessions > 0 ? (filtered.length / uniqueSessions).toFixed(1) : '0';
-
-  // Bar chart — daily counts in range
-  const days = [];
-  let cur = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), rangeStart.getDate());
-  const endDay = new Date(rangeEnd.getFullYear(), rangeEnd.getMonth(), rangeEnd.getDate());
-  while (cur <= endDay && days.length < 60) {
-    const ds = new Date(cur), de = new Date(cur.getTime() + 86400000 - 1);
-    days.push({
-      label: `${cur.getDate()}/${cur.getMonth() + 1}`,
-      count: filtered.filter(v => { const d = safeDate(v.isoTimestamp); return d && d >= ds && d <= de; }).length,
-    });
-    cur = new Date(cur.getTime() + 86400000);
-  }
-  const maxBar = Math.max(...days.map(d => d.count), 1);
-
-  // Page breakdown
-  const pageMap = {};
-  filtered.forEach(v => { pageMap[v.page] = (pageMap[v.page] || 0) + 1; });
-  const pageBreakdown = Object.entries(pageMap).sort((a, b) => b[1] - a[1]);
-  const PAGE_NAMES = { home: 'หน้าแรก', remap: 'ECU Remap', hks: 'HKS Exhaust', panthera: 'Panthera', partner: 'Partner' };
-
-  const mobileCount  = filtered.filter(v => v.device === 'mobile').length;
-  const desktopCount = filtered.filter(v => v.device === 'desktop').length;
-
-  const btnCls = (t) => `px-4 py-2 rounded-full text-sm font-bold transition-all ${rangeType === t ? 'bg-blue-600 text-white' : 'bg-neutral-800 text-neutral-400 hover:text-white'}`;
-
-  return (
-    <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: 'วันนี้',      value: todayCount,  color: 'text-blue-400' },
-          { label: 'สัปดาห์นี้', value: weekCount,   color: 'text-cyan-400' },
-          { label: 'เดือนนี้',   value: monthCount,  color: 'text-teal-400' },
-          { label: 'ปีนี้',      value: yearCount,   color: 'text-green-400' },
-        ].map((s, i) => (
-          <div key={i} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 text-center">
-            <p className="text-neutral-500 text-xs uppercase tracking-wider mb-2">{s.label}</p>
-            <p className={`text-4xl font-black ${s.color}`}>{s.value}</p>
-            <p className="text-neutral-600 text-xs mt-1">การเข้าชม</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Filter */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
-        <p className="text-neutral-400 text-sm mb-3 font-medium">เลือกช่วงเวลา</p>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {[{ k:'1d',label:'วันนี้'},{k:'7d',label:'7 วัน'},{k:'30d',label:'30 วัน'},{k:'year',label:'ปีนี้'},{k:'custom',label:'กำหนดเอง'}].map(b => (
-            <button key={b.k} onClick={() => setRangeType(b.k)} className={btnCls(b.k)}>{b.label}</button>
-          ))}
-        </div>
-        {rangeType === 'custom' && (
-          <div className="flex flex-wrap gap-3 items-center mt-3">
-            <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
-              className="bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500" />
-            <span className="text-neutral-500">ถึง</span>
-            <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
-              className="bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500" />
-          </div>
-        )}
-        <div className="flex flex-wrap gap-6 mt-4 text-sm border-t border-neutral-800 pt-4">
-          <span className="text-neutral-400">การเข้าชม: <span className="text-white font-bold">{filtered.length}</span></span>
-          <span className="text-neutral-400">Sessions: <span className="text-white font-bold">{uniqueSessions}</span></span>
-          <span className="text-neutral-400">เฉลี่ย: <span className="text-white font-bold">{avgPages}</span> หน้า/session</span>
-        </div>
-      </div>
-
-      {/* Bar Chart */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
-        <h3 className="text-white font-bold mb-6">การเข้าชมรายวัน</h3>
-        {days.every(d => d.count === 0) ? (
-          <p className="text-neutral-600 text-center py-8">ยังไม่มีข้อมูลในช่วงนี้</p>
-        ) : (
-          <div className="overflow-x-auto pb-2">
-            <svg width={Math.max(days.length * 38, 300)} height="170">
-              {days.map((day, i) => {
-                const bh = Math.max((day.count / maxBar) * 120, day.count > 0 ? 6 : 0);
-                const x = i * 38 + 6;
-                return (
-                  <g key={i}>
-                    <rect x={x} y={130 - bh} width={26} height={bh} rx={4} fill={day.count > 0 ? '#3b82f6' : '#1f2937'} />
-                    {day.count > 0 && <text x={x+13} y={125 - bh} textAnchor="middle" fill="#93c5fd" fontSize="10">{day.count}</text>}
-                    <text x={x+13} y={148} textAnchor="middle" fill="#6b7280" fontSize="9">{day.label}</text>
-                  </g>
-                );
-              })}
-            </svg>
-          </div>
-        )}
-      </div>
-
-      {/* Page & Device */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
-          <h3 className="text-white font-bold mb-5">หน้าที่เข้าชมมากสุด</h3>
-          {pageBreakdown.length === 0 ? <p className="text-neutral-600 text-sm">ยังไม่มีข้อมูล</p> :
-            pageBreakdown.map(([page, count]) => (
-              <div key={page} className="flex items-center gap-3 mb-3">
-                <span className="text-neutral-300 text-sm w-28 shrink-0">{PAGE_NAMES[page] || page}</span>
-                <div className="flex-1 bg-neutral-800 rounded-full h-2">
-                  <div className="bg-blue-500 h-2 rounded-full transition-all" style={{ width: `${filtered.length > 0 ? (count / filtered.length) * 100 : 0}%` }} />
-                </div>
-                <span className="text-neutral-400 text-sm w-6 text-right shrink-0">{count}</span>
-              </div>
-            ))}
-        </div>
-        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
-          <h3 className="text-white font-bold mb-5">อุปกรณ์</h3>
-          {filtered.length === 0 ? <p className="text-neutral-600 text-sm">ยังไม่มีข้อมูล</p> :
-            [{ label: '📱 Mobile', count: mobileCount, color: 'bg-blue-500' },
-             { label: '💻 Desktop', count: desktopCount, color: 'bg-purple-500' }].map(d => (
-              <div key={d.label} className="flex items-center gap-3 mb-4">
-                <span className="text-neutral-300 text-sm w-28 shrink-0">{d.label}</span>
-                <div className="flex-1 bg-neutral-800 rounded-full h-2">
-                  <div className={`${d.color} h-2 rounded-full`} style={{ width: `${filtered.length > 0 ? (d.count / filtered.length) * 100 : 0}%` }} />
-                </div>
-                <span className="text-neutral-400 text-sm w-6 text-right shrink-0">{d.count}</span>
-              </div>
-            ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ─── Pie Chart ────────────────────────────────────────────────────────────────
-const PieChart = ({ remapCount, partnerCount }) => {
-  const total = remapCount + partnerCount;
-  if (total === 0) {
-    return (
-      <div className="flex flex-col items-center py-8">
-        <div className="w-48 h-48 rounded-full border-4 border-dashed border-neutral-800 flex items-center justify-center">
-          <span className="text-neutral-600 text-sm">ยังไม่มีข้อมูล</span>
-        </div>
-      </div>
-    );
-  }
-
-  const cx = 120, cy = 120, r = 100;
-  const toXY = (deg) => {
-    const rad = (deg - 90) * Math.PI / 180;
-    return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
-  };
-
-  const remapPct   = remapCount / total;
-  const remapAngle = remapPct * 360;
-
-  let remapPath, partnerPath;
-  if (remapCount === 0) {
-    partnerPath = `M ${cx},${cy - r} A ${r},${r} 0 1,1 ${cx - 0.01},${cy - r} Z`;
-    remapPath   = null;
-  } else if (partnerCount === 0) {
-    remapPath   = `M ${cx},${cy - r} A ${r},${r} 0 1,1 ${cx - 0.01},${cy - r} Z`;
-    partnerPath = null;
-  } else {
-    const [x1, y1] = toXY(0);
-    const [x2, y2] = toXY(remapAngle);
-    const largeR = remapAngle > 180 ? 1 : 0;
-    const largeP = remapAngle <= 180 ? 1 : 0;
-    remapPath   = `M ${cx},${cy} L ${x1},${y1} A ${r},${r} 0 ${largeR},1 ${x2},${y2} Z`;
-    partnerPath = `M ${cx},${cy} L ${x2},${y2} A ${r},${r} 0 ${largeP},1 ${x1},${y1} Z`;
-  }
-
-  return (
-    <div className="flex flex-col items-center gap-6">
-      <svg width="240" height="240" viewBox="0 0 240 240">
-        {remapPath   && <path d={remapPath}   fill="#ef4444" />}
-        {partnerPath && <path d={partnerPath} fill="#f97316" />}
-        <circle cx={cx} cy={cy} r={44} fill="#111827" />
-        <text x={cx} y={cy - 8}  textAnchor="middle" fill="#ffffff" fontSize="24" fontWeight="bold">{total}</text>
-        <text x={cx} y={cy + 14} textAnchor="middle" fill="#9ca3af" fontSize="11">รวมทั้งหมด</text>
-      </svg>
-      <div className="flex flex-wrap justify-center gap-6">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-red-500 shrink-0" />
-          <span className="text-neutral-300 text-sm">ECU Remap ({remapCount}) — {Math.round(remapPct * 100)}%</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-orange-500 shrink-0" />
-          <span className="text-neutral-300 text-sm">Partner ({partnerCount}) — {Math.round((1 - remapPct) * 100)}%</span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ─── Dashboard Page ───────────────────────────────────────────────────────────
-const DashboardPage = ({ onBack }) => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState(null);
-  const [data, setData]       = useState({
-    remapLeads: [], partnerApplications: [], visits: [], counts: { remap: 0, partner: 0 }
-  });
-
-  useEffect(() => {
-    fetch('/api/get-leads')
-      .then(r => r.json())
-      .then(d => { setData(d); setLoading(false); })
-      .catch(() => { setError('โหลดข้อมูลไม่ได้ กรุณาตรวจสอบการเชื่อมต่อ'); setLoading(false); });
-  }, []);
-
-  const { remapLeads, partnerApplications, counts } = data;
-  const total = counts.remap + counts.partner;
-  const thCls = 'px-4 py-3 text-left text-xs font-bold text-neutral-400 uppercase tracking-wider';
-  const tdCls = 'px-4 py-3 text-sm';
-
-  return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-200">
-      {/* Header */}
-      <div className="bg-neutral-900 border-b border-neutral-800 px-6 py-4 flex items-center gap-4 sticky top-0 z-10">
-        <button onClick={onBack} className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors text-sm font-medium">
-          ← กลับหน้าหลัก
-        </button>
-        <span className="text-neutral-700">|</span>
-        <h1 className="text-white font-bold">🔐 Admin Dashboard</h1>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-6 py-12 space-y-12">
-
-        {loading && (
-          <div className="text-center text-neutral-500 py-32">
-            <div className="text-4xl mb-4 animate-pulse">⏳</div>
-            <p>กำลังโหลดข้อมูลจาก Google Sheets...</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="text-center text-red-400 py-32">
-            <div className="text-4xl mb-4">⚠️</div>
-            <p>{error}</p>
-          </div>
-        )}
-
-        {!loading && !error && (
-          <>
-            {/* Analytics */}
-            <div>
-              <h2 className="text-white font-bold text-xl mb-6 border-l-4 border-blue-500 pl-4">📊 Analytics — การเข้าชมเว็บไซต์</h2>
-              <AnalyticsSection visits={data.visits || []} />
-            </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center">
-                <p className="text-neutral-500 text-sm mb-3 uppercase tracking-wider">ECU Remap Leads</p>
-                <p className="text-6xl font-black text-red-500">{counts.remap}</p>
-              </div>
-              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center">
-                <p className="text-neutral-500 text-sm mb-3 uppercase tracking-wider">Partner Applications</p>
-                <p className="text-6xl font-black text-orange-500">{counts.partner}</p>
-              </div>
-              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center">
-                <p className="text-neutral-500 text-sm mb-3 uppercase tracking-wider">รวมทั้งหมด</p>
-                <p className="text-6xl font-black text-white">{total}</p>
-              </div>
-            </div>
-
-            {/* Pie Chart */}
-            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 md:p-12">
-              <h2 className="text-white font-bold text-xl mb-8 text-center">สัดส่วน Leads ทั้งหมด</h2>
-              <PieChart remapCount={counts.remap} partnerCount={counts.partner} />
-            </div>
-
-            {/* Remap Leads Table */}
-            <div>
-              <h2 className="text-white font-bold text-xl mb-4 border-l-4 border-red-500 pl-4">
-                ECU Remap Leads <span className="text-neutral-500 font-normal text-base ml-2">({counts.remap} รายการ)</span>
-              </h2>
-              <div className="overflow-x-auto rounded-2xl border border-neutral-800">
-                <table className="w-full">
-                  <thead className="bg-neutral-900 border-b border-neutral-800">
-                    <tr>
-                      <th className={thCls}>วันที่</th>
-                      <th className={thCls}>ชื่อ</th>
-                      <th className={thCls}>ติดต่อ</th>
-                      <th className={thCls}>รุ่นรถ</th>
-                      <th className={thCls}>สถานที่</th>
-                      <th className={thCls}>รายละเอียด</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-900">
-                    {remapLeads.length === 0 ? (
-                      <tr><td colSpan={6} className="px-4 py-12 text-center text-neutral-600">ยังไม่มีข้อมูล</td></tr>
-                    ) : [...remapLeads].reverse().map((row, i) => (
-                      <tr key={i} className="bg-neutral-950 hover:bg-neutral-900 transition-colors">
-                        <td className={`${tdCls} text-neutral-500 whitespace-nowrap`}>{String(row.timestamp)}</td>
-                        <td className={`${tdCls} text-white font-medium`}>{row.name}</td>
-                        <td className={`${tdCls} text-neutral-300`}>{row.contact}</td>
-                        <td className={`${tdCls} text-neutral-300`}>{row.car}</td>
-                        <td className={`${tdCls} text-neutral-400`}>{row.location}</td>
-                        <td className={`${tdCls} text-neutral-400 max-w-xs truncate`}>{row.detail}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Partner Table */}
-            <div>
-              <h2 className="text-white font-bold text-xl mb-4 border-l-4 border-orange-500 pl-4">
-                Partner Applications <span className="text-neutral-500 font-normal text-base ml-2">({counts.partner} รายการ)</span>
-              </h2>
-              <div className="overflow-x-auto rounded-2xl border border-neutral-800">
-                <table className="w-full">
-                  <thead className="bg-neutral-900 border-b border-neutral-800">
-                    <tr>
-                      <th className={thCls}>วันที่</th>
-                      <th className={thCls}>ชื่อร้าน</th>
-                      <th className={thCls}>ผู้ติดต่อ</th>
-                      <th className={thCls}>เบอร์</th>
-                      <th className={thCls}>จังหวัด</th>
-                      <th className={thCls}>ความถนัด</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-900">
-                    {partnerApplications.length === 0 ? (
-                      <tr><td colSpan={6} className="px-4 py-12 text-center text-neutral-600">ยังไม่มีข้อมูล</td></tr>
-                    ) : [...partnerApplications].reverse().map((row, i) => (
-                      <tr key={i} className="bg-neutral-950 hover:bg-neutral-900 transition-colors">
-                        <td className={`${tdCls} text-neutral-500 whitespace-nowrap`}>{String(row.timestamp)}</td>
-                        <td className={`${tdCls} text-white font-medium`}>{row.shopName}</td>
-                        <td className={`${tdCls} text-neutral-300`}>{row.contactName}</td>
-                        <td className={`${tdCls} text-neutral-300`}>{row.phone}</td>
-                        <td className={`${tdCls} text-neutral-400`}>{row.province}</td>
-                        <td className={`${tdCls} text-neutral-400 text-xs`}>{row.expertise}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-};
 
 export default ShiftupApp;
