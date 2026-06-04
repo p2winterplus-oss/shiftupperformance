@@ -111,6 +111,25 @@ const HKS_PER_PAGE = 12
 
 ---
 
+## Last Session
+**วันที่**: 4 มิ.ย. 2569  
+**สิ่งที่ทำไปในsession นี้**:
+- เพิ่ม Brand tab pricing (Mazda/Honda/Toyota) ใน Remap page — editable ผ่าน admin
+- เพิ่ม 3D Coverflow Portfolio Slideshow (auto-play 3.5s, ◀▶ + dots)
+- เพิ่ม Infinite auto-scroll Reviews Carousel (1 แถว, pause on hover, 9s/card)
+- เพิ่ม Email notification → `p2w.interplus@gmail.com` ทุกครั้งที่มีฟอร์มส่งเข้า
+- แก้ปุ่ม Dashboard gear หายกลับมาครบ
+- แก้ DashboardPage / AnalyticsSection / PieChart หายกลับมาครบ (build พังเพราะ component หาย)
+- revert server.js URL กลับเป็น `AKfycbxGc0...` ที่มี `doGet` ทำงานได้
+- ลบ `dev` branch ออก เหลือแค่ `main` branch เดียว
+- สร้าง CLAUDE.md นี้เพื่อ context continuity
+
+**ค้างอยู่ / ยังไม่ได้ตรวจสอบ**:
+- Dashboard โหลดข้อมูลจาก Sheet ได้หรือยัง (หลัง Railway deploy ล่าสุด)
+- Apps Script URL ที่ใช้อยู่ใน server.js (`AKfycbxGc0...`) — ยืนยันว่ามี `doGet` ทำงานได้จริง
+
+---
+
 ## สิ่งที่ต้องระวัง
 1. **อย่าแตะ server.js URL** — ใช้อยู่แล้ว ถ้าเปลี่ยน dashboard พัง
 2. **อย่าสร้าง branch** — push main ตรงๆ เท่านั้น
