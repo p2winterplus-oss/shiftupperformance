@@ -442,6 +442,140 @@ const DEFAULT_PANTHERA = {
 };
 
 
+// ─── 3D Portfolio Slideshow ───────────────────────────────────────────────────
+const Portfolio3DSlideshow = ({ items }) => {
+  const [current, setCurrent] = useState(0);
+  const [hovered, setHovered] = useState(false);
+  const total = items.length;
+
+  useEffect(() => {
+    if (hovered || total < 2) return;
+    const t = setInterval(() => setCurrent(c => (c + 1) % total), 3500);
+    return () => clearInterval(t);
+  }, [hovered, total]);
+
+  const goTo = (i) => setCurrent((i + total) % total);
+
+  if (total === 0) return (
+    <div className="h-64 flex items-center justify-center text-neutral-600 text-sm">
+      ยังไม่มีภาพผลงาน — เพิ่มผ่าน Admin
+    </div>
+  );
+
+  return (
+    <div className="relative select-none"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}>
+
+      {/* 3D Stage */}
+      <div className="relative h-52 sm:h-72 md:h-96 flex items-center justify-center"
+        style={{ perspective: '1200px' }}>
+
+        {items.map((item, i) => {
+          let off = i - current;
+          if (off > total / 2)  off -= total;
+          if (off < -total / 2) off += total;
+          const abs = Math.abs(off);
+          if (abs > 2) return null;
+
+          return (
+            <div key={item.id}
+              className="absolute rounded-2xl overflow-hidden border border-neutral-700 shadow-2xl"
+              style={{
+                width: 'min(280px, 60vw)',
+                aspectRatio: '4/3',
+                cursor: abs === 0 ? 'default' : 'pointer',
+                transform: `rotateY(${off * 38}deg) translateX(${off * 50}%) translateZ(${-abs * 130}px) scale(${1 - abs * 0.18})`,
+                opacity: abs === 0 ? 1 : abs === 1 ? 0.72 : 0.42,
+                zIndex: 10 - abs * 3,
+                transition: 'all 0.55s cubic-bezier(0.25,0.46,0.45,0.94)',
+              }}
+              onClick={() => abs > 0 && goTo(i)}>
+
+              {item.imgUrl
+                ? <img src={item.imgUrl} alt={item.caption} className="w-full h-full object-cover pointer-events-none" />
+                : <div className="w-full h-full bg-neutral-800 flex items-center justify-center">
+                    <span className="text-neutral-600 text-sm text-center px-4">{item.caption || `ภาพผลงาน ${i + 1}`}</span>
+                  </div>}
+
+              {abs === 0 && item.caption && (
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                  <span className="text-white font-bold text-sm">{item.caption}</span>
+                </div>
+              )}
+              {abs > 0 && <div className="absolute inset-0 bg-black/25 pointer-events-none" />}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Arrows */}
+      <button onClick={() => goTo(current - 1)}
+        className="absolute left-0 top-[calc(50%-2rem)] z-20 w-10 h-10 rounded-full bg-neutral-900/80 hover:bg-red-600 border border-neutral-700 text-white flex items-center justify-center transition-all text-sm font-bold shadow-lg">◀</button>
+      <button onClick={() => goTo(current + 1)}
+        className="absolute right-0 top-[calc(50%-2rem)] z-20 w-10 h-10 rounded-full bg-neutral-900/80 hover:bg-red-600 border border-neutral-700 text-white flex items-center justify-center transition-all text-sm font-bold shadow-lg">▶</button>
+
+      {/* Dots */}
+      <div className="flex justify-center gap-1.5 mt-5">
+        {items.map((_, i) => (
+          <button key={i} onClick={() => goTo(i)}
+            className={`h-1.5 rounded-full transition-all duration-300 ${i === current ? 'w-6 bg-red-500' : 'w-2 bg-neutral-700 hover:bg-neutral-500'}`} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ─── Reviews Infinite Auto-scroll Carousel ────────────────────────────────────
+const ReviewsCarousel = ({ reviews }) => {
+  const [paused, setPaused] = useState(false);
+  if (!reviews.length) return null;
+
+  const CARD_W = 320;
+  const GAP    = 24;
+  const totalW = reviews.length * (CARD_W + GAP);
+
+  return (
+    <div className="relative overflow-hidden"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}>
+
+      <style>{`@keyframes reviewScroll{from{transform:translateX(0)}to{transform:translateX(-${totalW}px)}}`}</style>
+
+      {/* Fade edges */}
+      <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-neutral-950 to-transparent z-10 pointer-events-none" />
+      <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-neutral-950 to-transparent z-10 pointer-events-none" />
+
+      <div className="flex pb-2" style={{
+        gap: `${GAP}px`,
+        width: `${totalW * 2}px`,
+        animation: `reviewScroll ${reviews.length * 5}s linear infinite`,
+        animationPlayState: paused ? 'paused' : 'running',
+      }}>
+        {[...reviews, ...reviews].map((rev, i) => (
+          <div key={i}
+            className="flex-shrink-0 bg-neutral-900 p-6 rounded-2xl border border-neutral-800"
+            style={{ width: `${CARD_W}px` }}>
+            <div className="flex text-yellow-500 mb-3">
+              {[...Array(rev.stars)].map((_, s) => <Star key={s} fill="currentColor" size={16} />)}
+            </div>
+            <p className="text-neutral-300 text-sm mb-4 italic leading-relaxed line-clamp-4">"{rev.text}"</p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center text-neutral-500 font-bold text-sm flex-shrink-0">
+                {rev.name.charAt(rev.name.length - 1)}
+              </div>
+              <div>
+                <p className="text-white font-bold text-sm">{rev.name}</p>
+                <p className="text-neutral-500 text-xs">{rev.car}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // ─── Admin Panel ──────────────────────────────────────────────────────────────
 const AdminPanel = ({ data, onSave, onClose }) => {
   const [tab, setTab] = useState('articles');
@@ -770,46 +904,16 @@ const RemapPage = () => {
           </div>
         </section>
 
-        {/* ── Portfolio ── */}
+        {/* ── Portfolio 3D Slideshow ── */}
         <section>
           <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">ผลงานรีแมป (Portfolio)</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {data.portfolio.map((item) => (
-              <div key={item.id} className="aspect-square bg-neutral-900 rounded-xl border border-neutral-800 flex items-center justify-center hover:border-red-500/60 transition-colors cursor-pointer group relative overflow-hidden">
-                {item.imgUrl
-                  ? <img src={item.imgUrl} alt={item.caption} className="absolute inset-0 w-full h-full object-cover" />
-                  : <span className="text-neutral-600 text-sm z-10 relative text-center px-2">ภาพผลงานรถที่ {item.id}</span>
-                }
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4 z-20">
-                  <span className="text-white font-bold text-sm">{item.caption}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+          <Portfolio3DSlideshow items={data.portfolio} />
         </section>
 
-        {/* ── Reviews ── */}
+        {/* ── Reviews Carousel ── */}
         <section>
           <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">รีวิวจากผู้ใช้จริง</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {data.reviews.map((rev) => (
-              <div key={rev.id} className="bg-neutral-900 p-8 rounded-2xl border border-neutral-800">
-                <div className="flex text-yellow-500 mb-4">
-                  {[...Array(rev.stars)].map((_, s) => <Star key={s} fill="currentColor" size={20} />)}
-                </div>
-                <p className="text-neutral-300 mb-6 font-medium italic">"{rev.text}"</p>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-neutral-800 rounded-full flex items-center justify-center text-neutral-500 font-bold">
-                    {rev.name.charAt(rev.name.length - 1)}
-                  </div>
-                  <div>
-                    <h4 className="text-white font-bold text-sm">{rev.name}</h4>
-                    <p className="text-neutral-500 text-xs">{rev.car}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <ReviewsCarousel reviews={data.reviews} />
         </section>
 
         {/* ── CTA จองคิว ── */}
