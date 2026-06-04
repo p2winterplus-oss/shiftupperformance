@@ -15,7 +15,7 @@ app.use(express.static(join(__dirname, 'dist')));
 
 // ── Proxy GET → Google Apps Script (หลีกเลี่ยง CORS) ────────────────────────
 app.get('/api/get-leads', async (req, res) => {
-  const scriptUrl = 'https://script.google.com/macros/s/AKfycbwMrK1ip9KWPihhA0VAkUMbYrsHBIqRrcsne099n-t0HBkgAKlFtTvhLDl0asMciy0TWw/exec';
+  const scriptUrl = 'https://script.google.com/macros/s/AKfycbxGc0JZJkZ0MtW73_MldOdcc-ILttkvcA5G_16-0MwhjrLtWLSFTlQrMdD3W-g-dmqIDg/exec';
   try {
     const r    = await fetch(scriptUrl, { redirect: 'follow' });
     const data = await r.json();
