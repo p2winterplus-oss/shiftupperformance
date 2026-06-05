@@ -108,25 +108,42 @@ const HKS_PER_PAGE = 12
 - [x] Admin Dashboard (Analytics + Leads tables + Pie chart)
 - [x] Hidden dashboard gear button (หน้าแรก มุมล่างขวา)
 - [x] Password-protected admin panels ทุกหน้า
+- [x] Watermark อัตโนมัติ (Portfolio + HKS) — `WatermarkedImage` component
+- [x] โลโก้ใหม่ `public/images/logo.png` (อัปเดตแล้ว)
+
+---
+
+## Watermark — ข้อมูลสำคัญ
+
+- **Component**: `WatermarkedImage` — อยู่ต้น App.jsx (หลัง submitToSheets)
+- **ค่าที่ใช้**: opacity 22%, เฉียง -30°, ระยะห่าง 1.5x, ขนาดโลโก้ 28%
+- **ใช้กับ**: Portfolio (3D Slideshow) + HKS product grid
+- **Panthera**: ยังไม่ได้ทำ (ตั้งใจไว้)
+- **วิธีทำงาน**: CSS overlay — ไม่มีปัญหา CORS, รูปใหม่ที่เพิ่มทีหลังได้ลายน้ำอัตโนมัติ
+- **โลโก้ที่ใช้**: `/images/logo.png`
+
+---
+
+## Logo Sizes (App.jsx)
+| ตำแหน่ง | Class | px |
+|---|---|---|
+| Navbar | `h-20` | 80px (เต็มความสูง navbar) |
+| Footer | `h-24` | 96px |
+
+> Navbar container สูง `h-20` (80px) — ถ้าขยายโลโก้เกินนี้ต้องขยาย navbar ด้วย
 
 ---
 
 ## Last Session
-**วันที่**: 4 มิ.ย. 2569  
+**วันที่**: 5 มิ.ย. 2569  
 **สิ่งที่ทำไปในsession นี้**:
-- เพิ่ม Brand tab pricing (Mazda/Honda/Toyota) ใน Remap page — editable ผ่าน admin
-- เพิ่ม 3D Coverflow Portfolio Slideshow (auto-play 3.5s, ◀▶ + dots)
-- เพิ่ม Infinite auto-scroll Reviews Carousel (1 แถว, pause on hover, 9s/card)
-- เพิ่ม Email notification → `p2w.interplus@gmail.com` ทุกครั้งที่มีฟอร์มส่งเข้า
-- แก้ปุ่ม Dashboard gear หายกลับมาครบ
-- แก้ DashboardPage / AnalyticsSection / PieChart หายกลับมาครบ (build พังเพราะ component หาย)
-- revert server.js URL กลับเป็น `AKfycbxGc0...` ที่มี `doGet` ทำงานได้
-- ลบ `dev` branch ออก เหลือแค่ `main` branch เดียว
-- สร้าง CLAUDE.md นี้เพื่อ context continuity
+- เพิ่ม `WatermarkedImage` component — ลายน้ำโลโก้อัตโนมัติบน Portfolio + HKS
+- อัปเดตโลโก้ใหม่ `public/images/logo.png`
+- ขยายโลโก้ navbar → `h-20` (80px), footer → `h-24` (96px)
 
-**ค้างอยู่ / ยังไม่ได้ตรวจสอบ**:
-- Dashboard โหลดข้อมูลจาก Sheet ได้หรือยัง (หลัง Railway deploy ล่าสุด)
-- Apps Script URL ที่ใช้อยู่ใน server.js (`AKfycbxGc0...`) — ยืนยันว่ามี `doGet` ทำงานได้จริง
+**ค้างอยู่ / ยังไม่ได้ทำ**:
+- Watermark สำหรับ Panthera (user บอกยังไม่ทำ)
+- Dashboard โหลดข้อมูลจาก Sheet ได้หรือยัง — ยังไม่ได้ตรวจสอบ
 
 ---
 
