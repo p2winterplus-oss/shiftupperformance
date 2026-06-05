@@ -96,7 +96,7 @@ const ShiftupApp = () => {
 
             {/* Logo image */}
             <div className="flex-shrink-0 cursor-pointer" onClick={() => navigateTo('home')}>
-              <img src={LOGO_SRC} alt="Shiftup Performance" className="h-16 w-auto" />
+              <img src={LOGO_SRC} alt="Shiftup Performance" className="h-20 w-auto" />
             </div>
 
             <div className="hidden md:block">
@@ -157,7 +157,7 @@ const ShiftupApp = () => {
             <div className="col-span-1 lg:col-span-2">
               {/* Footer logo image */}
               <div className="cursor-pointer mb-4 inline-block" onClick={() => navigateTo('home')}>
-                <img src={LOGO_SRC} alt="Shiftup Performance" className="h-14 w-auto" />
+                <img src={LOGO_SRC} alt="Shiftup Performance" className="h-24 w-auto" />
               </div>
               <p className="text-neutral-500 max-w-sm mb-6">
                 Performance tuning, exhaust selection, and the next sound experience for selected vehicles. By P2W Interplus.
