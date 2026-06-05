@@ -12,6 +12,31 @@ const LINE_URL  = 'https://lin.ee/nZOMcph';
 // ↓ วาง URL ของ Google Apps Script Web App หลัง Deploy แล้ว
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwMrK1ip9KWPihhA0VAkUMbYrsHBIqRrcsne099n-t0HBkgAKlFtTvhLDl0asMciy0TWw/exec';
 
+// ─── Watermark Component ──────────────────────────────────────────────────────
+// ใส่ลายน้ำโลโก้ทับรูปอัตโนมัติ (Portfolio + HKS)
+// ค่า: opacity 22%, เฉียง -30°, ระยะห่าง 1.5x, โลโก้ 28% ของรูป
+const WatermarkedImage = ({ src, alt, className }) => {
+  const overlayStyle = {
+    position: 'absolute',
+    inset: '-60%',
+    width: '220%',
+    height: '220%',
+    backgroundImage: 'url(/images/logo.png)',
+    backgroundRepeat: 'repeat',
+    backgroundSize: '19%',   // 42% ของ container ÷ 220% = ~19% ของ overlay
+    opacity: 0.22,
+    transform: 'rotate(-30deg)',
+    pointerEvents: 'none',
+    zIndex: 10,
+  };
+  return (
+    <>
+      <img src={src} alt={alt} className={className} />
+      <div style={overlayStyle} />
+    </>
+  );
+};
+
 async function submitToSheets(payload) {
   if (!GOOGLE_SCRIPT_URL) return;
   try {
@@ -474,7 +499,7 @@ const Portfolio3DSlideshow = ({ items }) => {
               onClick={() => abs > 0 && goTo(i)}>
 
               {item.imgUrl
-                ? <img src={item.imgUrl} alt={item.caption} className="w-full h-full object-cover pointer-events-none" />
+                ? <WatermarkedImage src={item.imgUrl} alt={item.caption} className="w-full h-full object-cover pointer-events-none" />
                 : <div className="w-full h-full bg-neutral-800 flex items-center justify-center">
                     <span className="text-neutral-600 text-sm text-center px-4">{item.caption || `ภาพผลงาน ${i + 1}`}</span>
                   </div>}
@@ -1210,7 +1235,7 @@ const HKSPage = () => {
                   {/* Product image */}
                   <div className="h-56 bg-neutral-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
                     {item.imgUrl ? (
-                      <img src={item.imgUrl} alt={item.model} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <WatermarkedImage src={item.imgUrl} alt={item.model} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     ) : (
                       <>
                         <div className="w-3/4 h-8 bg-neutral-800 rounded-full mb-2" />
