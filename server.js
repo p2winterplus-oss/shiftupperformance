@@ -195,8 +195,16 @@ app.post('/api/track-visit', async (req, res) => {
       });
       const sheetUrl = `${SHEET_DOGET_URL}?${tp.toString()}`;
       console.log(`[sheet] calling: page=${visit.page} province=${visit.province}`);
-      const sheetRes = await fetch(sheetUrl, { redirect: 'follow' });
-      console.log(`[sheet] status: ${sheetRes.status} ok=${sheetRes.ok}`);
+      // ใช้ redirect:'manual' เพื่อดูว่า script.google.com ตอบ 302 หรือ 400 ก่อน
+      const r1 = await fetch(sheetUrl, { redirect: 'manual' });
+      const loc = r1.headers.get('location') || '';
+      console.log(`[sheet] r1.status=${r1.status} location=${loc.substring(0,100)}`);
+      if (r1.status === 302 && loc) {
+        // follow redirect manually → GET to googleusercontent.com
+        const r2 = await fetch(loc);
+        const body = await r2.text();
+        console.log(`[sheet] r2.status=${r2.status} body=${body.substring(0,80)}`);
+      }
     } catch (e) {
       console.error('[track-visit] geo error:', e.message);
     }
