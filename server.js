@@ -193,8 +193,10 @@ app.post('/api/track-visit', async (req, res) => {
         isp:      visit.isp,
         iso:      visit.isoTimestamp,
       });
-      fetch(`${SHEET_DOGET_URL}?${tp.toString()}`, { redirect: 'follow' })
-        .catch(e => console.error('[track-visit] sheet error:', e.message));
+      const sheetUrl = `${SHEET_DOGET_URL}?${tp.toString()}`;
+      console.log(`[sheet] calling: page=${visit.page} province=${visit.province}`);
+      const sheetRes = await fetch(sheetUrl, { redirect: 'follow' });
+      console.log(`[sheet] status: ${sheetRes.status} ok=${sheetRes.ok}`);
     } catch (e) {
       console.error('[track-visit] geo error:', e.message);
     }
