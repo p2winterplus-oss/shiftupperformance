@@ -1716,6 +1716,8 @@ const AnalyticsSection = ({ visits = [] }) => {
   const [rangeType, setRangeType] = useState('7d');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo]   = useState('');
+  const [visitPage, setVisitPage] = useState(0);
+  const [visitRows, setVisitRows] = useState(10);
 
   const now        = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -1741,6 +1743,9 @@ const AnalyticsSection = ({ visits = [] }) => {
   const rangeStart = getRangeStart();
   const rangeEnd   = getRangeEnd();
 
+  // Reset หน้า table เมื่อเปลี่ยนช่วงเวลา
+  useEffect(() => { setVisitPage(0); }, [rangeType, customFrom, customTo]);
+
   const inRange  = (v) => { const d = safeDate(v.isoTimestamp); return d && d >= rangeStart && d <= rangeEnd; };
   const filtered = visits.filter(inRange);
 
@@ -1765,10 +1770,39 @@ const AnalyticsSection = ({ visits = [] }) => {
   }
   const maxBar = Math.max(...days.map(d => d.count), 1);
 
+  // Trend line — linear regression บน bar chart
+  let trendPoints = '';
+  if (days.length >= 2 && days.some(d => d.count > 0)) {
+    const n = days.length;
+    const xMean = (n - 1) / 2;
+    const yMean = days.reduce((s, d) => s + d.count, 0) / n;
+    let num = 0, den = 0;
+    days.forEach((d, i) => { num += (i - xMean) * (d.count - yMean); den += (i - xMean) ** 2; });
+    const slope = den !== 0 ? num / den : 0;
+    const intercept = yMean - slope * xMean;
+    trendPoints = days.map((_, i) => {
+      const tv = intercept + slope * i;
+      const x  = i * 38 + 19; // center ของแต่ละ bar
+      const y  = 130 - Math.max(2, Math.min((tv / maxBar) * 120, 128));
+      return `${x},${y}`;
+    }).join(' ');
+  }
+
+  // Visitor table data
+  const sortedVisits = [...filtered].sort((a, b) => new Date(b.isoTimestamp) - new Date(a.isoTimestamp));
+  const totalVPages  = Math.ceil(sortedVisits.length / visitRows);
+  const pagedVisits  = sortedVisits.slice(visitPage * visitRows, (visitPage + 1) * visitRows);
+  const PAGE_NAMES_TH = { home: 'หน้าแรก', remap: 'ECU Remap', hks: 'HKS Exhaust', panthera: 'Panthera', partner: 'Partner', dashboard: 'Dashboard' };
+  const showRef = (ref) => {
+    if (!ref) return <span className="text-neutral-600 text-xs">ตรงมา</span>;
+    try { return <span className="text-blue-400 text-xs">{new URL(ref).hostname}</span>; }
+    catch { return <span className="text-neutral-400 text-xs">{String(ref).slice(0, 25)}</span>; }
+  };
+
   const pageMap = {};
   filtered.forEach(v => { pageMap[v.page] = (pageMap[v.page] || 0) + 1; });
   const pageBreakdown = Object.entries(pageMap).sort((a, b) => b[1] - a[1]);
-  const PAGE_NAMES = { home: 'หน้าแรก', remap: 'ECU Remap', hks: 'HKS Exhaust', panthera: 'Panthera', partner: 'Partner' };
+  const PAGE_NAMES = PAGE_NAMES_TH;
 
   const mobileCount  = filtered.filter(v => v.device === 'mobile').length;
   const desktopCount = filtered.filter(v => v.device === 'desktop').length;
@@ -1815,8 +1849,17 @@ const AnalyticsSection = ({ visits = [] }) => {
         </div>
       </div>
 
+      {/* Bar chart + trend line */}
       <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
-        <h3 className="text-white font-bold mb-6">การเข้าชมรายวัน</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-white font-bold">การเข้าชมรายวัน</h3>
+          {trendPoints && (
+            <div className="flex items-center gap-2 text-xs text-neutral-400">
+              <svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" stroke="#f97316" strokeWidth="2" strokeDasharray="4,2"/></svg>
+              แนวโน้ม
+            </div>
+          )}
+        </div>
         {days.every(d => d.count === 0) ? (
           <p className="text-neutral-600 text-center py-8">ยังไม่มีข้อมูลในช่วงนี้</p>
         ) : (
@@ -1833,11 +1876,15 @@ const AnalyticsSection = ({ visits = [] }) => {
                   </g>
                 );
               })}
+              {trendPoints && (
+                <polyline points={trendPoints} fill="none" stroke="#f97316" strokeWidth="2" strokeDasharray="5,3" strokeLinecap="round"/>
+              )}
             </svg>
           </div>
         )}
       </div>
 
+      {/* Page breakdown + Device */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
           <h3 className="text-white font-bold mb-5">หน้าที่เข้าชมมากสุด</h3>
@@ -1866,6 +1913,75 @@ const AnalyticsSection = ({ visits = [] }) => {
               </div>
             ))}
         </div>
+      </div>
+
+      {/* Visitor details table */}
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+          <h3 className="text-white font-bold">รายละเอียดผู้เข้าชม</h3>
+          <div className="flex items-center gap-2">
+            <span className="text-neutral-500 text-sm">แสดง</span>
+            {[10, 25, 50].map(n => (
+              <button key={n} onClick={() => { setVisitRows(n); setVisitPage(0); }}
+                className={`px-3 py-1 rounded-lg text-sm font-bold transition-all ${visitRows === n ? 'bg-blue-600 text-white' : 'bg-neutral-800 text-neutral-400 hover:text-white'}`}>
+                {n}
+              </button>
+            ))}
+            <span className="text-neutral-500 text-sm">แถว</span>
+          </div>
+        </div>
+
+        {sortedVisits.length === 0 ? (
+          <p className="text-neutral-600 text-center py-8 text-sm">ยังไม่มีข้อมูลในช่วงนี้</p>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[700px]">
+                <thead>
+                  <tr className="border-b border-neutral-800">
+                    {['วันที่-เวลา','หน้า','อุปกรณ์','Browser','OS','จังหวัด','เมือง','ที่มา'].map(h => (
+                      <th key={h} className="text-left text-neutral-500 text-xs uppercase py-3 px-2 font-medium whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagedVisits.map((v, i) => (
+                    <tr key={i} className="border-b border-neutral-800/50 hover:bg-neutral-800/30 transition-colors">
+                      <td className="py-2.5 px-2 text-neutral-500 whitespace-nowrap text-xs">{v.timestamp || '-'}</td>
+                      <td className="py-2.5 px-2 text-neutral-300 whitespace-nowrap text-xs">{PAGE_NAMES[v.page] || v.page || '-'}</td>
+                      <td className="py-2.5 px-2 whitespace-nowrap">
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${v.device === 'mobile' ? 'bg-blue-900/50 text-blue-300' : 'bg-purple-900/50 text-purple-300'}`}>
+                          {v.device === 'mobile' ? '📱' : '💻'} {v.device || '-'}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-2 text-neutral-400 whitespace-nowrap text-xs">{v.browser || '-'}</td>
+                      <td className="py-2.5 px-2 text-neutral-400 whitespace-nowrap text-xs">{v.os || '-'}</td>
+                      <td className="py-2.5 px-2 text-neutral-300 whitespace-nowrap text-xs">{v.province || '-'}</td>
+                      <td className="py-2.5 px-2 text-neutral-400 whitespace-nowrap text-xs">{v.city || '-'}</td>
+                      <td className="py-2.5 px-2 whitespace-nowrap">{showRef(v.referrer)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-neutral-800">
+              <span className="text-neutral-500 text-sm">
+                {sortedVisits.length > 0 ? `${visitPage * visitRows + 1}–${Math.min((visitPage + 1) * visitRows, sortedVisits.length)} จาก ${sortedVisits.length} รายการ` : ''}
+              </span>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setVisitPage(p => Math.max(0, p - 1))} disabled={visitPage === 0}
+                  className="px-3 py-1.5 bg-neutral-800 text-neutral-300 rounded-lg text-sm disabled:opacity-30 hover:bg-neutral-700 transition-colors">
+                  ← ก่อนหน้า
+                </button>
+                <span className="text-neutral-400 text-sm px-2">{visitPage + 1} / {Math.max(1, totalVPages)}</span>
+                <button onClick={() => setVisitPage(p => Math.min(totalVPages - 1, p + 1))} disabled={visitPage >= totalVPages - 1}
+                  className="px-3 py-1.5 bg-neutral-800 text-neutral-300 rounded-lg text-sm disabled:opacity-30 hover:bg-neutral-700 transition-colors">
+                  ถัดไป →
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

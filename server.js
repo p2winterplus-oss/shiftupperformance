@@ -162,29 +162,28 @@ app.post('/api/track-visit', async (req, res) => {
   visitsDirty = true;
   res.json({ success: true, total: visits.length });
 
-  // Geo + Sheet write (async after response)
-  try {
-    const geo = await getGeo(ip);
-    visit.province = geo.province;
-    visit.city     = geo.city;
+  // Geo + Sheet write (async หลัง response — ไม่บล็อก client)
+  setImmediate(async () => {
+    try {
+      const geo = await getGeo(ip);
+      visit.province = geo.province;
+      visit.city     = geo.city;
 
-    // เขียนลง Google Sheet ผ่าน Apps Script doGet (GET request = ไม่มี redirect issue)
-    const params = new URLSearchParams({
-      action:   'track',
-      iso:      visit.isoTimestamp,
-      page:     visit.page,
-      device:   visit.device,
-      sid:      visit.sessionId,
-      province: geo.province,
-      city:     geo.city,
-      browser,
-      os,
-      ref:      visit.referrer,
-    });
-    await fetch(`${SHEET_DOGET_URL}?${params}`, { redirect: 'follow' }).catch(() => {});
-  } catch (e) {
-    console.log('[track-visit] geo/sheet error:', e.message);
-  }
+      // เขียนลง Google Sheet ผ่าน Apps Script doGet (GET = ไม่มี redirect issue)
+      const params = new URLSearchParams({
+        action: 'track', iso: visit.isoTimestamp,
+        page: visit.page, device: visit.device, sid: visit.sessionId,
+        province: geo.province, city: geo.city, browser, os, ref: visit.referrer,
+      });
+      const sheetRes  = await fetch(`${SHEET_DOGET_URL}?${params}`, { redirect: 'follow' });
+      const sheetText = await sheetRes.text().catch(() => '');
+      if (sheetText.trim() !== 'ok') {
+        console.warn('[track-visit] sheet response:', sheetRes.status, sheetText.slice(0, 150));
+      }
+    } catch (e) {
+      console.error('[track-visit] async error:', e.message);
+    }
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════
@@ -196,12 +195,11 @@ const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1Su-nW33_bmmE-RUDy0xVf
 const NOTIFY_TO = process.env.NOTIFY_EMAIL || 'p2w.interplus@gmail.com';
 
 function makeTransporter() {
+  // strip spaces — Google แสดง App Password เป็น "xxxx xxxx xxxx xxxx" แต่ต้องไม่มี space
+  const pass = (process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
   return nodemailer.createTransport({
     service: 'gmail',
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD,
-    },
+    auth: { user: process.env.GMAIL_USER, pass },
   });
 }
 
@@ -264,14 +262,22 @@ app.post('/api/notify-lead', async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════
 
 app.get('/api/get-leads', async (req, res) => {
-  const scriptUrl = SHEET_DOGET_URL;
   try {
-    const r    = await fetch(scriptUrl, { redirect: 'follow' });
+    const r    = await fetch(SHEET_DOGET_URL, { redirect: 'follow' });
     const data = await r.json();
+
+    // Merge: sheetVisits (historical) + server memory visits (ใหม่)
+    // dedup ด้วย isoTimestamp+sessionId เพื่อไม่ให้ซ้ำ
+    const sheetVisits = Array.isArray(data.sheetVisits) ? data.sheetVisits : [];
+    const memIds      = new Set(visits.map(v => `${v.isoTimestamp}|${v.sessionId}`));
+    const uniqueSheet = sheetVisits.filter(v => !memIds.has(`${v.isoTimestamp}|${v.sessionId}`));
+    const allVisits   = [...uniqueSheet, ...visits]
+      .sort((a, b) => new Date(a.isoTimestamp) - new Date(b.isoTimestamp));
+
     res.json({
       ...data,
-      visits,
-      counts: { ...data.counts, visits: visits.length },
+      visits:  allVisits,
+      counts:  { ...data.counts, visits: allVisits.length },
     });
   } catch (err) {
     res.status(500).json({

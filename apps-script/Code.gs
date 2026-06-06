@@ -42,7 +42,7 @@ function doGet(e) {
       return ContentService.createTextOutput('ok');
     }
 
-    // ── Default: ส่งข้อมูล Dashboard ─────────────────────────────────────────
+    // ── Default: ส่งข้อมูล Dashboard (leads + visits) ────────────────────────
     const remapSheet  = ss.getSheetByName('Remap Leads');
     const remapVals   = remapSheet ? remapSheet.getDataRange().getValues() : [[]];
     const remapLeads  = (remapVals.length > 1 ? remapVals.slice(1) : []).map(r => ({
@@ -56,9 +56,20 @@ function doGet(e) {
       lineId: r[4], province: r[5], expertise: r[6], facebook: r[7]
     }));
 
+    // ★ Visits จาก sheet (historical data) — server จะ merge กับ in-memory visits
+    const visitsSheet = ss.getSheetByName('Visits');
+    const visitsVals  = visitsSheet ? visitsSheet.getDataRange().getValues() : [[]];
+    const sheetVisits = (visitsVals.length > 1 ? visitsVals.slice(1) : []).map(r => ({
+      isoTimestamp: r[0] || '', timestamp: r[1] || '',
+      page: r[2] || '', device: r[3] || '', sessionId: r[4] || '',
+      province: r[5] || '', city: r[6] || '',
+      browser: r[7] || '', os: r[8] || '', referrer: r[9] || '',
+    }));
+
     return jsonResponse({
       remapLeads,
       partnerApplications,
+      sheetVisits,
       counts: { remap: remapLeads.length, partner: partnerApplications.length }
     });
   } catch (err) {
@@ -218,14 +229,14 @@ function setupSheets() {
     buildDashboard(dash);
   }
 
-  // ── Visits ───────────────────────────────────────────────────────────────────
+  // ── Visits (10 columns) ───────────────────────────────────────────────────────
   let visitsSheet = ss.getSheetByName('Visits');
   if (!visitsSheet) {
     visitsSheet = ss.insertSheet('Visits');
-    const h = ['ISO Timestamp', 'วันที่-เวลา', 'หน้า', 'อุปกรณ์', 'Session ID'];
+    const h = ['ISO Timestamp','วันที่-เวลา','หน้า','อุปกรณ์','Session ID','จังหวัด','เมือง','Browser','OS','Referrer'];
     visitsSheet.appendRow(h);
     styleHeader(visitsSheet, h.length, '#1a73e8');
-    [180, 160, 100, 80, 200].forEach((w, i) => visitsSheet.setColumnWidth(i + 1, w));
+    [180,160,100,80,200,150,150,90,90,200].forEach((w, i) => visitsSheet.setColumnWidth(i + 1, w));
     visitsSheet.setFrozenRows(1);
   }
 
