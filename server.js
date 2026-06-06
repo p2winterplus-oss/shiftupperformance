@@ -162,24 +162,28 @@ app.post('/api/track-visit', async (req, res) => {
   visitsDirty = true;
   res.json({ success: true, total: visits.length });
 
-  // Geo + Sheet write (async หลัง response — ไม่บล็อก client)
+  // เขียน Sheet + Geo (async หลัง response)
   setImmediate(async () => {
     try {
+      // ★ เขียน Sheet ทันที (ไม่รอ geo) → ถ้า server restart ข้อมูลก็อยู่ใน Sheet แล้ว
+      const buildParams = (prov, cty) => new URLSearchParams({
+        action: 'track', iso: visit.isoTimestamp,
+        page: visit.page, device: visit.device, sid: visit.sessionId,
+        province: prov, city: cty, browser, os, ref: visit.referrer,
+      });
+
+      const sheetRes  = await fetch(`${SHEET_DOGET_URL}?${buildParams('', '')}`, { redirect: 'follow' });
+      const sheetText = await sheetRes.text().catch(() => '');
+      if (sheetText.trim() !== 'ok') {
+        console.warn('[track-visit] sheet:', sheetRes.status, sheetText.slice(0, 150));
+      } else {
+        console.log(`[track-visit] sheet ✓ page=${visit.page} device=${visit.device}`);
+      }
+
+      // ★ จากนั้น geo → update in-memory (dashboard จะแสดงจังหวัด/เมือง)
       const geo = await getGeo(ip);
       visit.province = geo.province;
       visit.city     = geo.city;
-
-      // เขียนลง Google Sheet ผ่าน Apps Script doGet (GET = ไม่มี redirect issue)
-      const params = new URLSearchParams({
-        action: 'track', iso: visit.isoTimestamp,
-        page: visit.page, device: visit.device, sid: visit.sessionId,
-        province: geo.province, city: geo.city, browser, os, ref: visit.referrer,
-      });
-      const sheetRes  = await fetch(`${SHEET_DOGET_URL}?${params}`, { redirect: 'follow' });
-      const sheetText = await sheetRes.text().catch(() => '');
-      if (sheetText.trim() !== 'ok') {
-        console.warn('[track-visit] sheet response:', sheetRes.status, sheetText.slice(0, 150));
-      }
     } catch (e) {
       console.error('[track-visit] async error:', e.message);
     }
@@ -202,6 +206,31 @@ function makeTransporter() {
     auth: { user: process.env.GMAIL_USER, pass },
   });
 }
+
+// ── API: ทดสอบ Email (เปิด URL นี้ใน browser เพื่อเช็ค config) ───
+app.get('/api/test-email', async (req, res) => {
+  const user = process.env.GMAIL_USER;
+  const pass = (process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
+  if (!user || !pass) {
+    return res.json({
+      success: false,
+      error: 'ยังไม่ได้ตั้ง env vars',
+      missing: [!user && 'GMAIL_USER', !pass && 'GMAIL_APP_PASSWORD'].filter(Boolean),
+    });
+  }
+  try {
+    await nodemailer.createTransport({ service: 'gmail', auth: { user, pass } })
+      .sendMail({
+        from: `"Shiftup Test" <${user}>`,
+        to:   NOTIFY_TO,
+        subject: '✅ [Shiftup] ทดสอบ Email — ระบบ OK',
+        text: `ทดสอบระบบ email notification\nGMAIL_USER: ${user}\nส่งหา: ${NOTIFY_TO}\n\nถ้าได้รับ email นี้ แสดงว่าระบบทำงานถูกต้อง`,
+      });
+    res.json({ success: true, message: `✅ ส่ง email ไปที่ ${NOTIFY_TO} แล้ว — ตรวจ inbox/spam` });
+  } catch (err) {
+    res.json({ success: false, error: err.toString(), hint: 'ตรวจสอบ App Password ว่าถูกต้องหรือไม่' });
+  }
+});
 
 // ── API: แจ้งเตือน Lead ใหม่ (เรียกหลัง form submit) ─────────────
 app.post('/api/notify-lead', async (req, res) => {
