@@ -260,41 +260,84 @@ function styleHeader(sheet, colCount, bgColor) {
 }
 
 function buildDashboard(dash) {
-  dash.getRange('A1').setValue('📊  Shiftup Performance — Dashboard');
-  dash.getRange('A1').setFontSize(18).setFontWeight('bold').setFontColor('#ffffff');
-  dash.getRange('A1:E1').merge().setBackground('#1a1a1a');
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
-  // Summary cards
-  // คอลัมน์: A=icon, B=ชื่อ, C=จำนวน(formula), D=link
-  const summaryData = [
-    ['', 'หมวด', 'จำนวน (Leads/สมัคร)', 'Link'],
-    ['🔧', 'Remap Leads',          "=COUNTA('Remap Leads'!A:A)-1",         "=HYPERLINK(\"#gid=\"&'Remap Leads'!A1,\"→ ดูข้อมูล\")"],
-    ['🤝', 'Partner Applications', "=COUNTA('Partner Applications'!A:A)-1", "=HYPERLINK(\"#gid=\"&'Partner Applications'!A1,\"→ ดูข้อมูล\")"],
-    ['📈', 'รวมทั้งหมด',           '=C4+C5',                               ''],  // C4=Remap count, C5=Partner count
-  ];
-  dash.getRange(3, 1, summaryData.length, summaryData[0].length).setValues(summaryData);
-  dash.getRange('A3:D3').setBackground('#333333').setFontColor('#ffffff').setFontWeight('bold');
-  dash.getRange('C4:C6').setFontSize(20).setFontWeight('bold').setFontColor('#ff5533'); // C column has the numbers
+  // ── Title ─────────────────────────────────────────────────────
+  dash.getRange('A1:H1').merge();
+  dash.getRange('A1')
+    .setValue('📊  Shiftup Performance — Dashboard')
+    .setFontSize(18).setFontWeight('bold').setFontColor('#ffffff');
+  dash.getRange('A1').setBackground('#1a1a1a');
 
-  // Remap Leads รายการล่าสุด
-  dash.getRange('A9').setValue('📅  รายการล่าสุด (Remap Leads)');
-  dash.getRange('A9').setFontSize(13).setFontWeight('bold');
-  dash.getRange('A10:F10').setValues([['วันที่', 'ชื่อ', 'เบอร์/LINE', 'รุ่นรถ', 'สถานที่', 'รายละเอียด']]);
-  dash.getRange('A10:F10').setBackground('#cc2200').setFontColor('#ffffff').setFontWeight('bold');
-  // ใช้ QUERY แทน SORT เพื่อ stability มากกว่า
-  dash.getRange('A11').setFormula("=IFERROR(QUERY('Remap Leads'!A2:F1000,\"SELECT * ORDER BY A DESC\",0),\"\")");
+  const updated = '🔄 อัปเดตล่าสุด: ' + new Date().toLocaleString('th-TH');
+  dash.getRange('A2').setValue(updated).setFontColor('#666666').setFontSize(9);
 
-  // Partner รายการล่าสุด
-  dash.getRange('A20').setValue('📅  รายการล่าสุด (Partner)');
-  dash.getRange('A20').setFontSize(13).setFontWeight('bold');
-  dash.getRange('A21:H21').setValues([['วันที่', 'ร้าน', 'ผู้ติดต่อ', 'เบอร์', 'LINE', 'จังหวัด', 'ความถนัด', 'Facebook']]);
-  dash.getRange('A21:H21').setBackground('#cc5500').setFontColor('#ffffff').setFontWeight('bold');
-  dash.getRange('A22').setFormula("=IFERROR(QUERY('Partner Applications'!A2:H1000,\"SELECT * ORDER BY A DESC\",0),\"\")");
+  // ── อ่านข้อมูลจาก Remap Leads ─────────────────────────────────
+  const remapSheet   = ss.getSheetByName('Remap Leads');
+  const remapRows    = remapSheet && remapSheet.getLastRow() > 1
+    ? remapSheet.getRange(2, 1, remapSheet.getLastRow() - 1, 6).getValues()
+        .filter(r => r[0] !== '')          // กรองแถวว่าง
+        .reverse()                          // ล่าสุดขึ้นก่อน
+    : [];
 
-  dash.setColumnWidth(1, 30);
-  dash.setColumnWidth(2, 160);
-  dash.setColumnWidth(3, 100);
-  dash.setColumnWidth(4, 100);
+  // ── Remap Leads section ────────────────────────────────────────
+  const remapTitleRow = 4;
+  dash.getRange(remapTitleRow, 1)
+    .setValue('🔧  Remap Leads  (' + remapRows.length + ' รายการ)')
+    .setFontSize(13).setFontWeight('bold').setFontColor('#ff5533');
+
+  const remapH = ['วันที่-เวลา','ชื่อ-นามสกุล','เบอร์/LINE','รุ่นรถ','สถานที่','รายละเอียด'];
+  const remapHeaderRow = remapTitleRow + 1;
+  dash.getRange(remapHeaderRow, 1, 1, remapH.length).setValues([remapH]);
+  dash.getRange(remapHeaderRow, 1, 1, remapH.length)
+    .setBackground('#cc2200').setFontColor('#ffffff').setFontWeight('bold');
+
+  const remapDataRow = remapHeaderRow + 1;
+  if (remapRows.length > 0) {
+    dash.getRange(remapDataRow, 1, remapRows.length, 6).setValues(remapRows);
+    // zebra stripe
+    remapRows.forEach((_, i) => {
+      if (i % 2 === 0) dash.getRange(remapDataRow + i, 1, 1, 6).setBackground('#1a1a1a');
+    });
+  } else {
+    dash.getRange(remapDataRow, 1).setValue('ยังไม่มีข้อมูล').setFontColor('#555555').setFontStyle('italic');
+  }
+
+  // ── Gap 2 แถว ─────────────────────────────────────────────────
+  const partnerTitleRow = remapDataRow + Math.max(remapRows.length, 1) + 2;
+
+  // ── อ่านข้อมูลจาก Partner Applications ────────────────────────
+  const partnerSheet = ss.getSheetByName('Partner Applications');
+  const partnerRows  = partnerSheet && partnerSheet.getLastRow() > 1
+    ? partnerSheet.getRange(2, 1, partnerSheet.getLastRow() - 1, 8).getValues()
+        .filter(r => r[0] !== '')
+        .reverse()
+    : [];
+
+  // ── Partner Applications section ───────────────────────────────
+  dash.getRange(partnerTitleRow, 1)
+    .setValue('🤝  Partner Applications  (' + partnerRows.length + ' รายการ)')
+    .setFontSize(13).setFontWeight('bold').setFontColor('#ff8c00');
+
+  const partnerH = ['วันที่-เวลา','ชื่อร้าน/อู่','ชื่อผู้ติดต่อ','เบอร์โทร','LINE ID','จังหวัด','ความถนัด','Facebook'];
+  const partnerHeaderRow = partnerTitleRow + 1;
+  dash.getRange(partnerHeaderRow, 1, 1, partnerH.length).setValues([partnerH]);
+  dash.getRange(partnerHeaderRow, 1, 1, partnerH.length)
+    .setBackground('#cc5500').setFontColor('#ffffff').setFontWeight('bold');
+
+  const partnerDataRow = partnerHeaderRow + 1;
+  if (partnerRows.length > 0) {
+    dash.getRange(partnerDataRow, 1, partnerRows.length, 8).setValues(partnerRows);
+    partnerRows.forEach((_, i) => {
+      if (i % 2 === 0) dash.getRange(partnerDataRow + i, 1, 1, 8).setBackground('#1a1a1a');
+    });
+  } else {
+    dash.getRange(partnerDataRow, 1).setValue('ยังไม่มีข้อมูล').setFontColor('#555555').setFontStyle('italic');
+  }
+
+  // ── Column widths ──────────────────────────────────────────────
+  [160, 150, 130, 140, 130, 120, 220, 160].forEach((w, i) => dash.setColumnWidth(i + 1, w));
+  dash.setFrozenRows(1);
 }
 
 // ── ลบ Dashboard เก่า → สร้างใหม่สะอาด ──────────────────────────────────────
