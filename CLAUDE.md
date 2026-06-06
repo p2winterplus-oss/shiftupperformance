@@ -23,23 +23,29 @@
 ### Apps Script — deployment "ไม่มีชื่อ" (อัปเดต 6 มิ.ย. 2569)
 | ใช้ที่ไหน | URL (deployment ID) |
 |---|---|
-| **server.js** `SHEET_DOGET_URL` (dashboard + visit tracking) | `AKfycbxGc0JZJkZ0MtW73_MldOdcc-ILttkvcA5G_16-0MwhjrLtWLSFTlQrMdD3W-g-dmqIDg` |
+| **server.js** `SHEET_DOGET_URL` (dashboard GET + visit tracking POST) | `AKfycbxGc0JZJkZ0MtW73_MldOdcc-ILttkvcA5G_16-0MwhjrLtWLSFTlQrMdD3W-g-dmqIDg` |
 | **App.jsx** `GOOGLE_SCRIPT_URL` (remap/partner forms POST) | `AKfycbxGc0JZJkZ0MtW73_MldOdcc-ILttkvcA5G_16-0MwhjrLtWLSFTlQrMdD3W-g-dmqIDg` |
 
-> ✅ ใช้ deployment เดียว ทุกอย่าง — "ไม่มีชื่อ" deployment version 16+
+> ✅ ใช้ deployment เดียว ทุกอย่าง — "ไม่มีชื่อ" deployment version 17+
 > ⚠️ **อย่าสร้าง deployment ใหม่** — URL จะเปลี่ยน ให้ใช้ Manage deployments → Edit → New version เท่านั้น
 
-### Visit Tracking — Root Cause & Final Fix (6 มิ.ย. 2569)
+### Visit Tracking — Root Cause & Final Fix (6 มิ.ย. 2569 — แก้จบแล้ว ✅)
 ```
 ❌ ทุก browser fetch → Apps Script → 400 Bad Request
    เหตุ: Google script.google.com block requests ที่มี Origin header จาก browser
          ไม่ว่าจะเป็น no-cors POST / no-cors GET / Image.src / regular CORS fetch
 
-✅ แก้ถาวร: server.js เรียก Apps Script แทน browser ทั้งหมด
+❌ Server-side GET พร้อม query params → ก็ได้ 400 เช่นกัน!
+   เหตุ: Google block GET+params ที่ routing layer ก่อน script จะทำงาน
+         (ไม่มีอะไรขึ้นใน Executions log เลย)
+         GET ไม่มี params → 302 ✅ (ใช้ได้สำหรับ dashboard read)
+         GET มี params → 400 ❌ (ทุก deployment, ทุก URL)
+
+✅ แก้ถาวร: server.js POST JSON {source:'visit'} → doPost ทำงาน ✅
    - browser → POST /api/track-visit → server.js
    - server.js → geo lookup (province/city/isp)
-   - server.js → GET SHEET_DOGET_URL?action=track (Node.js ไม่มี Origin header)
-   - Apps Script doGet → บันทึก Visits sheet ✅ (รวม province/city/isp ด้วย!)
+   - server.js → POST SHEET_DOGET_URL {source:'visit', page, device, ...}
+   - Apps Script doPost → บันทึก Visits sheet ✅ (รวม province/city/isp ด้วย!)
 ```
 
 ### Google Sheet
@@ -90,13 +96,13 @@ apps-script/Code.gs  — Google Apps Script (อัปเดต manual โดย
 
 ### Dashboard Flow
 ```
-Browser → GET /api/get-leads → server.js → Apps Script doGet → Google Sheet
+Browser → GET /api/get-leads → server.js → Apps Script doGet (ไม่มี params) → Google Sheet
                                          ↓ merge
                              server memory visits (มี geo/ISP)
                              → return รวม → Dashboard แสดงผล
 ```
 
-### Visit Tracking Flow (อัปเดต 6 มิ.ย. 2569 — แก้ถาวร)
+### Visit Tracking Flow (แก้จบ 6 มิ.ย. 2569 — ใช้ POST ✅)
 ```
 browser useEffect → POST /api/track-visit → server.js
                          ↓
@@ -104,14 +110,18 @@ browser useEffect → POST /api/track-visit → server.js
                          ↓ setImmediate async
                     getGeo(ip) → ip-api.com → province/city/isp
                          ↓
-                    GET SHEET_DOGET_URL?action=track&province=...
+                    POST SHEET_DOGET_URL {source:'visit', page, device, ...}
                          ↓
-                    Apps Script doGet → Visits sheet ✅
+                    Apps Script doPost → Visits sheet ✅
 
-❌ Browser → Apps Script ทุกชนิดไม่ work:
-   เหตุ: Google block browser requests ที่มี Origin header (400 Bad Request)
-   no-cors POST / no-cors GET / Image.src / regular CORS fetch → ทุกอันได้ 400
-✅ Server Node.js → Apps Script work เพราะไม่มี Origin header
+❌ สิ่งที่ไม่ work (อย่าลองใหม่ — เสียเวลาทั้งวันแล้ว):
+   Browser → Apps Script ทุกชนิด → 400 (Origin header)
+   Server GET + query params → 400 (Google block ที่ routing layer ก่อน script run)
+   Server POST + manual redirect + re-GET → 400 (URL นั้น block params)
+
+✅ สิ่งที่ work:
+   Server GET ไม่มี params → 302 → doGet runs (ใช้สำหรับ dashboard read)
+   Server POST JSON {source:'visit'} → doPost runs → เขียน Visits sheet ✅
 ```
 
 ---
@@ -158,7 +168,7 @@ const HKS_PER_PAGE = 12
 | Field | ที่มา | Sheet | Dashboard |
 |---|---|---|---|
 | isoTimestamp | browser | ✅ | ✅ |
-| timestamp (th-TH) | browser | ✅ | ✅ |
+| timestamp (th-TH) | server (จาก isoTimestamp) | ✅ | ✅ |
 | page | browser | ✅ | ✅ |
 | device (mobile/desktop) | browser UA | ✅ | ✅ |
 | sessionId | sessionStorage | ✅ | ✅ |
@@ -170,7 +180,7 @@ const HKS_PER_PAGE = 12
 | city (เมือง) | ip-api.com (server) | ✅ | ✅ |
 | isp (ค่ายมือถือ) | ip-api.com (server) | ✅ | ✅ |
 
-> ✅ Sheet มี province/city/isp ด้วย เพราะ server ส่งไป Apps Script (ไม่ใช่ browser อีกต่อไป)
+> ✅ Sheet มี province/city/isp ด้วย เพราะ server ส่งไป Apps Script (ไม่ใช่ browser)
 
 ### sessionId Logic
 - เก็บใน `sessionStorage` key `shiftup_sid`
@@ -181,6 +191,18 @@ const HKS_PER_PAGE = 12
 ```
 A: ISO Timestamp | B: วันที่-เวลา | C: หน้า | D: อุปกรณ์ | E: Session ID
 F: จังหวัด | G: เมือง | H: Browser | I: OS | J: Referrer | K: ISP | L: ภาษา
+```
+
+### Code.gs doPost — source:'visit' handler (บรรทัด 128-143)
+```javascript
+} else if (data.source === 'visit') {
+  migrateVisitsSheet(ss);
+  appendRow(ss, 'Visits', [
+    data.isoTimestamp, data.timestamp, data.page, data.device,
+    data.sessionId, data.province, data.city, data.browser,
+    data.os, data.referrer, data.isp, data.language
+  ]);
+}
 ```
 
 ---
@@ -216,9 +238,9 @@ F: จังหวัด | G: เมือง | H: Browser | I: OS | J: Referrer
 - ถ้า push ไม่ได้หลัง Railway commit → `git pull --rebase origin main`
 
 ### Google Sheet `Visits` Tab
-- **Server.js** ส่งผ่าน GET → Apps Script doGet action=track (แก้จาก browser 6 มิ.ย. 2569)
+- **Server.js** ส่งผ่าน POST JSON `{source:'visit'}` → Apps Script doPost (แก้จบ 6 มิ.ย. 2569)
 - ข้อมูลถาวร ไม่หายเมื่อ Railway restart
-- มีครบ 12 columns รวม province/city/isp (เพราะ server ส่ง)
+- มีครบ 12 columns รวม province/city/isp
 
 ---
 
@@ -229,6 +251,7 @@ F: จังหวัด | G: เมือง | H: Browser | I: OS | J: Referrer
 - **Trend line** — orange dashed line คำนวณด้วย linear regression
 - **Visitor Details Table** — แสดงทุก visit พร้อม pagination 10/25/50 rows
   - Columns: วันที่-เวลา, หน้า, อุปกรณ์, Browser, OS, จังหวัด, ISP, ภาษา, ที่มา
+- Column filter dropdowns + click-to-filter จากสถิติหน้าที่เข้าชม
 
 ### PieChart
 - สัดส่วน mobile vs desktop
@@ -268,10 +291,13 @@ F: จังหวัด | G: เมือง | H: Browser | I: OS | J: Referrer
 - [x] Password-protected admin panels ทุกหน้า
 - [x] Watermark อัตโนมัติ (Portfolio + HKS) — `WatermarkedImage` component
 - [x] โลโก้ใหม่ `public/images/logo.png`
-- [x] Visit tracking: browser→server→Apps Script→Sheet (server-side, ไม่มี CORS issue)
+- [x] Visit tracking: browser→server→Apps Script doPost→Sheet ✅ (แก้จบ 6 มิ.ย. 2569)
 - [x] Visit persistence: GitHub `public/visits.json` (save ทุก 30 นาที)
 - [x] IP Geolocation: จังหวัด/เมือง/ISP via ip-api.com
 - [x] ISP field + Language field ใน Visits (12 columns)
+- [x] Column filter dropdowns ในตาราง visitor details (Dashboard)
+- [x] Click-to-filter จากสถิติ "หน้าที่เข้าชมมากสุด"
+- [x] Dashboard Sheet: Remap + Partner สองตารางเรียงซ้าย-ขวา
 
 ---
 
@@ -282,30 +308,52 @@ F: จังหวัด | G: เมือง | H: Browser | I: OS | J: Referrer
 1. เพิ่ม column filter dropdowns ในตาราง visitor details (Dashboard)
 2. เพิ่ม click-to-filter บน "หน้าที่เข้าชมมากสุด" → หัวข้ออื่นจาง + device panel filter
 3. แก้ Dashboard Sheet: Remap + Partner สองตารางเรียงซ้าย-ขวา (ไม่มี formula ที่ error)
-4. **แก้ visit tracking ลง Sheet (ใช้เวลาทั้งวัน)**:
-   - ค้นพบ: browser ส่ง no-cors POST → redirect 302 → body หาย → doPost ไม่รับข้อมูล
-   - ลอง: GET request, Image.src, regular CORS fetch → **ทุกอันได้ 400** จาก Google
-   - Root cause: Google block ทุก browser request ที่มี `Origin` header ไป script.google.com
-   - **แก้ถาวร**: server.js เรียก Apps Script แทน browser ทั้งหมด (หลัง geo lookup)
-   - ผลพลอยได้: Sheet ได้ province/city/isp ด้วย (browser ทำไม่ได้)
+4. **แก้ visit tracking ลง Sheet (ใช้เวลาเกือบทั้งวัน — แก้จบแล้ว ✅)**:
+
+   **Timeline การ debug:**
+   - Browser no-cors POST → 302 redirect → method เปลี่ยนเป็น GET → body หาย → doPost ไม่รับ
+   - Browser GET no-cors → 400 (Sec-Fetch-Mode: no-cors)
+   - Browser Image.src → 400 (Sec-Fetch-Dest: image)
+   - Browser CORS fetch → 400 (มี Origin header)
+   - **Root cause #1**: Google block ทุก browser request ที่มี Origin/Sec-Fetch headers
+   - แก้: ย้ายไป server-side fetch (Node.js ไม่มี Origin header)
+   - Server GET + query params → **ยังได้ 400!** (ทั้ง SHEET_DOGET_URL และ SHEET_DOPOST_URL)
+   - ใช้ redirect:'manual' → r1.status=400 location= (empty) → Google block ที่ routing layer
+   - **Root cause #2**: Google block GET+params ที่ routing layer ก่อน script run เลย ไม่ว่าจาก browser หรือ server
+   - ไม่มีอะไรขึ้นใน Executions log เมื่อ 400
+   - **Final fix**: เปลี่ยนจาก GET+params → POST JSON {source:'visit'} ซึ่ง doPost รองรับอยู่แล้ว
+   - `[sheet] status=200 body={"success":true}` ✅ + Visits sheet มีแถวใหม่ ✅
+
 5. รวม GOOGLE_SCRIPT_URL เป็น deployment เดียว (AKfycbxGc0JZJkZ0...)
 
 **ค้างอยู่ / ต้องทำ**:
-- [ ] ทดสอบ visit tracking ลง Sheet ว่าทำงานหลัง Railway deploy เสร็จ (รอ Railway)
 - [ ] Watermark สำหรับ Panthera (user บอกยังไม่ทำ)
 
 ---
 
 ## สิ่งที่ต้องระวัง
 
-1. **อย่าแตะ server.js URLs** — `SHEET_DOGET_URL` ใช้ทั้ง dashboard + visit tracking ถ้าเปลี่ยนพังทั้งคู่
+1. **อย่าแตะ server.js SHEET_DOGET_URL** — ใช้ทั้ง dashboard GET + visit tracking POST ถ้าเปลี่ยนพังทั้งคู่
 2. **อย่าสร้าง branch** — push main ตรงๆ เท่านั้น
 3. **Apps Script** — user deploy เองด้วยมือ ไม่ได้ auto-deploy จาก GitHub
 4. **content.json** — มีข้อมูลจริงของ user อยู่ ระวังอย่า overwrite ด้วย default data
 5. **visits.json** — Railway commit ทุก 30 นาที → ถ้า push conflict ให้ rebase
-6. **Browser → Apps Script ทำไม่ได้เลย** — Google block ทุก browser request ที่มี Origin header (400)
-   ใช้ server.js Node.js fetch แทน (ไม่มี Origin header → Google ยอมรับ)
-7. **Gmail SMTP ใช้ไม่ได้** — Railway block SMTP → ใช้ Resend API เท่านั้น
+6. **Browser → Apps Script ทำไม่ได้เลย** — Google block Origin header → 400
+7. **Server GET + params → Apps Script ทำไม่ได้** — Google block ที่ routing layer → 400
+8. **ใช้ POST JSON เท่านั้น** สำหรับ write ข้อมูลไป Apps Script (source:'visit', source:'remap', source:'partner')
+9. **Gmail SMTP ใช้ไม่ได้** — Railway block SMTP → ใช้ Resend API เท่านั้น
+
+---
+
+## Apps Script — สรุป endpoint ที่ใช้งาน
+
+| Method | params/body | ผล | ใช้ทำอะไร |
+|---|---|---|---|
+| GET | ไม่มี params | ✅ 302 → doGet | อ่านข้อมูล dashboard (leads + visits) |
+| GET | มี params | ❌ 400 | **ห้ามใช้** — Google block |
+| POST | `{source:'remap'}` | ✅ doPost | บันทึก Remap Lead |
+| POST | `{source:'partner'}` | ✅ doPost | บันทึก Partner Application |
+| POST | `{source:'visit'}` | ✅ doPost | บันทึก Visit ลง Visits sheet |
 
 ---
 
@@ -319,4 +367,5 @@ F: จังหวัด | G: เมือง | H: Browser | I: OS | J: Referrer
    (ห้ามสร้าง deployment ใหม่ URL จะเปลี่ยน)
 5. ทดสอบ: เปิดเว็บ → เข้าหน้าต่างๆ → ดู Sheet Visits tab
    ควรมีแถวใหม่เพิ่มขึ้น + header ควรมี 12 columns
+   ดู Railway logs: [sheet] status=200 body={"success":true}
 ```
