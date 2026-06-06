@@ -110,20 +110,7 @@ function doPost(e) {
         data.detail   || '',
       ]);
 
-      // ── แจ้งเตือน Email — Remap ──────────────────────────────────────────
-      sendEmail(
-        '🔧 [Shiftup] ลูกค้าใหม่ขอประเมิน Remap!',
-        '📋 ข้อมูลลูกค้าใหม่ — ECU Remap\n' +
-        '─────────────────────────────────\n' +
-        '⏰ เวลา     : ' + (data.timestamp || new Date().toLocaleString('th-TH')) + '\n' +
-        '👤 ชื่อ     : ' + (data.name     || '-') + '\n' +
-        '📞 ติดต่อ   : ' + (data.contact  || '-') + '\n' +
-        '🚗 รุ่นรถ   : ' + (data.car      || '-') + '\n' +
-        '📍 สถานที่  : ' + (data.location || '-') + '\n' +
-        '📝 รายละเอียด: ' + (data.detail  || '-') + '\n' +
-        '─────────────────────────────────\n' +
-        '→ ดูข้อมูลทั้งหมด: https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID
-      );
+      // ── Email: server.js ส่งผ่าน Resend API แล้ว → ไม่ต้องส่งซ้ำจาก Apps Script ──
 
     } else if (data.source === 'visit') {
       migrateVisitsSheet(ss); // อัปเกรด header เป็น 12 column ถ้ายังเป็นแบบเก่า
@@ -154,22 +141,7 @@ function doPost(e) {
         data.facebook    || '',
       ]);
 
-      // ── แจ้งเตือน Email — Partner ────────────────────────────────────────
-      sendEmail(
-        '🤝 [Shiftup] มีผู้สมัคร Partner ใหม่!',
-        '📋 ข้อมูลผู้สมัคร Partner\n' +
-        '─────────────────────────────────\n' +
-        '⏰ เวลา      : ' + (data.timestamp   || new Date().toLocaleString('th-TH')) + '\n' +
-        '🏪 ชื่อร้าน  : ' + (data.shopName    || '-') + '\n' +
-        '👤 ผู้ติดต่อ : ' + (data.contactName || '-') + '\n' +
-        '📞 เบอร์โทร  : ' + (data.phone       || '-') + '\n' +
-        '💬 LINE ID   : ' + (data.lineId      || '-') + '\n' +
-        '📍 จังหวัด   : ' + (data.province    || '-') + '\n' +
-        '🔧 ความถนัด  : ' + (data.expertise   || '-') + '\n' +
-        '📘 Facebook  : ' + (data.facebook    || '-') + '\n' +
-        '─────────────────────────────────\n' +
-        '→ ดูข้อมูลทั้งหมด: https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID
-      );
+      // ── Email: server.js ส่งผ่าน Resend API แล้ว → ไม่ต้องส่งซ้ำจาก Apps Script ──
     }
 
     return jsonResponse({ success: true });
