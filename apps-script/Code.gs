@@ -297,24 +297,51 @@ function buildDashboard(dash) {
   dash.setColumnWidth(4, 100);
 }
 
-// ── แก้ Dashboard sheet ที่มีอยู่แล้ว (รัน manual จาก Apps Script editor) ──────
-// วิธีใช้: เปิด Apps Script → เลือก fixDashboard จาก dropdown → Run
-function fixDashboard() {
-  const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const dash = ss.getSheetByName('Dashboard');
-  if (!dash) { Logger.log('ไม่พบ Dashboard sheet'); return; }
+// ── ลบ Dashboard เก่า → สร้างใหม่สะอาด ──────────────────────────────────────
+// วิธีใช้: เปิด Apps Script editor → เลือก rebuildDashboard → กด ▶ Run
+function rebuildDashboard() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
-  // Fix formula: =C4+C5 (ไม่ใช่ =B3+B4)
-  dash.getRange('C6').setFormula('=C4+C5');
+  // ถ้ามี Dashboard เก่า → rename เป็น _old ก่อน
+  const old = ss.getSheetByName('Dashboard');
+  if (old) {
+    const prev = ss.getSheetByName('Dashboard_old');
+    if (prev) ss.deleteSheet(prev);
+    old.setName('Dashboard_old');
+  }
 
-  // Fix number styling: column C (ไม่ใช่ column B)
-  dash.getRange('C4:C6').setFontSize(20).setFontWeight('bold').setFontColor('#ff5533');
+  // สร้าง Dashboard ใหม่ถูกต้อง
+  const newDash = ss.insertSheet('Dashboard', 0);
+  buildDashboard(newDash);
 
-  // Fix Remap Leads formula (QUERY แทน SORT)
-  dash.getRange('A11').setFormula("=IFERROR(QUERY('Remap Leads'!A2:F1000,\"SELECT * ORDER BY A DESC\",0),\"\")");
+  // ลบ _old ทิ้ง
+  const toDelete = ss.getSheetByName('Dashboard_old');
+  if (toDelete) ss.deleteSheet(toDelete);
 
-  // Fix Partner formula (QUERY แทน SORT)
-  dash.getRange('A22').setFormula("=IFERROR(QUERY('Partner Applications'!A2:H1000,\"SELECT * ORDER BY A DESC\",0),\"\")");
+  Logger.log('✅ Dashboard rebuilt! ตรวจสอบใน Sheet ได้เลย');
+}
 
-  Logger.log('✅ Dashboard fixed! C6=C4+C5, C4:C6 styled, QUERY formulas applied');
+// ── ล้าง Visits เก่า ตั้ง 12-column header ใหม่ ───────────────────────────────
+// ข้อมูลเก่าย้ายไป Visits_backup (ไม่ลบ)
+// วิธีใช้: เปิด Apps Script editor → เลือก resetVisitsSheet → กด ▶ Run
+function resetVisitsSheet() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+  // ย้ายของเก่าไป backup
+  const old = ss.getSheetByName('Visits');
+  if (old) {
+    const prev = ss.getSheetByName('Visits_backup');
+    if (prev) ss.deleteSheet(prev);
+    old.setName('Visits_backup');
+  }
+
+  // สร้าง Visits ใหม่ 12 columns
+  const sheet = ss.insertSheet('Visits');
+  const h = ['ISO Timestamp','วันที่-เวลา','หน้า','อุปกรณ์','Session ID','จังหวัด','เมือง','Browser','OS','Referrer','ISP','ภาษา'];
+  sheet.appendRow(h);
+  styleHeader(sheet, h.length, '#1a73e8');
+  [180,160,100,80,200,150,130,90,90,200,200,80].forEach((w, i) => sheet.setColumnWidth(i+1, w));
+  sheet.setFrozenRows(1);
+
+  Logger.log('✅ Visits reset! header 12 columns พร้อมแล้ว  |  ข้อมูลเก่าอยู่ใน Visits_backup');
 }
