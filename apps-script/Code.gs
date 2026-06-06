@@ -317,5 +317,4 @@ function fixDashboard() {
   dash.getRange('A22').setFormula("=IFERROR(QUERY('Partner Applications'!A2:H1000,\"SELECT * ORDER BY A DESC\",0),\"\")");
 
   Logger.log('✅ Dashboard fixed! C6=C4+C5, C4:C6 styled, QUERY formulas applied');
-  SpreadsheetApp.getUi().alert('✅ แก้ไข Dashboard เรียบร้อย!\n\nC6 = C4+C5 (รวมทั้งหมด)\nRemap + Partner ใช้ QUERY แทน SORT');
 }
