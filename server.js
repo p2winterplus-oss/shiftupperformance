@@ -193,14 +193,15 @@ app.post('/api/track-visit', async (req, res) => {
         isp:      visit.isp,
         iso:      visit.isoTimestamp,
       });
-      const sheetUrl = `${SHEET_DOGET_URL}?${tp.toString()}`;
+      // ทดสอบ: เปลี่ยนจาก SHEET_DOGET_URL ไปใช้ SHEET_DOPOST_URL (URL อีกตัว)
+      // SHEET_DOGET_URL → 400 ทุกครั้ง (เฉพาะ deployment นี้)
+      // ทดสอบ SHEET_DOPOST_URL ว่าให้ 302 (ผ่าน) หรือ 400 เหมือนกัน
+      const sheetUrl = `${SHEET_DOPOST_URL}?${tp.toString()}`;
       console.log(`[sheet] calling: page=${visit.page} province=${visit.province}`);
-      // ใช้ redirect:'manual' เพื่อดูว่า script.google.com ตอบ 302 หรือ 400 ก่อน
       const r1 = await fetch(sheetUrl, { redirect: 'manual' });
       const loc = r1.headers.get('location') || '';
       console.log(`[sheet] r1.status=${r1.status} location=${loc.substring(0,100)}`);
       if (r1.status === 302 && loc) {
-        // follow redirect manually → GET to googleusercontent.com
         const r2 = await fetch(loc);
         const body = await r2.text();
         console.log(`[sheet] r2.status=${r2.status} body=${body.substring(0,80)}`);
