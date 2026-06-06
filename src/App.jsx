@@ -75,23 +75,52 @@ const ShiftupApp = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Track page visits → server proxy (same-origin, ไม่มี CORS)
+  // Track page visits
   useEffect(() => {
     const KEY = 'shiftup_sid';
     const isFirst = !sessionStorage.getItem(KEY);
     let sid = sessionStorage.getItem(KEY);
     if (!sid) { sid = Math.random().toString(36).slice(2) + Date.now(); sessionStorage.setItem(KEY, sid); }
-    const device   = /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
+
+    const ua  = navigator.userAgent;
+    const device = /Mobi|Android/i.test(ua) ? 'mobile' : 'desktop';
     const referrer = isFirst ? (document.referrer || '') : '';
-    const language = navigator.language || navigator.userLanguage || '';
+    const language = navigator.language || '';
+
+    // detect browser + OS in browser (ส่งลง Sheet ได้)
+    let detectedBrowser = 'Other';
+    if      (/Edg\//i.test(ua))     detectedBrowser = 'Edge';
+    else if (/OPR|Opera/i.test(ua)) detectedBrowser = 'Opera';
+    else if (/Chrome/i.test(ua))    detectedBrowser = 'Chrome';
+    else if (/Firefox/i.test(ua))   detectedBrowser = 'Firefox';
+    else if (/Safari/i.test(ua))    detectedBrowser = 'Safari';
+
+    let detectedOS = 'Other';
+    if      (/Windows/i.test(ua))     detectedOS = 'Windows';
+    else if (/Android/i.test(ua))     detectedOS = 'Android';
+    else if (/iPhone|iPad/i.test(ua)) detectedOS = 'iOS';
+    else if (/Mac OS X/i.test(ua))    detectedOS = 'macOS';
+    else if (/Linux/i.test(ua))       detectedOS = 'Linux';
+
+    const payload = {
+      page: activePage, device, sessionId: sid, referrer, language,
+      browser: detectedBrowser, os: detectedOS,
+      isoTimestamp: new Date().toISOString(),
+      timestamp: new Date().toLocaleString('th-TH'),
+    };
+
+    // 1. Server → dashboard memory + geo/ISP (province, city, ISP จาก IP)
     fetch('/api/track-visit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        page: activePage, device, sessionId: sid, referrer, language,
-        isoTimestamp: new Date().toISOString(),
-        timestamp: new Date().toLocaleString('th-TH'),
-      }),
+      body: JSON.stringify(payload),
+    }).catch(() => {});
+
+    // 2. Google Sheet → no-cors (proven working, เหมือน Remap/Partner forms)
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: JSON.stringify({ source: 'visit', ...payload }),
     }).catch(() => {});
   }, [activePage]);
 

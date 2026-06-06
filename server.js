@@ -169,39 +169,16 @@ app.post('/api/track-visit', async (req, res) => {
   visitsDirty = true;
   res.json({ success: true, total: visits.length });
 
-  // Geo + Sheet write (async หลัง response)
+  // Geo lookup async — update in-memory for dashboard display
   setImmediate(async () => {
     try {
-      // ★ Geo lookup ก่อน (cached = เร็วมาก)
       const geo = await getGeo(ip);
       visit.province = geo.province;
       visit.city     = geo.city;
       visit.isp      = geo.isp;
-
-      // ★ เขียน Sheet ผ่าน doPost URL (เหมือน remap/partner forms — ใช้ได้แน่นอน)
-      const sheetRes = await fetch(SHEET_DOPOST_URL, {
-        method:  'POST',
-        redirect: 'follow',
-        headers:  { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({
-          source: 'visit',
-          isoTimestamp: visit.isoTimestamp,
-          timestamp:    visit.timestamp,
-          page:         visit.page,
-          device:       visit.device,
-          sessionId:    visit.sessionId,
-          province:     geo.province,
-          city:         geo.city,
-          browser,
-          os,
-          referrer:     visit.referrer,
-          isp:          geo.isp,
-          language:     visit.language,
-        }),
-      });
-      console.log(`[track-visit] sheet POST ${sheetRes.status} | ${visit.page} | ${geo.province} | ${geo.isp}`);
+      // Sheet write → browser handles via no-cors (proven working like Remap/Partner forms)
     } catch (e) {
-      console.error('[track-visit] async error:', e.message);
+      console.error('[track-visit] geo error:', e.message);
     }
   });
 });
