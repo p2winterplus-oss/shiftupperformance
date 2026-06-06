@@ -265,31 +265,57 @@ function buildDashboard(dash) {
   dash.getRange('A1:E1').merge().setBackground('#1a1a1a');
 
   // Summary cards
+  // คอลัมน์: A=icon, B=ชื่อ, C=จำนวน(formula), D=link
   const summaryData = [
     ['', 'หมวด', 'จำนวน (Leads/สมัคร)', 'Link'],
-    ['🔧', 'Remap Leads',         "=COUNTA('Remap Leads'!A:A)-1",         "=HYPERLINK(\"#gid=\"&'Remap Leads'!A1,\"→ ดูข้อมูล\")"],
+    ['🔧', 'Remap Leads',          "=COUNTA('Remap Leads'!A:A)-1",         "=HYPERLINK(\"#gid=\"&'Remap Leads'!A1,\"→ ดูข้อมูล\")"],
     ['🤝', 'Partner Applications', "=COUNTA('Partner Applications'!A:A)-1", "=HYPERLINK(\"#gid=\"&'Partner Applications'!A1,\"→ ดูข้อมูล\")"],
-    ['📈', 'รวมทั้งหมด',           '=B3+B4',                                ''],
+    ['📈', 'รวมทั้งหมด',           '=C4+C5',                               ''],  // C4=Remap count, C5=Partner count
   ];
   dash.getRange(3, 1, summaryData.length, summaryData[0].length).setValues(summaryData);
   dash.getRange('A3:D3').setBackground('#333333').setFontColor('#ffffff').setFontWeight('bold');
-  dash.getRange('B4:B6').setFontSize(20).setFontWeight('bold').setFontColor('#ff5533');
+  dash.getRange('C4:C6').setFontSize(20).setFontWeight('bold').setFontColor('#ff5533'); // C column has the numbers
 
-  // Monthly breakdown header
+  // Remap Leads รายการล่าสุด
   dash.getRange('A9').setValue('📅  รายการล่าสุด (Remap Leads)');
   dash.getRange('A9').setFontSize(13).setFontWeight('bold');
   dash.getRange('A10:F10').setValues([['วันที่', 'ชื่อ', 'เบอร์/LINE', 'รุ่นรถ', 'สถานที่', 'รายละเอียด']]);
   dash.getRange('A10:F10').setBackground('#cc2200').setFontColor('#ffffff').setFontWeight('bold');
-  dash.getRange('A11').setFormula("=IFERROR(SORT('Remap Leads'!A2:F,1,FALSE),\"\")");
+  // ใช้ QUERY แทน SORT เพื่อ stability มากกว่า
+  dash.getRange('A11').setFormula("=IFERROR(QUERY('Remap Leads'!A2:F1000,\"SELECT * ORDER BY A DESC\",0),\"\")");
 
+  // Partner รายการล่าสุด
   dash.getRange('A20').setValue('📅  รายการล่าสุด (Partner)');
   dash.getRange('A20').setFontSize(13).setFontWeight('bold');
   dash.getRange('A21:H21').setValues([['วันที่', 'ร้าน', 'ผู้ติดต่อ', 'เบอร์', 'LINE', 'จังหวัด', 'ความถนัด', 'Facebook']]);
   dash.getRange('A21:H21').setBackground('#cc5500').setFontColor('#ffffff').setFontWeight('bold');
-  dash.getRange('A22').setFormula("=IFERROR(SORT('Partner Applications'!A2:H,1,FALSE),\"\")");
+  dash.getRange('A22').setFormula("=IFERROR(QUERY('Partner Applications'!A2:H1000,\"SELECT * ORDER BY A DESC\",0),\"\")");
 
   dash.setColumnWidth(1, 30);
   dash.setColumnWidth(2, 160);
   dash.setColumnWidth(3, 100);
   dash.setColumnWidth(4, 100);
+}
+
+// ── แก้ Dashboard sheet ที่มีอยู่แล้ว (รัน manual จาก Apps Script editor) ──────
+// วิธีใช้: เปิด Apps Script → เลือก fixDashboard จาก dropdown → Run
+function fixDashboard() {
+  const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const dash = ss.getSheetByName('Dashboard');
+  if (!dash) { Logger.log('ไม่พบ Dashboard sheet'); return; }
+
+  // Fix formula: =C4+C5 (ไม่ใช่ =B3+B4)
+  dash.getRange('C6').setFormula('=C4+C5');
+
+  // Fix number styling: column C (ไม่ใช่ column B)
+  dash.getRange('C4:C6').setFontSize(20).setFontWeight('bold').setFontColor('#ff5533');
+
+  // Fix Remap Leads formula (QUERY แทน SORT)
+  dash.getRange('A11').setFormula("=IFERROR(QUERY('Remap Leads'!A2:F1000,\"SELECT * ORDER BY A DESC\",0),\"\")");
+
+  // Fix Partner formula (QUERY แทน SORT)
+  dash.getRange('A22').setFormula("=IFERROR(QUERY('Partner Applications'!A2:H1000,\"SELECT * ORDER BY A DESC\",0),\"\")");
+
+  Logger.log('✅ Dashboard fixed! C6=C4+C5, C4:C6 styled, QUERY formulas applied');
+  SpreadsheetApp.getUi().alert('✅ แก้ไข Dashboard เรียบร้อย!\n\nC6 = C4+C5 (รวมทั้งหมด)\nRemap + Partner ใช้ QUERY แทน SORT');
 }

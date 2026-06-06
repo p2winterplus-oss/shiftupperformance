@@ -1748,6 +1748,10 @@ const AnalyticsSection = ({ visits = [] }) => {
   const [customTo, setCustomTo]   = useState('');
   const [visitPage, setVisitPage] = useState(0);
   const [visitRows, setVisitRows] = useState(10);
+  // ── NEW: page click-to-filter ────────────────────────────────────
+  const [selectedPage, setSelectedPage] = useState(null); // null = all
+  // ── NEW: table column filters ────────────────────────────────────
+  const [tableFilters, setTableFilters] = useState({ page:'', device:'', browser:'', os:'', province:'', isp:'', language:'', referrer:'' });
 
   const now        = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -1773,8 +1777,8 @@ const AnalyticsSection = ({ visits = [] }) => {
   const rangeStart = getRangeStart();
   const rangeEnd   = getRangeEnd();
 
-  // Reset หน้า table เมื่อเปลี่ยนช่วงเวลา
-  useEffect(() => { setVisitPage(0); }, [rangeType, customFrom, customTo]);
+  const filterKey = Object.values(tableFilters).join('|');
+  useEffect(() => { setVisitPage(0); }, [rangeType, customFrom, customTo, filterKey]);
 
   const inRange  = (v) => { const d = safeDate(v.isoTimestamp); return d && d >= rangeStart && d <= rangeEnd; };
   const filtered = visits.filter(inRange);
@@ -1800,7 +1804,7 @@ const AnalyticsSection = ({ visits = [] }) => {
   }
   const maxBar = Math.max(...days.map(d => d.count), 1);
 
-  // Trend line — linear regression บน bar chart
+  // Trend line — linear regression
   let trendPoints = '';
   if (days.length >= 2 && days.some(d => d.count > 0)) {
     const n = days.length;
@@ -1812,35 +1816,70 @@ const AnalyticsSection = ({ visits = [] }) => {
     const intercept = yMean - slope * xMean;
     trendPoints = days.map((_, i) => {
       const tv = intercept + slope * i;
-      const x  = i * 38 + 19; // center ของแต่ละ bar
+      const x  = i * 38 + 19;
       const y  = 130 - Math.max(2, Math.min((tv / maxBar) * 120, 128));
       return `${x},${y}`;
     }).join(' ');
   }
 
-  // Visitor table data
+  // Page breakdown
+  const PAGE_NAMES = { home: 'หน้าแรก', remap: 'ECU Remap', hks: 'HKS Exhaust', panthera: 'Panthera', partner: 'Partner', dashboard: 'Dashboard' };
+  const pageMap = {};
+  filtered.forEach(v => { pageMap[v.page] = (pageMap[v.page] || 0) + 1; });
+  const pageBreakdown = Object.entries(pageMap).sort((a, b) => b[1] - a[1]);
+
+  // Device breakdown — filtered by selectedPage when set
+  const deviceSource  = selectedPage ? filtered.filter(v => v.page === selectedPage) : filtered;
+  const mobileCount   = deviceSource.filter(v => v.device === 'mobile').length;
+  const desktopCount  = deviceSource.filter(v => v.device === 'desktop').length;
+  const deviceTotal   = deviceSource.length;
+
+  // Table: sort → apply column filters
   const sortedVisits = [...filtered].sort((a, b) => new Date(b.isoTimestamp) - new Date(a.isoTimestamp));
-  const totalVPages  = Math.ceil(sortedVisits.length / visitRows);
-  const pagedVisits  = sortedVisits.slice(visitPage * visitRows, (visitPage + 1) * visitRows);
-  const PAGE_NAMES_TH = { home: 'หน้าแรก', remap: 'ECU Remap', hks: 'HKS Exhaust', panthera: 'Panthera', partner: 'Partner', dashboard: 'Dashboard' };
+
+  const getRefHost = (ref) => { if (!ref) return ''; try { return new URL(ref).hostname; } catch { return ref; } };
+
+  const filteredTableVisits = sortedVisits.filter(v => {
+    if (tableFilters.page     && v.page !== tableFilters.page) return false;
+    if (tableFilters.device   && v.device !== tableFilters.device) return false;
+    if (tableFilters.browser  && v.browser !== tableFilters.browser) return false;
+    if (tableFilters.os       && v.os !== tableFilters.os) return false;
+    if (tableFilters.province && v.province !== tableFilters.province) return false;
+    if (tableFilters.isp      && (v.isp || '').split(' ')[0] !== tableFilters.isp) return false;
+    if (tableFilters.language && v.language !== tableFilters.language) return false;
+    if (tableFilters.referrer && getRefHost(v.referrer) !== tableFilters.referrer) return false;
+    return true;
+  });
+
+  const totalVPages = Math.ceil(filteredTableVisits.length / visitRows);
+  const pagedVisits = filteredTableVisits.slice(visitPage * visitRows, (visitPage + 1) * visitRows);
+
+  // Unique values for filter dropdowns
+  const uniq = (arr) => [...new Set(arr.filter(Boolean))].sort();
+  const uPages     = uniq(sortedVisits.map(v => v.page));
+  const uDevices   = uniq(sortedVisits.map(v => v.device));
+  const uBrowsers  = uniq(sortedVisits.map(v => v.browser));
+  const uOSes      = uniq(sortedVisits.map(v => v.os));
+  const uProvinces = uniq(sortedVisits.map(v => v.province));
+  const uISPs      = uniq(sortedVisits.map(v => (v.isp || '').split(' ')[0]));
+  const uLangs     = uniq(sortedVisits.map(v => v.language));
+  const uRefs      = uniq(sortedVisits.map(v => getRefHost(v.referrer)));
+
+  const hasFilter = Object.values(tableFilters).some(v => v !== '');
+  const clearFilters = () => setTableFilters({ page:'', device:'', browser:'', os:'', province:'', isp:'', language:'', referrer:'' });
+
   const showRef = (ref) => {
     if (!ref) return <span className="text-neutral-600 text-xs">ตรงมา</span>;
     try { return <span className="text-blue-400 text-xs">{new URL(ref).hostname}</span>; }
     catch { return <span className="text-neutral-400 text-xs">{String(ref).slice(0, 25)}</span>; }
   };
 
-  const pageMap = {};
-  filtered.forEach(v => { pageMap[v.page] = (pageMap[v.page] || 0) + 1; });
-  const pageBreakdown = Object.entries(pageMap).sort((a, b) => b[1] - a[1]);
-  const PAGE_NAMES = PAGE_NAMES_TH;
-
-  const mobileCount  = filtered.filter(v => v.device === 'mobile').length;
-  const desktopCount = filtered.filter(v => v.device === 'desktop').length;
-
+  const selCls = 'bg-neutral-800 border border-neutral-700 rounded text-xs text-neutral-300 px-1 py-0.5 w-full focus:outline-none focus:border-blue-500 cursor-pointer';
   const btnCls = (t) => `px-4 py-2 rounded-full text-sm font-bold transition-all ${rangeType === t ? 'bg-blue-600 text-white' : 'bg-neutral-800 text-neutral-400 hover:text-white'}`;
 
   return (
     <div className="space-y-6">
+      {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'วันนี้',      value: todayCount,  color: 'text-blue-400' },
@@ -1856,6 +1895,7 @@ const AnalyticsSection = ({ visits = [] }) => {
         ))}
       </div>
 
+      {/* Range selector */}
       <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
         <p className="text-neutral-400 text-sm mb-3 font-medium">เลือกช่วงเวลา</p>
         <div className="flex flex-wrap gap-2 mb-4">
@@ -1914,30 +1954,71 @@ const AnalyticsSection = ({ visits = [] }) => {
         )}
       </div>
 
-      {/* Page breakdown + Device */}
+      {/* Page breakdown + Device — click-to-filter */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* หน้าที่เข้าชม — คลิกเพื่อ filter */}
         <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
-          <h3 className="text-white font-bold mb-5">หน้าที่เข้าชมมากสุด</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-white font-bold">หน้าที่เข้าชมมากสุด</h3>
+            <span className="text-neutral-600 text-xs">คลิกเพื่อกรอง →</span>
+          </div>
           {pageBreakdown.length === 0 ? <p className="text-neutral-600 text-sm">ยังไม่มีข้อมูล</p> :
-            pageBreakdown.map(([pg, count]) => (
-              <div key={pg} className="flex items-center gap-3 mb-3">
-                <span className="text-neutral-300 text-sm w-28 shrink-0">{PAGE_NAMES[pg] || pg}</span>
-                <div className="flex-1 bg-neutral-800 rounded-full h-2">
-                  <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${filtered.length > 0 ? (count/filtered.length)*100 : 0}%` }} />
+            pageBreakdown.map(([pg, count]) => {
+              const isSelected = selectedPage === pg;
+              const isFaded    = selectedPage && !isSelected;
+              return (
+                <div
+                  key={pg}
+                  onClick={() => setSelectedPage(prev => prev === pg ? null : pg)}
+                  className={`flex items-center gap-3 mb-2 rounded-xl px-3 py-2 cursor-pointer transition-all duration-200
+                    ${isSelected ? 'bg-blue-900/30 ring-1 ring-blue-500/50' : 'hover:bg-neutral-800/60'}
+                    ${isFaded ? 'opacity-30' : 'opacity-100'}`}
+                >
+                  <span className={`text-sm w-28 shrink-0 font-medium ${isSelected ? 'text-blue-300' : 'text-neutral-300'}`}>
+                    {PAGE_NAMES[pg] || pg}
+                  </span>
+                  <div className="flex-1 bg-neutral-800 rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full transition-all ${isSelected ? 'bg-blue-400' : 'bg-blue-600'}`}
+                      style={{ width: `${filtered.length > 0 ? (count/filtered.length)*100 : 0}%` }}
+                    />
+                  </div>
+                  <span className={`text-sm w-6 text-right shrink-0 font-bold ${isSelected ? 'text-blue-300' : 'text-neutral-400'}`}>{count}</span>
                 </div>
-                <span className="text-neutral-400 text-sm w-6 text-right shrink-0">{count}</span>
-              </div>
-            ))}
+              );
+            })}
         </div>
+
+        {/* อุปกรณ์ — แสดง breakdown ของหน้าที่ selected */}
         <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
-          <h3 className="text-white font-bold mb-5">อุปกรณ์</h3>
-          {filtered.length === 0 ? <p className="text-neutral-600 text-sm">ยังไม่มีข้อมูล</p> :
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-white font-bold">อุปกรณ์</h3>
+            {selectedPage && (
+              <button
+                onClick={() => setSelectedPage(null)}
+                className="text-xs text-neutral-500 hover:text-white flex items-center gap-1 transition-colors"
+              >
+                ✕ ล้าง
+              </button>
+            )}
+          </div>
+          {selectedPage && (
+            <div className="flex items-center gap-2 mb-4 mt-1">
+              <span className="text-blue-400 text-xs">🔍 กำลังดู:</span>
+              <span className="bg-blue-900/40 text-blue-300 text-xs px-2 py-0.5 rounded-full font-medium">
+                {PAGE_NAMES[selectedPage] || selectedPage}
+              </span>
+              <span className="text-neutral-600 text-xs">({deviceTotal} visits)</span>
+            </div>
+          )}
+          {!selectedPage && <div className="mb-5" />}
+          {deviceTotal === 0 ? <p className="text-neutral-600 text-sm">ยังไม่มีข้อมูล</p> :
             [{ label:'📱 Mobile', count:mobileCount, color:'bg-blue-500' },
              { label:'💻 Desktop', count:desktopCount, color:'bg-purple-500' }].map(d => (
               <div key={d.label} className="flex items-center gap-3 mb-4">
                 <span className="text-neutral-300 text-sm w-28 shrink-0">{d.label}</span>
                 <div className="flex-1 bg-neutral-800 rounded-full h-2">
-                  <div className={`${d.color} h-2 rounded-full`} style={{ width: `${filtered.length > 0 ? (d.count/filtered.length)*100 : 0}%` }} />
+                  <div className={`${d.color} h-2 rounded-full transition-all duration-500`} style={{ width: `${deviceTotal > 0 ? (d.count/deviceTotal)*100 : 0}%` }} />
                 </div>
                 <span className="text-neutral-400 text-sm w-6 text-right shrink-0">{d.count}</span>
               </div>
@@ -1945,10 +2026,18 @@ const AnalyticsSection = ({ visits = [] }) => {
         </div>
       </div>
 
-      {/* Visitor details table */}
+      {/* Visitor details table + column filters */}
       <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-          <h3 className="text-white font-bold">รายละเอียดผู้เข้าชม</h3>
+          <div className="flex items-center gap-3">
+            <h3 className="text-white font-bold">รายละเอียดผู้เข้าชม</h3>
+            {hasFilter && (
+              <button onClick={clearFilters}
+                className="text-xs text-orange-400 hover:text-orange-300 border border-orange-400/40 px-2 py-0.5 rounded-full transition-colors">
+                ✕ ล้าง filter
+              </button>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <span className="text-neutral-500 text-sm">แสดง</span>
             {[10, 25, 50].map(n => (
@@ -1966,16 +2055,46 @@ const AnalyticsSection = ({ visits = [] }) => {
         ) : (
           <>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[700px]">
+              <table className="w-full text-sm min-w-[800px]">
                 <thead>
+                  {/* Column headers */}
                   <tr className="border-b border-neutral-800">
                     {['วันที่-เวลา','หน้า','อุปกรณ์','Browser','OS','จังหวัด','ISP','ภาษา','ที่มา'].map(h => (
                       <th key={h} className="text-left text-neutral-500 text-xs uppercase py-3 px-2 font-medium whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
+                  {/* Filter row */}
+                  <tr className="border-b border-neutral-700/60">
+                    <td className="py-1.5 px-2">
+                      <span className="text-neutral-700 text-xs">—</span>
+                    </td>
+                    {[
+                      { key:'page',     opts:uPages,     label:'ทุกหน้า',     fn:(v) => PAGE_NAMES[v] || v },
+                      { key:'device',   opts:uDevices,   label:'ทุกอุปกรณ์' },
+                      { key:'browser',  opts:uBrowsers,  label:'ทุก Browser' },
+                      { key:'os',       opts:uOSes,      label:'ทุก OS' },
+                      { key:'province', opts:uProvinces, label:'ทุกจังหวัด' },
+                      { key:'isp',      opts:uISPs,      label:'ทุก ISP' },
+                      { key:'language', opts:uLangs,     label:'ทุกภาษา' },
+                      { key:'referrer', opts:uRefs,      label:'ทุกที่มา' },
+                    ].map(({ key, opts, label, fn }) => (
+                      <td key={key} className="py-1.5 px-2">
+                        <select
+                          value={tableFilters[key]}
+                          onChange={e => { setTableFilters(prev => ({ ...prev, [key]: e.target.value })); setVisitPage(0); }}
+                          className={`${selCls} ${tableFilters[key] ? 'text-blue-300 border-blue-500/50' : ''}`}
+                        >
+                          <option value="">{label}</option>
+                          {opts.map(o => <option key={o} value={o}>{fn ? fn(o) : o}</option>)}
+                        </select>
+                      </td>
+                    ))}
+                  </tr>
                 </thead>
                 <tbody>
-                  {pagedVisits.map((v, i) => (
+                  {filteredTableVisits.length === 0 ? (
+                    <tr><td colSpan={9} className="py-8 text-center text-neutral-600 text-sm">ไม่พบข้อมูลที่ตรงกับ filter</td></tr>
+                  ) : pagedVisits.map((v, i) => (
                     <tr key={i} className="border-b border-neutral-800/50 hover:bg-neutral-800/30 transition-colors">
                       <td className="py-2.5 px-2 text-neutral-500 whitespace-nowrap text-xs">{v.timestamp || '-'}</td>
                       <td className="py-2.5 px-2 text-neutral-300 whitespace-nowrap text-xs">{PAGE_NAMES[v.page] || v.page || '-'}</td>
@@ -1997,7 +2116,9 @@ const AnalyticsSection = ({ visits = [] }) => {
             </div>
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-neutral-800">
               <span className="text-neutral-500 text-sm">
-                {sortedVisits.length > 0 ? `${visitPage * visitRows + 1}–${Math.min((visitPage + 1) * visitRows, sortedVisits.length)} จาก ${sortedVisits.length} รายการ` : ''}
+                {filteredTableVisits.length > 0
+                  ? `${visitPage * visitRows + 1}–${Math.min((visitPage + 1) * visitRows, filteredTableVisits.length)} จาก ${filteredTableVisits.length} รายการ${hasFilter ? ` (กรองจาก ${sortedVisits.length})` : ''}`
+                  : '0 รายการ'}
               </span>
               <div className="flex items-center gap-2">
                 <button onClick={() => setVisitPage(p => Math.max(0, p - 1))} disabled={visitPage === 0}
