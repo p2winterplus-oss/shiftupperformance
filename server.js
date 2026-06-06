@@ -1,7 +1,7 @@
 import express from 'express';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
@@ -191,52 +191,46 @@ app.post('/api/track-visit', async (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════
-//  EMAIL NOTIFICATION — nodemailer + Gmail SMTP
-//  ต้องตั้ง env vars ใน Railway: GMAIL_USER, GMAIL_APP_PASSWORD
+//  EMAIL NOTIFICATION — Resend API (HTTPS, ไม่โดน block จาก Railway)
+//  ต้องตั้ง env var ใน Railway: RESEND_API_KEY
+//  สมัครฟรีที่ resend.com → Dashboard → API Keys → Create API Key
 // ═══════════════════════════════════════════════════════════════════
 
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1Su-nW33_bmmE-RUDy0xVf7ppiee4g9RuuA5HcIgyN6E';
-const NOTIFY_TO = process.env.NOTIFY_EMAIL || 'p2w.interplus@gmail.com';
+const NOTIFY_TO   = process.env.NOTIFY_EMAIL  || 'p2w.interplus@gmail.com';
+const NOTIFY_FROM = process.env.NOTIFY_FROM   || 'Shiftup Performance <onboarding@resend.dev>';
 
-function makeTransporter() {
-  // strip spaces — Google แสดง App Password เป็น "xxxx xxxx xxxx xxxx" แต่ต้องไม่มี space
-  const pass = (process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: process.env.GMAIL_USER, pass },
-  });
+async function sendEmail(subject, text) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) throw new Error('RESEND_API_KEY not set in Railway env vars');
+  const resend = new Resend(apiKey);
+  const result = await resend.emails.send({ from: NOTIFY_FROM, to: [NOTIFY_TO], subject, text });
+  if (result.error) throw new Error(result.error.message || JSON.stringify(result.error));
+  return result;
 }
 
-// ── API: ทดสอบ Email (เปิด URL นี้ใน browser เพื่อเช็ค config) ───
+// ── API: ทดสอบ Email — เปิด URL นี้ใน browser เพื่อเช็ค config ───
 app.get('/api/test-email', async (req, res) => {
-  const user = process.env.GMAIL_USER;
-  const pass = (process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
-  if (!user || !pass) {
+  if (!process.env.RESEND_API_KEY) {
     return res.json({
       success: false,
-      error: 'ยังไม่ได้ตั้ง env vars',
-      missing: [!user && 'GMAIL_USER', !pass && 'GMAIL_APP_PASSWORD'].filter(Boolean),
+      error: 'ยังไม่ได้ตั้ง RESEND_API_KEY ใน Railway env vars',
+      steps: ['1. ไปที่ resend.com → สมัครฟรี', '2. Dashboard → API Keys → Create API Key', '3. Copy key → วางใน Railway env vars ชื่อ RESEND_API_KEY'],
     });
   }
   try {
-    await nodemailer.createTransport({ service: 'gmail', auth: { user, pass } })
-      .sendMail({
-        from: `"Shiftup Test" <${user}>`,
-        to:   NOTIFY_TO,
-        subject: '✅ [Shiftup] ทดสอบ Email — ระบบ OK',
-        text: `ทดสอบระบบ email notification\nGMAIL_USER: ${user}\nส่งหา: ${NOTIFY_TO}\n\nถ้าได้รับ email นี้ แสดงว่าระบบทำงานถูกต้อง`,
-      });
+    await sendEmail(
+      '✅ [Shiftup] ทดสอบ Email — ระบบ OK',
+      `ทดสอบระบบ email notification\nส่งหา: ${NOTIFY_TO}\n\nถ้าได้รับ email นี้ แสดงว่าระบบทำงานถูกต้อง ✅`
+    );
     res.json({ success: true, message: `✅ ส่ง email ไปที่ ${NOTIFY_TO} แล้ว — ตรวจ inbox/spam` });
   } catch (err) {
-    res.json({ success: false, error: err.toString(), hint: 'ตรวจสอบ App Password ว่าถูกต้องหรือไม่' });
+    res.json({ success: false, error: err.toString() });
   }
 });
 
 // ── API: แจ้งเตือน Lead ใหม่ (เรียกหลัง form submit) ─────────────
 app.post('/api/notify-lead', async (req, res) => {
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-    return res.json({ success: false, reason: 'email not configured' });
-  }
   const d = req.body || {};
   let subject = '', text = '';
 
@@ -273,12 +267,8 @@ app.post('/api/notify-lead', async (req, res) => {
   }
 
   try {
-    await makeTransporter().sendMail({
-      from:    `"Shiftup Performance" <${process.env.GMAIL_USER}>`,
-      to:      NOTIFY_TO,
-      subject, text,
-    });
-    console.log(`[notify-lead] email sent: ${subject}`);
+    await sendEmail(subject, text);
+    console.log(`[notify-lead] ✓ email sent: ${subject}`);
     res.json({ success: true });
   } catch (err) {
     console.error('[notify-lead] error:', err.toString());
