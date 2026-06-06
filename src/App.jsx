@@ -9,8 +9,8 @@ const LOGO_SRC = '/images/logo.png';
 const HERO_BG  = 'https://drive.google.com/thumbnail?id=1G3y845m2OTvSpoDjUG4v59Tx6G--VMtY&sz=w2400';
 const PROD_BG  = 'https://drive.google.com/thumbnail?id=1Fw5aLkbJZvHxIeu7NtegJnRSE_aO1UiA&sz=w2400';
 const LINE_URL  = 'https://lin.ee/nZOMcph';
-// ↓ วาง URL ของ Google Apps Script Web App หลัง Deploy แล้ว
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwMrK1ip9KWPihhA0VAkUMbYrsHBIqRrcsne099n-t0HBkgAKlFtTvhLDl0asMciy0TWw/exec';
+// ↓ Google Apps Script Web App URL (deployment เดียว ใช้ทั้ง forms + visit tracking)
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxGc0JZJkZ0MtW73_MldOdcc-ILttkvcA5G_16-0MwhjrLtWLSFTlQrMdD3W-g-dmqIDg/exec';
 
 // ─── Watermark Component ──────────────────────────────────────────────────────
 // ใส่ลายน้ำโลโก้ทับรูปอัตโนมัติ (Portfolio + HKS)

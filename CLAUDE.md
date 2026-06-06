@@ -20,14 +20,19 @@
 
 ## URLs ที่สำคัญ
 
-### Apps Script — มี 2 URL อย่าสับสน ❗
+### Apps Script — ใช้ **URL เดียวกัน** ทุกที่ (อัปเดต 6 มิ.ย. 2569)
 | ใช้ที่ไหน | URL (deployment ID) |
 |---|---|
 | **server.js** `SHEET_DOGET_URL` (dashboard ดึงข้อมูล) | `AKfycbxGc0JZJkZ0MtW73_MldOdcc-ILttkvcA5G_16-0MwhjrLtWLSFTlQrMdD3W-g-dmqIDg` |
-| **App.jsx** `GOOGLE_SCRIPT_URL` (form + visit submissions) | `AKfycbwMrK1ip9KWPihhA0VAkUMbYrsHBIqRrcsne099n-t0HBkgAKlFtTvhLDl0asMciy0TWw` |
+| **App.jsx** `GOOGLE_SCRIPT_URL` (remap/partner forms) | `AKfycbxGc0JZJkZ0MtW73_MldOdcc-ILttkvcA5G_16-0MwhjrLtWLSFTlQrMdD3W-g-dmqIDg` |
+| **App.jsx** visit tracking GET (useEffect) | `AKfycbxGc0JZJkZ0MtW73_MldOdcc-ILttkvcA5G_16-0MwhjrLtWLSFTlQrMdD3W-g-dmqIDg` |
 
-> ⚠️ **ห้ามสลับ URL** — URL แรกมี `doGet` (dashboard read), URL ที่สองมี `doPost` (remap/partner/visit write)
+> ✅ **ตอนนี้ใช้ deployment เดียว** (LEAD) ทุกอย่าง — ไม่ต้องสลับ URL อีกต่อไป
 > ⚠️ **อย่าสร้าง deployment ใหม่** — URL จะเปลี่ยน ให้ใช้ Manage deployments → Edit → New version เท่านั้น
+
+### Visit Tracking — แก้ไข Root Cause (6 มิ.ย. 2569)
+- **ปัญหาเดิม**: no-cors POST → Apps Script redirect 302 → browser เปลี่ยน POST→GET → `doPost` ไม่ถูกเรียก → body หาย
+- **แก้ด้วย**: เปลี่ยนเป็น GET request + URLSearchParams → `doGet action=track` → บันทึกลง Visits sheet ✅
 
 ### Google Sheet
 `https://docs.google.com/spreadsheets/d/1Su-nW33_bmmE-RUDy0xVf7ppiee4g9RuuA5HcIgyN6E`
