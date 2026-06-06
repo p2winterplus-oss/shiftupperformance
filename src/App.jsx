@@ -109,29 +109,12 @@ const ShiftupApp = () => {
       timestamp: new Date().toLocaleString('th-TH'),
     };
 
-    // 1. Server → dashboard memory + geo/ISP (province, city, ISP จาก IP)
+    // Server บันทึก visit + เรียก Apps Script Sheet ให้เอง (server-side ไม่มี CORS issue)
     fetch('/api/track-visit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     }).catch(() => {});
-
-    // 2. Google Sheet → regular fetch (ไม่มี mode:'no-cors' → Sec-Fetch-Mode:cors → Google ไม่ return 400)
-    // Apps Script execute → บันทึก Visits → browser ได้ CORS TypeError กลับ (catch ไว้เงียบๆ ไม่เป็นไร)
-    try {
-      const tp = new URLSearchParams({
-        action:  'track',
-        page:    payload.page,
-        device:  payload.device,
-        sid:     sid,
-        browser: payload.browser,
-        os:      payload.os,
-        ref:     payload.referrer,
-        language: payload.language,
-      });
-      fetch('https://script.google.com/macros/s/AKfycbxGc0JZJkZ0MtW73_MldOdcc-ILttkvcA5G_16-0MwhjrLtWLSFTlQrMdD3W-g-dmqIDg/exec?' + tp.toString())
-        .catch(() => {});
-    } catch (_) {}
   }, [activePage]);
 
   const lineUrl = "https://lin.ee/nZOMcph";

@@ -169,14 +169,32 @@ app.post('/api/track-visit', async (req, res) => {
   visitsDirty = true;
   res.json({ success: true, total: visits.length });
 
-  // Geo lookup async — update in-memory for dashboard display
+  // Geo lookup async → แล้ว server เรียก Apps Script โดยตรง (ไม่พึ่ง browser เลย)
+  // Server-side Node.js fetch ไม่มี Origin/Sec-* headers → Google ไม่ block → 200 OK
   setImmediate(async () => {
     try {
       const geo = await getGeo(ip);
       visit.province = geo.province;
       visit.city     = geo.city;
       visit.isp      = geo.isp;
-      // Sheet write → browser handles via no-cors (proven working like Remap/Partner forms)
+
+      // บันทึกลง Google Sheet Visits tab ผ่าน Apps Script doGet action=track
+      const tp = new URLSearchParams({
+        action:   'track',
+        page:     visit.page,
+        device:   visit.device,
+        sid:      visit.sessionId,
+        browser:  visit.browser,
+        os:       visit.os,
+        ref:      visit.referrer,
+        language: visit.language,
+        province: visit.province,
+        city:     visit.city,
+        isp:      visit.isp,
+        iso:      visit.isoTimestamp,
+      });
+      fetch(`${SHEET_DOGET_URL}?${tp.toString()}`, { redirect: 'follow' })
+        .catch(e => console.error('[track-visit] sheet error:', e.message));
     } catch (e) {
       console.error('[track-visit] geo error:', e.message);
     }
