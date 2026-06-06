@@ -82,12 +82,12 @@ function migrateVisitsSheet(ss) {
   const sheet = ss.getSheetByName('Visits');
   if (!sheet) return;
   const lastCol = sheet.getLastColumn();
-  if (lastCol < 10) {
-    const newHeaders = ['ISO Timestamp', 'วันที่-เวลา', 'หน้า', 'อุปกรณ์', 'Session ID', 'จังหวัด', 'เมือง', 'Browser', 'OS', 'Referrer'];
+  if (lastCol < 12) {
+    const newHeaders = ['ISO Timestamp','วันที่-เวลา','หน้า','อุปกรณ์','Session ID','จังหวัด','เมือง','Browser','OS','Referrer','ISP','ภาษา'];
     sheet.getRange(1, 1, 1, newHeaders.length).setValues([newHeaders]);
     styleHeader(sheet, newHeaders.length, '#1a73e8');
-    [180,160,100,80,200,150,150,90,90,200].forEach((w,i) => sheet.setColumnWidth(i+1, w));
-    Logger.log('Visits sheet migrated to new headers');
+    [180,160,100,80,200,150,130,90,90,200,200,80].forEach((w,i) => sheet.setColumnWidth(i+1, w));
+    Logger.log('Visits sheet migrated to 12 columns (+ ISP, Language)');
   }
 }
 
@@ -123,12 +123,20 @@ function doPost(e) {
       );
 
     } else if (data.source === 'visit') {
+      migrateVisitsSheet(ss); // อัปเกรด header เป็น 12 column ถ้ายังเป็นแบบเก่า
       appendRow(ss, 'Visits', [
         data.isoTimestamp || new Date().toISOString(),
         data.timestamp    || new Date().toLocaleString('th-TH'),
         data.page         || '',
         data.device       || '',
         data.sessionId    || '',
+        data.province     || '',
+        data.city         || '',
+        data.browser      || '',
+        data.os           || '',
+        data.referrer     || '',
+        data.isp          || '',
+        data.language     || '',
       ]);
 
     } else if (data.source === 'partner') {
@@ -233,10 +241,10 @@ function setupSheets() {
   let visitsSheet = ss.getSheetByName('Visits');
   if (!visitsSheet) {
     visitsSheet = ss.insertSheet('Visits');
-    const h = ['ISO Timestamp','วันที่-เวลา','หน้า','อุปกรณ์','Session ID','จังหวัด','เมือง','Browser','OS','Referrer'];
+    const h = ['ISO Timestamp','วันที่-เวลา','หน้า','อุปกรณ์','Session ID','จังหวัด','เมือง','Browser','OS','Referrer','ISP','ภาษา'];
     visitsSheet.appendRow(h);
     styleHeader(visitsSheet, h.length, '#1a73e8');
-    [180,160,100,80,200,150,150,90,90,200].forEach((w, i) => visitsSheet.setColumnWidth(i + 1, w));
+    [180,160,100,80,200,150,130,90,90,200,200,80].forEach((w, i) => visitsSheet.setColumnWidth(i + 1, w));
     visitsSheet.setFrozenRows(1);
   }
 

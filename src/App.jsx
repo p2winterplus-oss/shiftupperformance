@@ -82,12 +82,13 @@ const ShiftupApp = () => {
     let sid = sessionStorage.getItem(KEY);
     if (!sid) { sid = Math.random().toString(36).slice(2) + Date.now(); sessionStorage.setItem(KEY, sid); }
     const device   = /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
-    const referrer = isFirst ? (document.referrer || '') : ''; // เฉพาะ visit แรกเท่านั้น
+    const referrer = isFirst ? (document.referrer || '') : '';
+    const language = navigator.language || navigator.userLanguage || '';
     fetch('/api/track-visit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        page: activePage, device, sessionId: sid, referrer,
+        page: activePage, device, sessionId: sid, referrer, language,
         isoTimestamp: new Date().toISOString(),
         timestamp: new Date().toLocaleString('th-TH'),
       }),
@@ -1939,7 +1940,7 @@ const AnalyticsSection = ({ visits = [] }) => {
               <table className="w-full text-sm min-w-[700px]">
                 <thead>
                   <tr className="border-b border-neutral-800">
-                    {['วันที่-เวลา','หน้า','อุปกรณ์','Browser','OS','จังหวัด','เมือง','ที่มา'].map(h => (
+                    {['วันที่-เวลา','หน้า','อุปกรณ์','Browser','OS','จังหวัด','ISP','ภาษา','ที่มา'].map(h => (
                       <th key={h} className="text-left text-neutral-500 text-xs uppercase py-3 px-2 font-medium whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -1957,7 +1958,8 @@ const AnalyticsSection = ({ visits = [] }) => {
                       <td className="py-2.5 px-2 text-neutral-400 whitespace-nowrap text-xs">{v.browser || '-'}</td>
                       <td className="py-2.5 px-2 text-neutral-400 whitespace-nowrap text-xs">{v.os || '-'}</td>
                       <td className="py-2.5 px-2 text-neutral-300 whitespace-nowrap text-xs">{v.province || '-'}</td>
-                      <td className="py-2.5 px-2 text-neutral-400 whitespace-nowrap text-xs">{v.city || '-'}</td>
+                      <td className="py-2.5 px-2 text-neutral-400 whitespace-nowrap text-xs" title={v.isp}>{v.isp ? v.isp.split(' ')[0] : '-'}</td>
+                      <td className="py-2.5 px-2 text-neutral-400 whitespace-nowrap text-xs">{v.language || '-'}</td>
                       <td className="py-2.5 px-2 whitespace-nowrap">{showRef(v.referrer)}</td>
                     </tr>
                   ))}

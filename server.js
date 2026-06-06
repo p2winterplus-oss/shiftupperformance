@@ -19,7 +19,10 @@ app.use(express.static(join(__dirname, 'dist')));
 
 let visits = [];
 let visitsDirty = false;
-const geoCache = new Map(); // IP → { province, city }  cache 1hr
+const geoCache = new Map(); // IP → { province, city, isp }  cache 1hr
+
+// doPost URL — same approach as remap/partner forms (POST body received before redirect ✓)
+const SHEET_DOPOST_URL = 'https://script.google.com/macros/s/AKfycbwMrK1ip9KWPihhA0VAkUMbYrsHBIqRrcsne099n-t0HBkgAKlFtTvhLDl0asMciy0TWw/exec';
 
 // ── Helper: parse User-Agent ─────────────────────────────────────
 function parseUA(ua = '') {
@@ -41,20 +44,21 @@ function parseUA(ua = '') {
 // ── Helper: IP Geolocation (ip-api.com — ฟรี, ไม่จำกัด req/วัน) ──
 async function getGeo(ip) {
   if (!ip || ip === '::1' || ip.startsWith('127.') || ip.startsWith('192.168.') || ip.startsWith('10.')) {
-    return { province: 'localhost', city: '' };
+    return { province: 'localhost', city: '', isp: 'localhost' };
   }
   if (geoCache.has(ip)) return geoCache.get(ip);
   try {
-    const res  = await fetch(`http://ip-api.com/json/${ip}?lang=th&fields=status,regionName,city`);
+    // เพิ่ม isp field — รู้ว่าผู้เข้าชมใช้ค่ายไหน (AIS/True/DTAC ฯลฯ)
+    const res  = await fetch(`http://ip-api.com/json/${ip}?lang=th&fields=status,regionName,city,isp`);
     const data = await res.json();
     const geo  = data.status === 'success'
-      ? { province: data.regionName || '', city: data.city || '' }
-      : { province: '', city: '' };
+      ? { province: data.regionName || '', city: data.city || '', isp: data.isp || '' }
+      : { province: '', city: '', isp: '' };
     geoCache.set(ip, geo);
-    setTimeout(() => geoCache.delete(ip), 60 * 60 * 1000); // expire 1hr
+    setTimeout(() => geoCache.delete(ip), 60 * 60 * 1000);
     return geo;
   } catch {
-    return { province: '', city: '' };
+    return { province: '', city: '', isp: '' };
   }
 }
 
@@ -142,48 +146,60 @@ const SHEET_DOGET_URL = 'https://script.google.com/macros/s/AKfycbxGc0JZJkZ0MtW7
 
 // ── API: บันทึก visit ────────────────────────────────────────────
 app.post('/api/track-visit', async (req, res) => {
-  const { page, device, sessionId, isoTimestamp, timestamp, referrer } = req.body || {};
+  const { page, device, sessionId, isoTimestamp, timestamp, referrer, language } = req.body || {};
   const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim()
            || req.socket?.remoteAddress || '';
   const { os, browser } = parseUA(req.headers['user-agent'] || '');
+  // ภาษาจาก browser (navigator.language) หรือ fallback จาก Accept-Language header
+  const lang = language || (req.headers['accept-language'] || '').split(',')[0] || '';
 
   const visit = {
     isoTimestamp: isoTimestamp || new Date().toISOString(),
     timestamp:    timestamp    || new Date().toLocaleString('th-TH'),
-    page:         page    || 'home',
-    device:       device  || 'desktop',
-    sessionId:    sessionId || Math.random().toString(36).slice(2),
-    province: '', city: '',
+    page:         page         || 'home',
+    device:       device       || 'desktop',
+    sessionId:    sessionId    || Math.random().toString(36).slice(2),
+    province: '', city: '', isp: '',
     browser, os,
     referrer: referrer || '',
+    language: lang,
   };
 
   visits.push(visit);
   visitsDirty = true;
   res.json({ success: true, total: visits.length });
 
-  // เขียน Sheet + Geo (async หลัง response)
+  // Geo + Sheet write (async หลัง response)
   setImmediate(async () => {
     try {
-      // ★ เขียน Sheet ทันที (ไม่รอ geo) → ถ้า server restart ข้อมูลก็อยู่ใน Sheet แล้ว
-      const buildParams = (prov, cty) => new URLSearchParams({
-        action: 'track', iso: visit.isoTimestamp,
-        page: visit.page, device: visit.device, sid: visit.sessionId,
-        province: prov, city: cty, browser, os, ref: visit.referrer,
-      });
-
-      const sheetRes  = await fetch(`${SHEET_DOGET_URL}?${buildParams('', '')}`, { redirect: 'follow' });
-      const sheetText = await sheetRes.text().catch(() => '');
-      if (sheetText.trim() !== 'ok') {
-        console.warn('[track-visit] sheet:', sheetRes.status, sheetText.slice(0, 150));
-      } else {
-        console.log(`[track-visit] sheet ✓ page=${visit.page} device=${visit.device}`);
-      }
-
-      // ★ จากนั้น geo → update in-memory (dashboard จะแสดงจังหวัด/เมือง)
+      // ★ Geo lookup ก่อน (cached = เร็วมาก)
       const geo = await getGeo(ip);
       visit.province = geo.province;
       visit.city     = geo.city;
+      visit.isp      = geo.isp;
+
+      // ★ เขียน Sheet ผ่าน doPost URL (เหมือน remap/partner forms — ใช้ได้แน่นอน)
+      const sheetRes = await fetch(SHEET_DOPOST_URL, {
+        method:  'POST',
+        redirect: 'follow',
+        headers:  { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          source: 'visit',
+          isoTimestamp: visit.isoTimestamp,
+          timestamp:    visit.timestamp,
+          page:         visit.page,
+          device:       visit.device,
+          sessionId:    visit.sessionId,
+          province:     geo.province,
+          city:         geo.city,
+          browser,
+          os,
+          referrer:     visit.referrer,
+          isp:          geo.isp,
+          language:     visit.language,
+        }),
+      });
+      console.log(`[track-visit] sheet POST ${sheetRes.status} | ${visit.page} | ${geo.province} | ${geo.isp}`);
     } catch (e) {
       console.error('[track-visit] async error:', e.message);
     }
