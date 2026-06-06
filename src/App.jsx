@@ -116,8 +116,8 @@ const ShiftupApp = () => {
       body: JSON.stringify(payload),
     }).catch(() => {});
 
-    // 2. Google Sheet → Image pixel tracking (ไม่มี CORS ปัญหาเลย, ไม่มี 400 จาก mode:no-cors)
-    // Image.src ส่ง GET request ผ่าน img loader — Apps Script รับแล้ว doGet action=track บันทึก Visits
+    // 2. Google Sheet → regular fetch (ไม่มี mode:'no-cors' → Sec-Fetch-Mode:cors → Google ไม่ return 400)
+    // Apps Script execute → บันทึก Visits → browser ได้ CORS TypeError กลับ (catch ไว้เงียบๆ ไม่เป็นไร)
     try {
       const tp = new URLSearchParams({
         action:  'track',
@@ -129,7 +129,8 @@ const ShiftupApp = () => {
         ref:     payload.referrer,
         language: payload.language,
       });
-      new Image().src = 'https://script.google.com/macros/s/AKfycbxGc0JZJkZ0MtW73_MldOdcc-ILttkvcA5G_16-0MwhjrLtWLSFTlQrMdD3W-g-dmqIDg/exec?' + tp.toString();
+      fetch('https://script.google.com/macros/s/AKfycbxGc0JZJkZ0MtW73_MldOdcc-ILttkvcA5G_16-0MwhjrLtWLSFTlQrMdD3W-g-dmqIDg/exec?' + tp.toString())
+        .catch(() => {});
     } catch (_) {}
   }, [activePage]);
 
