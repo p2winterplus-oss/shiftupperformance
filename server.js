@@ -178,34 +178,31 @@ app.post('/api/track-visit', async (req, res) => {
       visit.city     = geo.city;
       visit.isp      = geo.isp;
 
-      // บันทึกลง Google Sheet Visits tab ผ่าน Apps Script doGet action=track
-      const tp = new URLSearchParams({
-        action:   'track',
-        page:     visit.page,
-        device:   visit.device,
-        sid:      visit.sessionId,
-        browser:  visit.browser,
-        os:       visit.os,
-        ref:      visit.referrer,
-        language: visit.language,
-        province: visit.province,
-        city:     visit.city,
-        isp:      visit.isp,
-        iso:      visit.isoTimestamp,
+      // บันทึกลง Google Sheet Visits tab ผ่าน Apps Script doPost (source:'visit')
+      // POST JSON → doPost ทำงานได้ (เหมือน remap form) — ไม่ต้องใช้ GET+params ที่ Google block
+      const trackBody = JSON.stringify({
+        source:       'visit',
+        isoTimestamp: visit.isoTimestamp,
+        timestamp:    new Date(visit.isoTimestamp).toLocaleString('th-TH'),
+        page:         visit.page,
+        device:       visit.device,
+        sessionId:    visit.sessionId,
+        browser:      visit.browser,
+        os:           visit.os,
+        referrer:     visit.referrer,
+        language:     visit.language,
+        province:     visit.province,
+        city:         visit.city,
+        isp:          visit.isp,
       });
-      // ทดสอบ: เปลี่ยนจาก SHEET_DOGET_URL ไปใช้ SHEET_DOPOST_URL (URL อีกตัว)
-      // SHEET_DOGET_URL → 400 ทุกครั้ง (เฉพาะ deployment นี้)
-      // ทดสอบ SHEET_DOPOST_URL ว่าให้ 302 (ผ่าน) หรือ 400 เหมือนกัน
-      const sheetUrl = `${SHEET_DOPOST_URL}?${tp.toString()}`;
-      console.log(`[sheet] calling: page=${visit.page} province=${visit.province}`);
-      const r1 = await fetch(sheetUrl, { redirect: 'manual' });
-      const loc = r1.headers.get('location') || '';
-      console.log(`[sheet] r1.status=${r1.status} location=${loc.substring(0,100)}`);
-      if (r1.status === 302 && loc) {
-        const r2 = await fetch(loc);
-        const body = await r2.text();
-        console.log(`[sheet] r2.status=${r2.status} body=${body.substring(0,80)}`);
-      }
+      console.log(`[sheet] POST visit: page=${visit.page} province=${visit.province}`);
+      const r = await fetch(SHEET_DOGET_URL, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    trackBody,
+      });
+      const txt = await r.text();
+      console.log(`[sheet] status=${r.status} body=${txt.substring(0, 60)}`);
     } catch (e) {
       console.error('[track-visit] geo error:', e.message);
     }
