@@ -13,6 +13,26 @@ app.use(express.json({ limit: '2mb' }));
 // Serve the Vite build output
 app.use(express.static(join(__dirname, 'dist')));
 
+// ── Track Visit → Google Apps Script (server-side, ไม่ต้องพึ่ง no-cors) ─────
+app.post('/api/track-visit', async (req, res) => {
+  const scriptUrl = 'https://script.google.com/macros/s/AKfycbwMrK1ip9KWPihhA0VAkUMbYrsHBIqRrcsne099n-t0HBkgAKlFtTvhLDl0asMciy0TWw/exec';
+  try {
+    const payload = { ...req.body, source: 'visit' };
+    console.log('[track-visit] sending:', JSON.stringify(payload));
+    const r = await fetch(scriptUrl, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload),
+    });
+    console.log('[track-visit] Apps Script status:', r.status);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[track-visit] error:', err.toString());
+    res.status(500).json({ success: false, error: err.toString() });
+  }
+});
+
 // ── Proxy GET → Google Apps Script (หลีกเลี่ยง CORS) ────────────────────────
 app.get('/api/get-leads', async (req, res) => {
   const scriptUrl = 'https://script.google.com/macros/s/AKfycbxGc0JZJkZ0MtW73_MldOdcc-ILttkvcA5G_16-0MwhjrLtWLSFTlQrMdD3W-g-dmqIDg/exec';
