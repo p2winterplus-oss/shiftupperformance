@@ -37,6 +37,7 @@ const WatermarkedImage = ({ src, alt, className }) => {
   );
 };
 
+// ส่งข้อมูล Lead → Apps Script (sheet write, no-cors)
 async function submitToSheets(payload) {
   if (!GOOGLE_SCRIPT_URL) return;
   try {
@@ -46,6 +47,15 @@ async function submitToSheets(payload) {
       body: JSON.stringify({ ...payload, timestamp: new Date().toLocaleString('th-TH') }),
     });
   } catch (_) {}
+}
+
+// แจ้ง server → ส่ง email notification (fire-and-forget)
+function notifyServer(payload) {
+  fetch('/api/notify-lead', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }).catch(() => {});
 }
 
 // --- MAIN APP COMPONENT (Handles Routing) ---
@@ -65,17 +75,19 @@ const ShiftupApp = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Track page visits → server proxy (same-origin, ไม่มี CORS / redirect issues)
+  // Track page visits → server proxy (same-origin, ไม่มี CORS)
   useEffect(() => {
     const KEY = 'shiftup_sid';
+    const isFirst = !sessionStorage.getItem(KEY);
     let sid = sessionStorage.getItem(KEY);
     if (!sid) { sid = Math.random().toString(36).slice(2) + Date.now(); sessionStorage.setItem(KEY, sid); }
-    const device = /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
+    const device   = /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
+    const referrer = isFirst ? (document.referrer || '') : ''; // เฉพาะ visit แรกเท่านั้น
     fetch('/api/track-visit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        page: activePage, device, sessionId: sid,
+        page: activePage, device, sessionId: sid, referrer,
         isoTimestamp: new Date().toISOString(),
         timestamp: new Date().toLocaleString('th-TH'),
       }),
@@ -999,7 +1011,9 @@ const RemapPage = () => {
             <form className="space-y-4" onSubmit={async (e) => {
               e.preventDefault();
               const fd = new FormData(e.target);
-              await submitToSheets({ source:'remap', name:fd.get('name'), contact:fd.get('contact'), car:fd.get('car'), location:fd.get('location'), detail:fd.get('detail') });
+              const remapData = { source:'remap', name:fd.get('name'), contact:fd.get('contact'), car:fd.get('car'), location:fd.get('location'), detail:fd.get('detail') };
+              await submitToSheets(remapData);
+              notifyServer(remapData);
               alert('ส่งข้อมูลเรียบร้อย ทีมงานจะติดต่อกลับเร็วๆ นี้ครับ');
               e.target.reset();
             }}>
@@ -1645,7 +1659,9 @@ const PartnerPage = () => (
         <form className="space-y-6 max-w-2xl mx-auto" onSubmit={async (e) => {
           e.preventDefault();
           const fd = new FormData(e.target);
-          await submitToSheets({ source:'partner', shopName:fd.get('shopName'), contactName:fd.get('contactName'), phone:fd.get('phone'), lineId:fd.get('lineId'), province:fd.get('province'), expertise:fd.get('expertise'), facebook:fd.get('facebook') });
+          const partnerData = { source:'partner', shopName:fd.get('shopName'), contactName:fd.get('contactName'), phone:fd.get('phone'), lineId:fd.get('lineId'), province:fd.get('province'), expertise:fd.get('expertise'), facebook:fd.get('facebook') };
+          await submitToSheets(partnerData);
+          notifyServer(partnerData);
           alert('ข้อมูลการสมัครถูกส่งเรียบร้อยแล้ว ทีมงานจะติดต่อกลับเร็วๆ นี้');
           e.target.reset();
         }}>

@@ -17,11 +17,32 @@ const SPREADSHEET_ID = '1Su-nW33_bmmE-RUDy0xVf7ppiee4g9RuuA5HcIgyN6E';
 // ★ ใส่ email ที่ต้องการรับการแจ้งเตือน (ใส่ได้มากกว่า 1 คั่นด้วย ,)
 const NOTIFY_EMAIL = 'p2w.interplus@gmail.com';
 
-// ── รับ GET request — ส่งข้อมูลกลับให้ Dashboard ────────────────────────────
+// ── รับ GET request ───────────────────────────────────────────────────────────
 function doGet(e) {
   try {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const params = (e && e.parameter) ? e.parameter : {};
+    const ss     = SpreadsheetApp.openById(SPREADSHEET_ID);
 
+    // ★ Visit tracking จาก server (GET request = ไม่มี redirect issue)
+    // server เรียก ?action=track&page=...&device=...&sid=...&province=...&city=...&browser=...&os=...&ref=...
+    if (params.action === 'track') {
+      migrateVisitsSheet(ss); // อัปเดต header ถ้ายังเป็น version เก่า
+      appendRow(ss, 'Visits', [
+        params.iso      || new Date().toISOString(),
+        new Date().toLocaleString('th-TH'),
+        params.page     || '',
+        params.device   || '',
+        params.sid      || '',
+        params.province || '',
+        params.city     || '',
+        params.browser  || '',
+        params.os       || '',
+        params.ref      || '',
+      ]);
+      return ContentService.createTextOutput('ok');
+    }
+
+    // ── Default: ส่งข้อมูล Dashboard ─────────────────────────────────────────
     const remapSheet  = ss.getSheetByName('Remap Leads');
     const remapVals   = remapSheet ? remapSheet.getDataRange().getValues() : [[]];
     const remapLeads  = (remapVals.length > 1 ? remapVals.slice(1) : []).map(r => ({
@@ -35,20 +56,27 @@ function doGet(e) {
       lineId: r[4], province: r[5], expertise: r[6], facebook: r[7]
     }));
 
-    const visitsSheet = ss.getSheetByName('Visits');
-    const visitsVals  = visitsSheet ? visitsSheet.getDataRange().getValues() : [[]];
-    const visits = (visitsVals.length > 1 ? visitsVals.slice(1) : []).map(r => ({
-      isoTimestamp: r[0], timestamp: r[1], page: r[2], device: r[3], sessionId: r[4]
-    }));
-
     return jsonResponse({
       remapLeads,
       partnerApplications,
-      visits,
-      counts: { remap: remapLeads.length, partner: partnerApplications.length, visits: visits.length }
+      counts: { remap: remapLeads.length, partner: partnerApplications.length }
     });
   } catch (err) {
     return jsonResponse({ error: err.toString(), remapLeads: [], partnerApplications: [], counts: { remap: 0, partner: 0 } });
+  }
+}
+
+// ── อัปเดต header ของ Visits sheet เป็น version ใหม่ (มี province, city, browser, os, ref) ──
+function migrateVisitsSheet(ss) {
+  const sheet = ss.getSheetByName('Visits');
+  if (!sheet) return;
+  const lastCol = sheet.getLastColumn();
+  if (lastCol < 10) {
+    const newHeaders = ['ISO Timestamp', 'วันที่-เวลา', 'หน้า', 'อุปกรณ์', 'Session ID', 'จังหวัด', 'เมือง', 'Browser', 'OS', 'Referrer'];
+    sheet.getRange(1, 1, 1, newHeaders.length).setValues([newHeaders]);
+    styleHeader(sheet, newHeaders.length, '#1a73e8');
+    [180,160,100,80,200,150,150,90,90,200].forEach((w,i) => sheet.setColumnWidth(i+1, w));
+    Logger.log('Visits sheet migrated to new headers');
   }
 }
 
