@@ -23,21 +23,23 @@ function doGet(e) {
     const params = (e && e.parameter) ? e.parameter : {};
     const ss     = SpreadsheetApp.openById(SPREADSHEET_ID);
 
-    // ★ Visit tracking จาก server (GET request = ไม่มี redirect issue)
-    // server เรียก ?action=track&page=...&device=...&sid=...&province=...&city=...&browser=...&os=...&ref=...
+    // ★ Visit tracking จาก browser (GET request + URLSearchParams — แก้ไข no-cors POST redirect ปัญหา)
+    // browser เรียก ?action=track&page=...&device=...&sid=...&browser=...&os=...&ref=...&language=...&iso=...
     if (params.action === 'track') {
       migrateVisitsSheet(ss); // อัปเดต header ถ้ายังเป็น version เก่า
       appendRow(ss, 'Visits', [
-        params.iso      || new Date().toISOString(),
-        new Date().toLocaleString('th-TH'),
-        params.page     || '',
-        params.device   || '',
-        params.sid      || '',
-        params.province || '',
-        params.city     || '',
-        params.browser  || '',
-        params.os       || '',
-        params.ref      || '',
+        params.iso      || new Date().toISOString(), // A: ISO Timestamp
+        new Date().toLocaleString('th-TH'),          // B: วันที่-เวลา (th-TH)
+        params.page     || '',                        // C: หน้า
+        params.device   || '',                        // D: อุปกรณ์
+        params.sid      || '',                        // E: Session ID
+        params.province || '',                        // F: จังหวัด (browser ไม่มี → server เพิ่มทีหลังถ้ามี)
+        params.city     || '',                        // G: เมือง
+        params.browser  || '',                        // H: Browser
+        params.os       || '',                        // I: OS
+        params.ref      || '',                        // J: Referrer
+        params.isp      || '',                        // K: ISP (browser ไม่มี)
+        params.language || '',                        // L: ภาษา ← คอลัมน์ที่ 12
       ]);
       return ContentService.createTextOutput('ok');
     }
@@ -64,6 +66,7 @@ function doGet(e) {
       page: r[2] || '', device: r[3] || '', sessionId: r[4] || '',
       province: r[5] || '', city: r[6] || '',
       browser: r[7] || '', os: r[8] || '', referrer: r[9] || '',
+      isp: r[10] || '', language: r[11] || '',
     }));
 
     return jsonResponse({

@@ -116,12 +116,25 @@ const ShiftupApp = () => {
       body: JSON.stringify(payload),
     }).catch(() => {});
 
-    // 2. Google Sheet → no-cors (proven working, เหมือน Remap/Partner forms)
-    fetch(GOOGLE_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: JSON.stringify({ source: 'visit', ...payload }),
-    }).catch(() => {});
+    // 2. Google Sheet → GET + URLSearchParams (แก้: no-cors POST ถูก 302 redirect → method เปลี่ยนเป็น GET → body หาย)
+    // ใช้ LEAD deployment ที่ user อัปเดตสม่ำเสมอ → doGet action=track → บันทึกลง Visits sheet
+    try {
+      const tp = new URLSearchParams({
+        action:   'track',
+        page:     payload.page,
+        device:   payload.device,
+        sid:      sid,
+        iso:      payload.isoTimestamp,
+        browser:  payload.browser,
+        os:       payload.os,
+        ref:      payload.referrer,
+        language: payload.language,
+      });
+      fetch(
+        'https://script.google.com/macros/s/AKfycbxGc0JZJkZ0MtW73_MldOdcc-ILttkvcA5G_16-0MwhjrLtWLSFTlQrMdD3W-g-dmqIDg/exec?' + tp.toString(),
+        { mode: 'no-cors' }
+      ).catch(() => {});
+    } catch (_) {}
   }, [activePage]);
 
   const lineUrl = "https://lin.ee/nZOMcph";
