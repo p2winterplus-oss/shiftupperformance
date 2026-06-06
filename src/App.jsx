@@ -65,6 +65,22 @@ const ShiftupApp = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Track page visits → Google Sheet
+  useEffect(() => {
+    const KEY = 'shiftup_sid';
+    let sid = sessionStorage.getItem(KEY);
+    if (!sid) { sid = Math.random().toString(36).slice(2) + Date.now(); sessionStorage.setItem(KEY, sid); }
+    const device = /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST', mode: 'no-cors',
+      body: JSON.stringify({
+        source: 'visit', page: activePage, device, sessionId: sid,
+        isoTimestamp: new Date().toISOString(),
+        timestamp: new Date().toLocaleString('th-TH'),
+      }),
+    }).catch(() => {});
+  }, [activePage]);
+
   const lineUrl = "https://lin.ee/nZOMcph";
 
   const navigateTo = (page) => {
