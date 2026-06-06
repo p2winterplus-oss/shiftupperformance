@@ -155,7 +155,7 @@ app.post('/api/track-visit', async (req, res) => {
 
   const visit = {
     isoTimestamp: isoTimestamp || new Date().toISOString(),
-    timestamp:    timestamp    || new Date().toLocaleString('th-TH'),
+    timestamp:    timestamp    || new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }),
     page:         page         || 'home',
     device:       device       || 'desktop',
     sessionId:    sessionId    || Math.random().toString(36).slice(2),
@@ -183,7 +183,7 @@ app.post('/api/track-visit', async (req, res) => {
       const trackBody = JSON.stringify({
         source:       'visit',
         isoTimestamp: visit.isoTimestamp,
-        timestamp:    new Date(visit.isoTimestamp).toLocaleString('th-TH'),
+        timestamp:    new Date(visit.isoTimestamp).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }),
         page:         visit.page,
         device:       visit.device,
         sessionId:    visit.sessionId,
@@ -258,7 +258,7 @@ app.post('/api/notify-lead', async (req, res) => {
     text =
       `📋 ข้อมูลลูกค้าใหม่ — ECU Remap\n` +
       `─────────────────────────────────\n` +
-      `⏰ เวลา      : ${new Date().toLocaleString('th-TH')}\n` +
+      `⏰ เวลา      : ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}\n` +
       `👤 ชื่อ      : ${d.name     || '-'}\n` +
       `📞 ติดต่อ    : ${d.contact  || '-'}\n` +
       `🚗 รุ่นรถ    : ${d.car      || '-'}\n` +
@@ -271,7 +271,7 @@ app.post('/api/notify-lead', async (req, res) => {
     text =
       `📋 ข้อมูลผู้สมัคร Partner\n` +
       `─────────────────────────────────\n` +
-      `⏰ เวลา      : ${new Date().toLocaleString('th-TH')}\n` +
+      `⏰ เวลา      : ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}\n` +
       `🏪 ชื่อร้าน  : ${d.shopName    || '-'}\n` +
       `👤 ผู้ติดต่อ : ${d.contactName || '-'}\n` +
       `📞 เบอร์โทร  : ${d.phone       || '-'}\n` +

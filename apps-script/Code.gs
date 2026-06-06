@@ -29,7 +29,7 @@ function doGet(e) {
       migrateVisitsSheet(ss); // อัปเดต header ถ้ายังเป็น version เก่า
       appendRow(ss, 'Visits', [
         params.iso      || new Date().toISOString(), // A: ISO Timestamp
-        new Date().toLocaleString('th-TH'),          // B: วันที่-เวลา (th-TH)
+        new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }),          // B: วันที่-เวลา (th-TH)
         params.page     || '',                        // C: หน้า
         params.device   || '',                        // D: อุปกรณ์
         params.sid      || '',                        // E: Session ID
@@ -102,7 +102,7 @@ function doPost(e) {
 
     if (data.source === 'remap') {
       appendRow(ss, 'Remap Leads', [
-        data.timestamp || new Date().toLocaleString('th-TH'),
+        data.timestamp || new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }),
         data.name     || '',
         data.contact  || '',
         data.car      || '',
@@ -116,7 +116,7 @@ function doPost(e) {
       migrateVisitsSheet(ss); // อัปเกรด header เป็น 12 column ถ้ายังเป็นแบบเก่า
       appendRow(ss, 'Visits', [
         data.isoTimestamp || new Date().toISOString(),
-        data.timestamp    || new Date().toLocaleString('th-TH'),
+        data.timestamp    || new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }),
         data.page         || '',
         data.device       || '',
         data.sessionId    || '',
@@ -131,7 +131,7 @@ function doPost(e) {
 
     } else if (data.source === 'partner') {
       appendRow(ss, 'Partner Applications', [
-        data.timestamp   || new Date().toLocaleString('th-TH'),
+        data.timestamp   || new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }),
         data.shopName    || '',
         data.contactName || '',
         data.phone       || '',
@@ -247,7 +247,7 @@ function buildDashboard(dash) {
     .setFontSize(16).setFontWeight('bold').setFontColor('#ffffff')
     .setHorizontalAlignment('center').setBackground('#1a1a1a');
   dash.getRange('A2')
-    .setValue('🔄 อัปเดตล่าสุด: ' + new Date().toLocaleString('th-TH'))
+    .setValue('🔄 อัปเดตล่าสุด: ' + new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }))
     .setFontColor('#666666').setFontSize(9);
 
   // ── อ่านข้อมูล ─────────────────────────────────────────────────
@@ -314,7 +314,7 @@ function testVisitPost() {
   migrateVisitsSheet(ss);
   appendRow(ss, 'Visits', [
     new Date().toISOString(),
-    new Date().toLocaleString('th-TH'),
+    new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }),
     'home',
     'desktop',
     'TEST-' + Date.now(),

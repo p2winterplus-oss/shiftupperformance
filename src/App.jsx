@@ -44,7 +44,7 @@ async function submitToSheets(payload) {
     await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
-      body: JSON.stringify({ ...payload, timestamp: new Date().toLocaleString('th-TH') }),
+      body: JSON.stringify({ ...payload, timestamp: new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }) }),
     });
   } catch (_) {}
 }
@@ -106,7 +106,7 @@ const ShiftupApp = () => {
       page: activePage, device, sessionId: sid, referrer, language,
       browser: detectedBrowser, os: detectedOS,
       isoTimestamp: new Date().toISOString(),
-      timestamp: new Date().toLocaleString('th-TH'),
+      timestamp: new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }),
     };
 
     // Server บันทึก visit + เรียก Apps Script Sheet ให้เอง (server-side ไม่มี CORS issue)
