@@ -262,82 +262,96 @@ function styleHeader(sheet, colCount, bgColor) {
 function buildDashboard(dash) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
+  // Layout: Remap cols A-F (1-6) | spacer G (7) | Partner cols H-O (8-15)
+  const R = 1, P = 8;
+
   // ── Title ─────────────────────────────────────────────────────
-  dash.getRange('A1:H1').merge();
+  dash.getRange(1, 1, 1, 15).merge();
   dash.getRange('A1')
     .setValue('📊  Shiftup Performance — Dashboard')
-    .setFontSize(18).setFontWeight('bold').setFontColor('#ffffff');
-  dash.getRange('A1').setBackground('#1a1a1a');
+    .setFontSize(16).setFontWeight('bold').setFontColor('#ffffff')
+    .setHorizontalAlignment('center').setBackground('#1a1a1a');
+  dash.getRange('A2')
+    .setValue('🔄 อัปเดตล่าสุด: ' + new Date().toLocaleString('th-TH'))
+    .setFontColor('#666666').setFontSize(9);
 
-  const updated = '🔄 อัปเดตล่าสุด: ' + new Date().toLocaleString('th-TH');
-  dash.getRange('A2').setValue(updated).setFontColor('#666666').setFontSize(9);
-
-  // ── อ่านข้อมูลจาก Remap Leads ─────────────────────────────────
-  const remapSheet   = ss.getSheetByName('Remap Leads');
-  const remapRows    = remapSheet && remapSheet.getLastRow() > 1
+  // ── อ่านข้อมูล ─────────────────────────────────────────────────
+  const remapSheet  = ss.getSheetByName('Remap Leads');
+  const remapRows   = remapSheet && remapSheet.getLastRow() > 1
     ? remapSheet.getRange(2, 1, remapSheet.getLastRow() - 1, 6).getValues()
-        .filter(r => r[0] !== '')          // กรองแถวว่าง
-        .reverse()                          // ล่าสุดขึ้นก่อน
+        .filter(r => r[0] !== '').reverse()
     : [];
 
-  // ── Remap Leads section ────────────────────────────────────────
-  const remapTitleRow = 4;
-  dash.getRange(remapTitleRow, 1)
-    .setValue('🔧  Remap Leads  (' + remapRows.length + ' รายการ)')
-    .setFontSize(13).setFontWeight('bold').setFontColor('#ff5533');
-
-  const remapH = ['วันที่-เวลา','ชื่อ-นามสกุล','เบอร์/LINE','รุ่นรถ','สถานที่','รายละเอียด'];
-  const remapHeaderRow = remapTitleRow + 1;
-  dash.getRange(remapHeaderRow, 1, 1, remapH.length).setValues([remapH]);
-  dash.getRange(remapHeaderRow, 1, 1, remapH.length)
-    .setBackground('#cc2200').setFontColor('#ffffff').setFontWeight('bold');
-
-  const remapDataRow = remapHeaderRow + 1;
-  if (remapRows.length > 0) {
-    dash.getRange(remapDataRow, 1, remapRows.length, 6).setValues(remapRows);
-    // zebra stripe
-    remapRows.forEach((_, i) => {
-      if (i % 2 === 0) dash.getRange(remapDataRow + i, 1, 1, 6).setBackground('#1a1a1a');
-    });
-  } else {
-    dash.getRange(remapDataRow, 1).setValue('ยังไม่มีข้อมูล').setFontColor('#555555').setFontStyle('italic');
-  }
-
-  // ── Gap 2 แถว ─────────────────────────────────────────────────
-  const partnerTitleRow = remapDataRow + Math.max(remapRows.length, 1) + 2;
-
-  // ── อ่านข้อมูลจาก Partner Applications ────────────────────────
   const partnerSheet = ss.getSheetByName('Partner Applications');
   const partnerRows  = partnerSheet && partnerSheet.getLastRow() > 1
     ? partnerSheet.getRange(2, 1, partnerSheet.getLastRow() - 1, 8).getValues()
-        .filter(r => r[0] !== '')
-        .reverse()
+        .filter(r => r[0] !== '').reverse()
     : [];
 
-  // ── Partner Applications section ───────────────────────────────
-  dash.getRange(partnerTitleRow, 1)
-    .setValue('🤝  Partner Applications  (' + partnerRows.length + ' รายการ)')
-    .setFontSize(13).setFontWeight('bold').setFontColor('#ff8c00');
+  // ── Row 4: Section titles (ซ้าย-ขวา) ─────────────────────────
+  dash.getRange(4, R).setValue('🔧  Remap Leads  (' + remapRows.length + ' รายการ)')
+    .setFontSize(12).setFontWeight('bold').setFontColor('#ff5533');
+  dash.getRange(4, P).setValue('🤝  Partner Applications  (' + partnerRows.length + ' รายการ)')
+    .setFontSize(12).setFontWeight('bold').setFontColor('#ff8c00');
 
-  const partnerH = ['วันที่-เวลา','ชื่อร้าน/อู่','ชื่อผู้ติดต่อ','เบอร์โทร','LINE ID','จังหวัด','ความถนัด','Facebook'];
-  const partnerHeaderRow = partnerTitleRow + 1;
-  dash.getRange(partnerHeaderRow, 1, 1, partnerH.length).setValues([partnerH]);
-  dash.getRange(partnerHeaderRow, 1, 1, partnerH.length)
+  // ── Row 5: Column headers ──────────────────────────────────────
+  const remapH   = ['วันที่-เวลา','ชื่อ-นามสกุล','เบอร์/LINE','รุ่นรถ','สถานที่','รายละเอียด'];
+  const partnerH = ['วันที่-เวลา','ชื่อร้าน/อู่','ผู้ติดต่อ','เบอร์โทร','LINE','จังหวัด','ความถนัด','Facebook'];
+
+  dash.getRange(5, R, 1, remapH.length).setValues([remapH])
+    .setBackground('#cc2200').setFontColor('#ffffff').setFontWeight('bold');
+  dash.getRange(5, P, 1, partnerH.length).setValues([partnerH])
     .setBackground('#cc5500').setFontColor('#ffffff').setFontWeight('bold');
 
-  const partnerDataRow = partnerHeaderRow + 1;
-  if (partnerRows.length > 0) {
-    dash.getRange(partnerDataRow, 1, partnerRows.length, 8).setValues(partnerRows);
-    partnerRows.forEach((_, i) => {
-      if (i % 2 === 0) dash.getRange(partnerDataRow + i, 1, 1, 8).setBackground('#1a1a1a');
+  // ── Row 6+: Data เรียงซ้าย-ขวาพร้อมกัน ────────────────────────
+  const D = 6;
+
+  if (remapRows.length > 0) {
+    dash.getRange(D, R, remapRows.length, 6).setValues(remapRows);
+    remapRows.forEach((_, i) => {
+      if (i % 2 === 0) dash.getRange(D + i, R, 1, 6).setBackground('#141414');
     });
   } else {
-    dash.getRange(partnerDataRow, 1).setValue('ยังไม่มีข้อมูล').setFontColor('#555555').setFontStyle('italic');
+    dash.getRange(D, R).setValue('ยังไม่มีข้อมูล').setFontColor('#555555').setFontStyle('italic');
+  }
+
+  if (partnerRows.length > 0) {
+    dash.getRange(D, P, partnerRows.length, 8).setValues(partnerRows);
+    partnerRows.forEach((_, i) => {
+      if (i % 2 === 0) dash.getRange(D + i, P, 1, 8).setBackground('#141414');
+    });
+  } else {
+    dash.getRange(D, P).setValue('ยังไม่มีข้อมูล').setFontColor('#555555').setFontStyle('italic');
   }
 
   // ── Column widths ──────────────────────────────────────────────
-  [160, 150, 130, 140, 130, 120, 220, 160].forEach((w, i) => dash.setColumnWidth(i + 1, w));
+  [155,140,120,115,115,185].forEach((w, i) => dash.setColumnWidth(R + i, w)); // A-F
+  dash.setColumnWidth(7, 18);                                                   // G spacer
+  [130,130,115,105,105,110,140,150].forEach((w, i) => dash.setColumnWidth(P + i, w)); // H-O
   dash.setFrozenRows(1);
+}
+
+// ── ทดสอบการเขียน visit ลง Sheet โดยตรง ─────────────────────────────────────
+// รันจาก editor เพื่อเช็คว่า appendRow ทำงานได้ไหม
+// ถ้า run แล้ว Sheet Visits ได้แถวใหม่ → ปัญหาอยู่ที่ deployment URL ไม่ได้รับ request
+function testVisitPost() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  migrateVisitsSheet(ss);
+  appendRow(ss, 'Visits', [
+    new Date().toISOString(),
+    new Date().toLocaleString('th-TH'),
+    'home',
+    'desktop',
+    'TEST-' + Date.now(),
+    '',            // province (server เท่านั้น)
+    '',            // city
+    'Chrome',
+    'Windows',
+    '',            // referrer
+    '',            // isp
+    'th-TH',
+  ]);
+  Logger.log('✅ testVisitPost สำเร็จ — เช็ค Sheet Visits tab ได้เลย');
 }
 
 // ── ลบ Dashboard เก่า → สร้างใหม่สะอาด ──────────────────────────────────────
