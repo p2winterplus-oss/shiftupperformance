@@ -116,24 +116,20 @@ const ShiftupApp = () => {
       body: JSON.stringify(payload),
     }).catch(() => {});
 
-    // 2. Google Sheet → GET + URLSearchParams (แก้: no-cors POST ถูก 302 redirect → method เปลี่ยนเป็น GET → body หาย)
-    // ใช้ LEAD deployment ที่ user อัปเดตสม่ำเสมอ → doGet action=track → บันทึกลง Visits sheet
+    // 2. Google Sheet → Image pixel tracking (ไม่มี CORS ปัญหาเลย, ไม่มี 400 จาก mode:no-cors)
+    // Image.src ส่ง GET request ผ่าน img loader — Apps Script รับแล้ว doGet action=track บันทึก Visits
     try {
       const tp = new URLSearchParams({
-        action:   'track',
-        page:     payload.page,
-        device:   payload.device,
-        sid:      sid,
-        iso:      payload.isoTimestamp,
-        browser:  payload.browser,
-        os:       payload.os,
-        ref:      payload.referrer,
+        action:  'track',
+        page:    payload.page,
+        device:  payload.device,
+        sid:     sid,
+        browser: payload.browser,
+        os:      payload.os,
+        ref:     payload.referrer,
         language: payload.language,
       });
-      fetch(
-        'https://script.google.com/macros/s/AKfycbxGc0JZJkZ0MtW73_MldOdcc-ILttkvcA5G_16-0MwhjrLtWLSFTlQrMdD3W-g-dmqIDg/exec?' + tp.toString(),
-        { mode: 'no-cors' }
-      ).catch(() => {});
+      new Image().src = 'https://script.google.com/macros/s/AKfycbxGc0JZJkZ0MtW73_MldOdcc-ILttkvcA5G_16-0MwhjrLtWLSFTlQrMdD3W-g-dmqIDg/exec?' + tp.toString();
     } catch (_) {}
   }, [activePage]);
 
