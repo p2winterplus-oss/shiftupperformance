@@ -483,7 +483,7 @@ async function saveContent(section, data) {
 const HKS_BRANDS = ['Ford', 'BMW', 'Honda', 'Isuzu', 'Mazda', 'Mitsubishi', 'Toyota', 'Nissan'];
 const HKS_PER_PAGE = 12;
 
-const DEFAULT_HKS = { pipes: [] };
+const DEFAULT_HKS = { pipes: [], brands: ['Ford', 'BMW', 'Honda', 'Isuzu', 'Mazda', 'Mitsubishi', 'Toyota', 'Nissan'] };
 
 // ─── Panthera Content Data Layer ─────────────────────────────────────────────
 const DEFAULT_PANTHERA = {
@@ -1085,7 +1085,12 @@ const RemapPage = () => {
 
 // ─── HKS Admin Panel ──────────────────────────────────────────────────────────
 const HKSAdminPanel = ({ data, onSave, onClose }) => {
-  const [draft, setDraft] = useState(() => JSON.parse(JSON.stringify(data)));
+  const [draft, setDraft] = useState(() => {
+    const d = JSON.parse(JSON.stringify(data));
+    if (!d.brands || d.brands.length === 0) d.brands = [...DEFAULT_HKS.brands];
+    return d;
+  });
+  const [newBrand, setNewBrand] = useState('');
 
   const inputCls = 'w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500 placeholder-neutral-600';
 
@@ -1097,7 +1102,22 @@ const HKSAdminPanel = ({ data, onSave, onClose }) => {
 
   const addPipe = () => {
     const newId = Date.now();
-    setDraft({ ...draft, pipes: [...draft.pipes, { id: newId, brand: 'Mazda', model: '', type: '', desc: '', price: '', imgUrl: '' }] });
+    const defaultBrand = draft.brands[0] || 'Toyota';
+    setDraft({ ...draft, pipes: [...draft.pipes, { id: newId, brand: defaultBrand, model: '', type: '', desc: '', price: '', imgUrl: '' }] });
+  };
+
+  const addBrand = () => {
+    const trimmed = newBrand.trim();
+    if (!trimmed) return;
+    if (draft.brands.includes(trimmed)) { alert('ยี่ห้อนี้มีอยู่แล้ว'); return; }
+    setDraft({ ...draft, brands: [...draft.brands, trimmed] });
+    setNewBrand('');
+  };
+
+  const deleteBrand = (brand) => {
+    const hasPipes = draft.pipes.some(p => p.brand === brand);
+    if (hasPipes && !window.confirm(`ยังมีสินค้าของ ${brand} อยู่ ${draft.pipes.filter(p=>p.brand===brand).length} รายการ\nถ้าลบยี่ห้อนี้ สินค้าเหล่านั้นจะยังอยู่แต่ไม่แสดงในฟิลเตอร์\nต้องการลบต่อไหม?`)) return;
+    setDraft({ ...draft, brands: draft.brands.filter(b => b !== brand) });
   };
 
   const deletePipe = (i) => {
@@ -1117,6 +1137,30 @@ const HKSAdminPanel = ({ data, onSave, onClose }) => {
           <button onClick={onClose} className="text-neutral-400 hover:text-white text-2xl leading-none px-2">✕</button>
         </div>
 
+        {/* ── Brand Management ── */}
+        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 mb-6">
+          <h3 className="text-white font-bold mb-4">🏷️ จัดการยี่ห้อรถ (Filter Tabs)</h3>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {draft.brands.map(brand => (
+              <span key={brand} className="flex items-center gap-1 bg-neutral-800 border border-neutral-700 rounded-full px-3 py-1 text-sm text-white">
+                {brand}
+                <button onClick={() => deleteBrand(brand)} className="text-neutral-500 hover:text-red-500 transition-colors ml-1 leading-none">✕</button>
+              </span>
+            ))}
+            {draft.brands.length === 0 && <p className="text-neutral-600 text-sm">ยังไม่มียี่ห้อ</p>}
+          </div>
+          <div className="flex gap-2">
+            <input
+              className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500 placeholder-neutral-600"
+              placeholder="พิมพ์ยี่ห้อรถใหม่ เช่น Subaru"
+              value={newBrand}
+              onChange={e => setNewBrand(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && addBrand()}
+            />
+            <button onClick={addBrand} className="bg-orange-600 hover:bg-orange-700 text-white font-bold px-4 py-2 rounded-lg text-sm transition-colors">+ เพิ่ม</button>
+          </div>
+        </div>
+
         {/* Pipe list */}
         <div className="space-y-4 mb-6">
           {draft.pipes.length === 0 && (
@@ -1132,7 +1176,7 @@ const HKSAdminPanel = ({ data, onSave, onClose }) => {
                 <div>
                   <label className="text-neutral-400 text-xs mb-1 block">ยี่ห้อรถ (Brand) *</label>
                   <select className={inputCls} value={pipe.brand} onChange={e => updatePipe(i, 'brand', e.target.value)}>
-                    {HKS_BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
+                    {draft.brands.map(b => <option key={b} value={b}>{b}</option>)}
                   </select>
                 </div>
                 <div>
@@ -1250,7 +1294,7 @@ const HKSPage = () => {
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-white mb-6">เลือกยี่ห้อรถเพื่อดูสินค้า</h2>
           <div className="flex flex-wrap justify-center gap-3">
-            {['ทั้งหมด', ...HKS_BRANDS].map(brand => (
+            {['ทั้งหมด', ...(data.brands && data.brands.length > 0 ? data.brands : HKS_BRANDS)].map(brand => (
               <button
                 key={brand}
                 onClick={() => handleBrandChange(brand)}
