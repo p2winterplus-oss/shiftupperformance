@@ -1,6 +1,7 @@
 import express from 'express';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { writeFileSync } from 'fs';
 import { Resend } from 'resend';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -361,6 +362,16 @@ app.post('/api/save-content', async (req, res) => {
       const err = await putRes.json();
       return res.status(500).json({ success: false, error: err.message });
     }
+
+    // อัปเดต dist/content.json ทันที → F5 ได้ข้อมูลใหม่เลย ไม่ต้องรอ Railway redeploy
+    try {
+      const localPath = join(__dirname, 'dist', 'content.json');
+      writeFileSync(localPath, JSON.stringify(current, null, 2), 'utf-8');
+      console.log(`[save-content] updated local dist/content.json (section: ${section})`);
+    } catch (writeErr) {
+      console.warn('[save-content] could not write local file:', writeErr.message);
+    }
+
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, error: err.toString() });
