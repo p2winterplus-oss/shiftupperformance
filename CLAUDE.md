@@ -3,8 +3,9 @@
 ## Overview
 เว็บไซต์ P2W Interplus — บริการ ECU Remap, HKS Exhaust, Panthera Active Sound
 - **URL**: deploy บน Railway (auto-deploy จาก GitHub main)
+- **Domain (เร็วๆ นี้)**: `shiftupperformance.com` — จะจดเดือนหน้า (มิ.ย. 2569)
 - **Stack**: React 18 + Vite 5 + Tailwind CSS v3 + Express server
-- **วันที่อัปเดต**: 9 มิ.ย. 2569
+- **วันที่อัปเดต**: 13 มิ.ย. 2569
 
 ---
 
@@ -67,6 +68,10 @@ src/App.jsx          — React SPA (2000+ บรรทัด)
 server.js            — Express server (Railway)
 public/content.json  — CMS data (บทความ/portfolio/ราคา)
 public/visits.json   — Visit history สำรอง (GitHub persist ทุก 30 นาที)
+public/sitemap.xml   — Sitemap สำหรับ Google/Bing
+public/robots.txt    — บอก crawler ว่า crawl อะไรได้
+public/llms.txt      — บอก AI (Perplexity/ChatGPT/Claude) ว่าเว็บทำอะไร
+index.html           — SEO meta/OG/JSON-LD ทั้งหมดอยู่ที่นี่
 apps-script/Code.gs  — Google Apps Script (อัปเดต manual โดย user)
 ```
 
@@ -118,7 +123,8 @@ browser useEffect → POST /api/track-visit → server.js
 | `AdminPanel` | Remap admin (articles/portfolio/reviews/brandPricing) |
 | `PasswordModal` | Password gate สำหรับทุก admin panel |
 | `RemapPage` | หน้า ECU Remap |
-| `HKSAdminPanel` | HKS admin |
+| `HKSAdminPanel` | HKS admin (จัดการ pipes + gallery media + brands) |
+| `HKSProductModal` | Modal แสดงรายละเอียดสินค้า HKS (gallery รูป+วิดีโอ) |
 | `HKSPage` | หน้า HKS Exhaust |
 | `PantheraAdminPanel` | Panthera admin |
 | `PantheraPage` | หน้า Panthera |
@@ -142,6 +148,45 @@ const HKS_BRANDS = ['Ford','BMW','Honda','Isuzu','Mazda','Mitsubishi','Toyota','
 // แก้ไขผ่าน HKSAdminPanel (เพิ่ม/ลบ brand tab ได้)
 const HKS_PER_PAGE = 12
 ```
+
+## Helper Functions (App.jsx) — เพิ่ม 13 มิ.ย. 2569
+```js
+detectMediaType(url)          // 'youtube' | 'video' | 'image'
+getYouTubeId(url)             // แกะ video ID จาก youtube.com หรือ youtu.be
+getYouTubeEmbed(url, autoplay)// สร้าง embed URL พร้อม autoplay flag
+getYtThumb(url)               // ดึง thumbnail จาก YouTube (mqdefault.jpg)
+getFirstImage(pipe)           // หารูปแรก (image) จาก pipe.media[] หรือ fallback pipe.imgUrl
+```
+
+---
+
+## HKS Product Modal — รายละเอียด (เพิ่ม 13 มิ.ย. 2569)
+
+### Data Structure
+```js
+// pipe.media = array ของ media items (ใหม่)
+pipe.media = [
+  { type: 'image', url: 'https://...' },
+  { type: 'youtube', url: 'https://youtube.com/...' },
+  { type: 'video', url: 'https://...mp4' },
+]
+// pipe.imgUrl ยังใช้ได้ (backward compat — fallback ถ้า media ว่าง)
+```
+
+### Modal Features
+- เปิดจากปุ่ม **"รายละเอียดสินค้า"** (เปลี่ยนจาก "เช็คสต๊อกและราคา")
+- Gallery: ลูกศร ‹ › เลื่อนซ้าย/ขวา + keyboard ArrowLeft/ArrowRight/Esc
+- Auto-start ที่ video/YouTube แรก (ถ้ามี) + autoplay
+- YouTube: `key={yt-${idx}}` บน iframe → React re-mount → autoplay ทำงาน
+- รูปภาพ: ใช้ `WatermarkedImage` (ลายน้ำอัตโนมัติ)
+- Thumbnail strip ด้านล่าง + counter "x / total"
+- ปุ่ม LINE CTA ใน modal
+
+### Admin (HKSAdminPanel)
+- เพิ่ม media URL → auto-detect ประเภท (YouTube/video/image)
+- ลบ media แต่ละรายการ
+- **Drag-and-drop** เรียงลำดับ media ได้ (HTML5 DnD API ไม่ใช้ library)
+- หน้า grid แสดงรูปแรกที่เป็น image (`getFirstImage`)
 
 ---
 
@@ -247,6 +292,37 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 
 ---
 
+## SEO — สรุป (เพิ่ม 13 มิ.ย. 2569)
+
+### ไฟล์ที่เกี่ยวข้อง
+| ไฟล์ | สำหรับใคร | สถานะ |
+|---|---|---|
+| `index.html` | Google + LINE/FB preview | ✅ ทำงานได้เลยบน Railway |
+| `public/sitemap.xml` | Google, Bing | ✅ เข้าถึงได้ที่ `/sitemap.xml` |
+| `public/robots.txt` | ทุก crawler | ✅ เข้าถึงได้ที่ `/robots.txt` |
+| `public/llms.txt` | AI (Perplexity, ChatGPT, Claude) | ✅ เข้าถึงได้ที่ `/llms.txt` |
+
+### Canonical URL
+- ตอนนี้ชี้ไป `https://shiftupperformance.com` ไว้ล่วงหน้า
+- เว็บยังอยู่บน Railway ปกติ ไม่กระทบการใช้งาน
+- พอจด domain → ทุกอย่างพร้อมทันที
+
+### ⚠️ สิ่งที่ต้องทำเมื่อจด domain shiftupperformance.com
+```
+1. จด domain + ชี้ DNS → Railway
+2. Railway Dashboard → Settings → Domains → เพิ่ม shiftupperformance.com
+3. Find & Replace ใน 4 ไฟล์:
+      https://shiftupperformance.com  →  https://www.shiftupperformance.com
+   (ถ้าจะใช้ www — ถ้าใช้ non-www ไม่ต้องแก้)
+4. เปิด Google Search Console → เพิ่ม property → submit sitemap URL
+```
+
+### OG Image
+- ตอนนี้ใช้ `/images/logo.png` เป็น OG image
+- แนะนำ: เพิ่ม `/images/og-cover.jpg` ขนาด **1200×630px** ทีหลัง → preview สวยขึ้นบน LINE/Facebook
+
+---
+
 ## Dashboard Features
 
 ### AnalyticsSection
@@ -265,7 +341,7 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 
 - **Component**: `WatermarkedImage` — อยู่ต้น App.jsx (หลัง submitToSheets)
 - **ค่าที่ใช้**: opacity 22%, เฉียง -30°, ระยะห่าง 1.5x, ขนาดโลโก้ 28%
-- **ใช้กับ**: Portfolio (3D Slideshow) + HKS product grid
+- **ใช้กับ**: Portfolio (3D Slideshow) + HKS product grid + HKS product modal (รูปเท่านั้น ไม่ใส่ video)
 - **Panthera**: ยังไม่ได้ทำ (ตั้งใจไว้)
 - **วิธีทำงาน**: CSS overlay — ไม่มีปัญหา CORS, รูปใหม่ที่เพิ่มทีหลังได้ลายน้ำอัตโนมัติ
 - **โลโก้ที่ใช้**: `/images/logo.png`
@@ -304,10 +380,17 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - [x] Timezone GMT+7 ทุก timestamp (server.js + Code.gs + App.jsx)
 - [x] HKS admin: จัดการ brand tabs แบบ dynamic (เพิ่ม/ลบ brand ได้ ไม่ hardcode)
 - [x] Admin save: เขียน dist/content.json ทันที → F5 ได้ข้อมูลใหม่เลย (ไม่รอ Railway rebuild)
+- [x] HKS: ปุ่ม "รายละเอียดสินค้า" + Product Modal (gallery รูป+วิดีโอ, autoplay, keyboard nav)
+- [x] HKS: grid แสดงรูปแรกของ gallery อัตโนมัติ (getFirstImage)
+- [x] HKS Admin: drag-and-drop เรียงลำดับ gallery media (HTML5 DnD)
+- [x] SEO: meta tags, Open Graph, JSON-LD (AutoRepair schema), canonical URL
+- [x] SEO: sitemap.xml, robots.txt, llms.txt
 
 ---
 
 ## ค้างอยู่ / ต้องทำ
+- [ ] **จด domain `shiftupperformance.com`** (แผน: เดือนหน้า) → ดู checklist ใน SEO section
+- [ ] **OG Cover Image** — เพิ่ม `/images/og-cover.jpg` (1200×630px) เพื่อ LINE/FB preview สวยขึ้น
 - [ ] Watermark สำหรับ Panthera (user บอกยังไม่ทำ)
 
 ---
@@ -336,35 +419,24 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 
 **Root cause สรุป:**
 - Google block **ทุก browser request** ที่มี Origin/Sec-Fetch headers → 400
-- Google block **GET พร้อม query params** จากทุกที่ (browser + server) ที่ routing layer → 400 (ไม่มีใน Executions log เลย)
+- Google block **GET พร้อม query params** จากทุกที่ (browser + server) ที่ routing layer → 400
 - GET **ไม่มี params** → 302 ผ่านได้ (ใช้สำหรับ dashboard read)
 - POST JSON → doPost ทำงานได้ปกติ ✅
-
-**Key insight**: `doPost` ใน Code.gs มี `source:'visit'` handler อยู่แล้ว — แค่เปลี่ยนจาก GET → POST
 
 ---
 
 ### 🐛 #3 — Email แจ้งเตือนซ้ำ 2 ฉบับต่อ 1 submit
 - **อาการ**: กด submit 1 ครั้ง → ได้ email 2 ฉบับ (คนละ sender)
-- **สาเหตุ**: ส่งอีเมล **2 ทาง** พร้อมกัน:
-  - server.js → Resend API (Shiftup Performance)
-  - Code.gs doPost → MailApp (me / p2w.interplus)
-- **แก้**: ลบ `sendEmail()` calls ออกจาก `doPost` ใน Code.gs ทั้งหมด
+- **สาเหตุ**: ส่งอีเมล 2 ทาง: server.js → Resend + Code.gs → MailApp
+- **แก้**: ลบ `sendEmail()` ออกจาก `doPost` ใน Code.gs ทั้งหมด
 - **หมายเหตุ**: อย่าเพิ่มกลับเด็ดขาด — server.js จัดการให้แล้ว
 
 ---
 
 ### 🐛 #4 — Timestamp ผิด timezone (ช้ากว่าไทย 7 ชั่วโมง)
 - **อาการ**: เวลาใน Sheet / อีเมล ช้ากว่าความเป็นจริง 7 ชั่วโมง
-- **สาเหตุ**: Railway server และ Google Apps Script server อยู่ใน UTC
-  `new Date().toLocaleString('th-TH')` โดยไม่ระบุ timezone → ได้ UTC
+- **สาเหตุ**: Railway/Google servers อยู่ใน UTC → `new Date().toLocaleString('th-TH')` ได้ UTC
 - **แก้**: เติม `{ timeZone: 'Asia/Bangkok' }` ทุกที่ใน server.js, Code.gs, App.jsx
-  ```javascript
-  // ✅ ถูก
-  new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })
-  // ❌ ผิด — ได้ UTC บน server
-  new Date().toLocaleString('th-TH')
-  ```
 
 ---
 
@@ -380,6 +452,7 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 8. **ใช้ POST JSON เท่านั้น** สำหรับ write ข้อมูลไป Apps Script
 9. **Gmail SMTP ใช้ไม่ได้** — Railway block SMTP → ใช้ Resend API เท่านั้น
 10. **Timestamp ทุกตัว** ต้องระบุ `{ timeZone: 'Asia/Bangkok' }` ใน server.js และ Code.gs
+11. **SEO files** — `index.html`, `sitemap.xml`, `robots.txt`, `llms.txt` ใช้ `shiftupperformance.com` เป็น canonical → อย่า overwrite ด้วย Railway URL
 
 ---
 
@@ -401,7 +474,7 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 ---
 
 ## Last Session
-**วันที่**: 9 มิ.ย. 2569
+**วันที่**: 13 มิ.ย. 2569
 
 **6 มิ.ย. 2569 — Session 1:**
 1. เพิ่ม column filter dropdowns ในตาราง visitor details (Dashboard)
@@ -413,16 +486,17 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 **6 มิ.ย. 2569 — Session 2:**
 1. แก้ visit tracking ลง Sheet ถาวร: เปลี่ยนจาก GET+params → POST JSON {source:'visit'}
 2. แก้ email ซ้ำ: ลบ sendEmail() ออกจาก Code.gs doPost
-3. แก้ timezone: เติม `{ timeZone: 'Asia/Bangkok' }` ทุกที่ใน server.js, Code.gs, App.jsx
+3. แก้ timezone: เติม `{ timeZone: 'Asia/Bangkok' }` ทุกที่
 
 **8 มิ.ย. 2569 (เครื่องอื่น):**
-1. HKS admin: เพิ่ม brand management — เพิ่ม/ลบ brand tab ได้ผ่าน admin panel (ไม่ hardcode แล้ว)
-   - `DEFAULT_HKS` มี `brands` array ใน content.json
-   - HKSAdminPanel: เพิ่ม brand ด้วยชื่อ + ลบด้วยปุ่ม ✕
-   - เตือนก่อนลบ brand ที่มี pipe อยู่
-   - HKSPage filter tabs อ่านจาก `data.brands` (fallback HKS_BRANDS ถ้าข้อมูลเก่า)
+1. HKS admin: เพิ่ม brand management — เพิ่ม/ลบ brand tab ได้ (ไม่ hardcode แล้ว)
 
 **9 มิ.ย. 2569 (เครื่องอื่น):**
-1. แก้ Admin save: server เขียน `dist/content.json` ทันทีหลัง GitHub commit
-   - เดิม: save → commit GitHub → รอ Railway rebuild 2-3 นาที → F5 ถึงเห็นข้อมูลใหม่
-   - ใหม่: save → commit GitHub + เขียน dist ทันที → F5 เห็นข้อมูลใหม่ทันที ✅
+1. Admin save: server เขียน `dist/content.json` ทันทีหลัง GitHub commit → F5 เห็นผลทันที
+
+**13 มิ.ย. 2569:**
+1. HKS Product Modal: gallery รูป+วิดีโอ, ลูกศรนำทาง, keyboard nav, YouTube autoplay, thumbnail strip
+2. HKS grid: แสดงรูปแรก (image) อัตโนมัติ, ปุ่มเปลี่ยนเป็น "รายละเอียดสินค้า"
+3. HKS Admin: drag-and-drop เรียงลำดับ gallery media
+4. SEO ครบชุด: index.html (meta/OG/JSON-LD), sitemap.xml, robots.txt, llms.txt
+   - Canonical ชี้ `shiftupperformance.com` ไว้ล่วงหน้า (จะจด domain เดือนหน้า)
