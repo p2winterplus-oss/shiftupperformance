@@ -353,8 +353,89 @@
         "model": "TANK 300",
         "type": "HKS Tank 300 Diesel",
         "desc": "ท่อ HKS แท้ ตรงรุ่น TANK 300 Diesel\nสินค้าตรงรุ่น ไม่ต้องดัดแปลง\nถอดของเก่าออก ใส่ใหม่ได้ทันที\nสินค้ามีรับประกันจากโรงงาน 2 ปีเต็ม",
-        "price": "25000",
-        "imgUrl": "https://drive.google.com/file/d/1o_LjPbokU0-MJUo-vvTIFJozsl8jKq8P/view"
+        "price": "25,000",
+        "imgUrl": "https://drive.google.com/thumbnail?id=1o_LjPbokU0-MJUo-vvTIFJozsl8jKq8P&sz=w1200"
+      },
+      {
+        "id": 1781318392780,
+        "brand": "Mazda",
+        "model": "Mazda 2 1.5 Diesel",
+        "type": "HKS Mazda 2 1.5D Carbon",
+        "desc": "ท่อ HKS แท้ ตรงรุ่น Mazda 2 1.5 ดีเซล Skyactive\nสินค้าตรงรุ่น ไม่ต้องดัดแปลง\nถอดของเก่าออก ใส่ใหม่ได้ทันที\nสินค้ามีรับประกันจากโรงงาน 2 ปีเต็ม",
+        "price": "12,500",
+        "imgUrl": "https://drive.google.com/thumbnail?id=142aPgj9IaKyLOfBaMXe8WiCsJlskOK3u&sz=w1200"
+      },
+      {
+        "id": 1781318394640,
+        "brand": "Mazda",
+        "model": "Mazda 2 1.3 4D Skyactive",
+        "type": "HKS Mazda 2 1.3 4D Carbon",
+        "desc": "ท่อ HKS แท้ ตรงรุ่น Mazda 2 1.3 เบนซิน 4 ประตู Skyactive\nสินค้าตรงรุ่น ไม่ต้องดัดแปลง\nถอดของเก่าออก ใส่ใหม่ได้ทันที\nสินค้ามีรับประกันจากโรงงาน 2 ปีเต็ม",
+        "price": "11,500",
+        "imgUrl": "https://drive.google.com/thumbnail?id=1jZyVxwChw6tMIwjhjN3ZmpmN-3wkH8G9&sz=w1200"
+      },
+      {
+        "id": 1781318396274,
+        "brand": "Mazda",
+        "model": "Mazda 2 1.3 5D Skyactive",
+        "type": "HKS Mazda 2 1.3 5D Carbon",
+        "desc": "ท่อ HKS แท้ ตรงรุ่น Mazda 2 1.3 เบนซิน 5 ประตู Skyactive\nสินค้าตรงรุ่น ไม่ต้องดัดแปลง\nถอดของเก่าออก ใส่ใหม่ได้ทันที\nสินค้ามีรับประกันจากโรงงาน 2 ปีเต็ม",
+        "price": "13,500",
+        "imgUrl": "https://drive.google.com/thumbnail?id=1j7m6zITUB-civ3JU0LH6l2yyFJTUvC2i&sz=w1200"
+      },
+      {
+        "id": 1781318397394,
+        "brand": "Mazda",
+        "model": "Mazda Cx-3 2.0L",
+        "type": "HKS Mazda Cx-3 2.0L Carbon",
+        "desc": "ท่อ HKS แท้ ตรงรุ่น Mazda Cx-3 2.0L  เบนซิน Skyactive\nสินค้าตรงรุ่น ไม่ต้องดัดแปลง\nถอดของเก่าออก ใส่ใหม่ได้ทันที\nสินค้ามีรับประกันจากโรงงาน 2 ปีเต็ม",
+        "price": "19,000",
+        "imgUrl": "https://drive.google.com/thumbnail?id=1onZU7ncAKuFWhQRJjmKhz2-5PKGHjd_n&sz=w1200"
+      },
+      {
+        "id": 1781318398728,
+        "brand": "Mazda",
+        "model": "Mazda 3 BM BN Skyactive",
+        "type": "HKS Mazda 3 BM BN Carbon",
+        "desc": "ท่อ HKS แท้ ตรงรุ่น Mazda 3 2.0L  เบนซิน Skyactive โฉม BM BN\nสินค้าตรงรุ่น ไม่ต้องดัดแปลง\nถอดของเก่าออก ใส่ใหม่ได้ทันที\nสินค้ามีรับประกันจากโรงงาน 2 ปีเต็ม",
+        "price": "19,000",
+        "imgUrl": "https://drive.google.com/thumbnail?id=1YiH9lRxyczydzIN9B4FQCmHut5gYoUfm&sz=w1200"
+      },
+      {
+        "id": 1781318712343,
+        "brand": "Mazda",
+        "model": "Mazda 3 BP Skyactive",
+        "type": "HKS Mazda 3 2.0L BP Carbon",
+        "desc": "ท่อ HKS แท้ ตรงรุ่น Mazda 3 2.0L  เบนซิน Skyactive โฉม BP\nสินค้าตรงรุ่น ไม่ต้องดัดแปลง\nถอดของเก่าออก ใส่ใหม่ได้ทันที\nสินค้ามีรับประกันจากโรงงาน 2 ปีเต็ม",
+        "price": "19,000",
+        "imgUrl": "https://drive.google.com/thumbnail?id=1C4HqqgxpxxqeAOS1v_1Voi5yZhLdeIfm&sz=w1200"
+      },
+      {
+        "id": 1781318713931,
+        "brand": "Mazda",
+        "model": "Mazda Cx-30 Skyactive",
+        "type": "HKS Mazda Cx-30 2.0L Carbon",
+        "desc": "ท่อ HKS แท้ ตรงรุ่น Mazda Cx-30 2.0L  เบนซิน Skyactive\nสินค้าตรงรุ่น ไม่ต้องดัดแปลง\nถอดของเก่าออก ใส่ใหม่ได้ทันที\nสินค้ามีรับประกันจากโรงงาน 2 ปีเต็ม",
+        "price": "19,000",
+        "imgUrl": "https://drive.google.com/thumbnail?id=1r0t_woZJlXuHptmyHv6YH8iWGGV1AX6t&sz=w1200"
+      },
+      {
+        "id": 1781318762810,
+        "brand": "Mazda",
+        "model": "Mazda Cx-5 2.0L 2.5L Skyactive",
+        "type": "HKS Mazda Cx-5 2.0L 2.5L Carbon",
+        "desc": "ท่อ HKS แท้ ตรงรุ่น Mazda Cx-5 2.0L 2.5L เบนซิน Skyactive\n(ใส่กับ Cx-5 2.5Turbo ไม่ได้)\nสินค้าตรงรุ่น ไม่ต้องดัดแปลง\nถอดของเก่าออก ใส่ใหม่ได้ทันที\nสินค้ามีรับประกันจากโรงงาน 2 ปีเต็ม",
+        "price": "19,000",
+        "imgUrl": "https://drive.google.com/thumbnail?id=1qm2yBC3RSHJYCeKMuSpF_dfTaVusD-2V&sz=w1200"
+      },
+      {
+        "id": 1781318791866,
+        "brand": "Mazda",
+        "model": "Mazda Bt-50 1.9L 3.0L",
+        "type": "HKS Mazda Bt-50 Carbon",
+        "desc": "ท่อ HKS แท้ ตรงรุ่น Mazda BT-50 1.9L 3.0L\nสินค้าตรงรุ่น ไม่ต้องดัดแปลง\nถอดของเก่าออก ใส่ใหม่ได้ทันที\nสินค้ามีรับประกันจากโรงงาน 2 ปีเต็ม",
+        "price": "16,000",
+        "imgUrl": "https://drive.google.com/thumbnail?id=1d6p_tJ7JuHixaQHJ1SfoCXHUgoUi5pRo&sz=w1200"
       }
     ],
     "brands": [
