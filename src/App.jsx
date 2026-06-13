@@ -1084,6 +1084,141 @@ const RemapPage = () => {
 };
 
 // ─── HKS Admin Panel ──────────────────────────────────────────────────────────
+// ─── HKS Media Helpers ───────────────────────────────────────────────────────
+const detectMediaType = (url) => {
+  if (!url) return 'image';
+  const l = url.toLowerCase();
+  if (l.includes('youtube.com') || l.includes('youtu.be') || /\.(mp4|webm|mov|avi)(\?|$)/.test(l)) return 'video';
+  return 'image';
+};
+const getYouTubeId = (url) => {
+  if (!url) return '';
+  if (url.includes('youtube.com/watch')) { try { return new URL(url).searchParams.get('v') || ''; } catch(e) { return ''; } }
+  if (url.includes('youtu.be/')) return url.split('youtu.be/')[1].split('?')[0];
+  return '';
+};
+const getYouTubeEmbed = (url, autoplay = false) => {
+  const id = getYouTubeId(url);
+  if (!id) return url;
+  return `https://www.youtube.com/embed/${id}?autoplay=${autoplay ? 1 : 0}&rel=0`;
+};
+const getYtThumb = (url) => {
+  const id = getYouTubeId(url);
+  return id ? `https://img.youtube.com/vi/${id}/mqdefault.jpg` : null;
+};
+const getFirstImage = (pipe) => {
+  if (pipe.media && pipe.media.length > 0) {
+    const img = pipe.media.find(m => m.type === 'image');
+    if (img) return img.url;
+  }
+  return pipe.imgUrl || null;
+};
+
+// ─── HKS Product Detail Modal ────────────────────────────────────────────────
+const HKSProductModal = ({ pipe, onClose }) => {
+  const mediaList = (pipe.media && pipe.media.length > 0)
+    ? pipe.media
+    : (pipe.imgUrl ? [{ type: 'image', url: pipe.imgUrl }] : []);
+
+  const firstVideoIdx = mediaList.findIndex(m => m.type === 'video');
+  const [idx, setIdx] = useState(firstVideoIdx >= 0 ? firstVideoIdx : 0);
+  const total = mediaList.length;
+  const current = mediaList[idx];
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight' && total > 1) setIdx(i => (i + 1) % total);
+      if (e.key === 'ArrowLeft'  && total > 1) setIdx(i => (i - 1 + total) % total);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [total, onClose]);
+
+  const renderMedia = () => {
+    if (!current) return <div className="flex items-center justify-center h-full text-neutral-600">ไม่มีสื่อ</div>;
+    if (current.type === 'video') {
+      const isYT = current.url.includes('youtube.com') || current.url.includes('youtu.be');
+      if (isYT) return <iframe key={`yt-${idx}`} src={getYouTubeEmbed(current.url, true)} className="w-full h-full" allow="autoplay; encrypted-media; fullscreen" allowFullScreen />;
+      return <video key={`v-${idx}`} src={current.url} controls autoPlay className="w-full h-full object-contain" />;
+    }
+    return (
+      <div className="relative w-full h-full">
+        <WatermarkedImage src={current.url} alt={pipe.model} className="w-full h-full object-contain" />
+      </div>
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 z-[300] bg-black/95 flex items-center justify-center p-2 md:p-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="bg-neutral-950 rounded-2xl overflow-hidden w-full max-w-4xl border border-neutral-800 flex flex-col" style={{ maxHeight: '92vh' }}>
+
+        {/* Header */}
+        <div className="flex items-start justify-between px-5 py-4 border-b border-neutral-800 flex-shrink-0">
+          <div>
+            <span className="text-xs text-orange-500 font-bold">{pipe.brand}</span>
+            <h3 className="text-white font-black text-lg leading-tight">{pipe.model}</h3>
+            <p className="text-orange-400 text-sm font-semibold">{pipe.type}</p>
+          </div>
+          <button onClick={onClose} className="text-neutral-400 hover:text-white text-xl leading-none ml-4 flex-shrink-0 mt-1">✕</button>
+        </div>
+
+        {/* Main media */}
+        <div className="relative bg-black flex-shrink-0" style={{ height: '420px' }}>
+          {renderMedia()}
+          {total > 1 && (
+            <>
+              <button onClick={() => setIdx(i => (i - 1 + total) % total)}
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black text-white rounded-full w-10 h-10 flex items-center justify-center text-2xl font-light transition-colors z-10 select-none">‹</button>
+              <button onClick={() => setIdx(i => (i + 1) % total)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black text-white rounded-full w-10 h-10 flex items-center justify-center text-2xl font-light transition-colors z-10 select-none">›</button>
+              <div className="absolute bottom-2 right-3 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full z-10">{idx + 1} / {total}</div>
+            </>
+          )}
+        </div>
+
+        {/* Thumbnail strip */}
+        {total > 1 && (
+          <div className="flex gap-2 px-4 py-3 overflow-x-auto border-t border-neutral-800 flex-shrink-0 bg-neutral-950">
+            {mediaList.map((m, i) => {
+              const thumb = m.type === 'video' ? getYtThumb(m.url) : m.url;
+              return (
+                <button key={i} onClick={() => setIdx(i)}
+                  className={`relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${i === idx ? 'border-orange-500' : 'border-neutral-700 opacity-50 hover:opacity-100'}`}>
+                  {thumb
+                    ? <img src={thumb} alt="" className="w-full h-full object-cover" />
+                    : <div className="w-full h-full bg-neutral-800" />}
+                  {m.type === 'video' && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                      <div className="w-5 h-5 bg-white/80 rounded-full flex items-center justify-center">
+                        <span className="text-black text-xs" style={{ marginLeft: '2px' }}>▶</span>
+                      </div>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Details + CTA */}
+        <div className="px-5 py-4 border-t border-neutral-800 flex items-center justify-between gap-4 flex-shrink-0">
+          <div className="flex-1 min-w-0">
+            {pipe.desc  && <p className="text-neutral-400 text-sm leading-relaxed mb-1">{pipe.desc}</p>}
+            {pipe.price && <p className="text-white font-black text-2xl">{pipe.price}</p>}
+          </div>
+          <a href={LINE_URL} target="_blank" rel="noopener noreferrer"
+            className="flex-shrink-0 bg-green-600 hover:bg-green-700 text-white font-bold px-5 py-3 rounded-xl text-sm transition-colors whitespace-nowrap">
+            💬 สอบถาม LINE
+          </a>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
 const HKSAdminPanel = ({ data, onSave, onClose }) => {
   const [draft, setDraft] = useState(() => {
     const d = JSON.parse(JSON.stringify(data));
@@ -1103,7 +1238,7 @@ const HKSAdminPanel = ({ data, onSave, onClose }) => {
   const addPipe = () => {
     const newId = Date.now();
     const defaultBrand = draft.brands[0] || 'Toyota';
-    setDraft({ ...draft, pipes: [...draft.pipes, { id: newId, brand: defaultBrand, model: '', type: '', desc: '', price: '', imgUrl: '' }] });
+    setDraft({ ...draft, pipes: [...draft.pipes, { id: newId, brand: defaultBrand, model: '', type: '', desc: '', price: '', imgUrl: '', media: [] }] });
   };
 
   const addBrand = () => {
@@ -1123,6 +1258,26 @@ const HKSAdminPanel = ({ data, onSave, onClose }) => {
   const deletePipe = (i) => {
     if (!window.confirm('ลบรายการนี้?')) return;
     setDraft({ ...draft, pipes: draft.pipes.filter((_, idx) => idx !== i) });
+  };
+
+  const [newMediaUrl, setNewMediaUrl] = useState({});
+
+  const addMedia = (pipeIdx, url) => {
+    const trimmed = (url || '').trim();
+    if (!trimmed) return;
+    const type = detectMediaType(trimmed);
+    const pipes = [...draft.pipes];
+    const media = [...(pipes[pipeIdx].media || []), { type, url: trimmed }];
+    pipes[pipeIdx] = { ...pipes[pipeIdx], media };
+    setDraft({ ...draft, pipes });
+    setNewMediaUrl(prev => ({ ...prev, [pipeIdx]: '' }));
+  };
+
+  const removeMedia = (pipeIdx, mediaIdx) => {
+    const pipes = [...draft.pipes];
+    const media = (pipes[pipeIdx].media || []).filter((_, mi) => mi !== mediaIdx);
+    pipes[pipeIdx] = { ...pipes[pipeIdx], media };
+    setDraft({ ...draft, pipes });
   };
 
   return (
@@ -1196,8 +1351,52 @@ const HKSAdminPanel = ({ data, onSave, onClose }) => {
                   <textarea rows={2} className={inputCls} value={pipe.desc} onChange={e => updatePipe(i, 'desc', e.target.value)} placeholder="คำอธิบายสั้นๆ เกี่ยวกับท่อรุ่นนี้" />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="text-neutral-400 text-xs mb-1 block">URL รูปภาพ</label>
+                  <label className="text-neutral-400 text-xs mb-1 block">URL รูปหน้าปก (fallback ถ้าไม่มี Gallery)</label>
                   <input className={inputCls} value={pipe.imgUrl} onChange={e => updatePipe(i, 'imgUrl', e.target.value)} placeholder="https://... หรือ /images/hks1.jpg" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-neutral-400 text-xs mb-2 block">🖼️ Gallery รูปภาพ / วิดีโอ (ใส่ได้หลายรายการ)</label>
+                  {/* รายการ media ที่มีอยู่ */}
+                  {(pipe.media || []).length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {(pipe.media || []).map((m, mi) => {
+                        const thumb = m.type === 'video' ? getYtThumb(m.url) : m.url;
+                        return (
+                          <div key={mi} className="relative group">
+                            <div className="w-16 h-16 rounded-lg overflow-hidden border border-neutral-700 bg-neutral-800">
+                              {thumb
+                                ? <img src={thumb} alt="" className="w-full h-full object-cover" />
+                                : <div className="w-full h-full bg-neutral-800 flex items-center justify-center text-orange-500 text-xl">▶</div>}
+                              {m.type === 'video' && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-lg">
+                                  <span className="text-white text-lg">▶</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="absolute -top-1.5 -right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button onClick={() => removeMedia(i, mi)} className="w-5 h-5 bg-red-600 hover:bg-red-500 rounded-full text-white text-xs flex items-center justify-center leading-none">✕</button>
+                            </div>
+                            <p className="text-center text-neutral-500 text-[9px] mt-0.5">{m.type === 'video' ? 'VDO' : 'IMG'}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {/* เพิ่ม media ใหม่ */}
+                  <div className="flex gap-2">
+                    <input
+                      className={`${inputCls} flex-1`}
+                      value={newMediaUrl[i] || ''}
+                      onChange={e => setNewMediaUrl(prev => ({ ...prev, [i]: e.target.value }))}
+                      onKeyDown={e => e.key === 'Enter' && addMedia(i, newMediaUrl[i] || '')}
+                      placeholder="วาง URL รูปภาพ หรือลิงก์ YouTube..."
+                    />
+                    <button onClick={() => addMedia(i, newMediaUrl[i] || '')}
+                      className="bg-neutral-700 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors whitespace-nowrap">
+                      + เพิ่ม
+                    </button>
+                  </div>
+                  <p className="text-neutral-600 text-xs mt-1.5">รองรับ: URL รูปภาพ, ลิงก์ YouTube, ไฟล์วิดีโอ (.mp4) — รูปแรกในรายการจะเป็นหน้าปกสินค้า, วิดีโอจะเล่นอัตโนมัติเมื่อกดดูรายละเอียด</p>
                 </div>
               </div>
             </div>
@@ -1239,6 +1438,7 @@ const HKSPage = () => {
   const [page, setPage]               = useState(1);
   const [showAdmin, setShowAdmin]     = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedPipe, setSelectedPipe] = useState(null);
 
   useEffect(() => {
     fetch('/content.json')
@@ -1268,8 +1468,9 @@ const HKSPage = () => {
 
   return (
     <div className="pb-24 relative">
-      {showPassword && <PasswordModal onSuccess={handlePasswordSuccess} onClose={() => setShowPassword(false)} />}
-      {showAdmin    && <HKSAdminPanel data={data} onSave={handleSave} onClose={() => setShowAdmin(false)} />}
+      {showPassword  && <PasswordModal onSuccess={handlePasswordSuccess} onClose={() => setShowPassword(false)} />}
+      {showAdmin     && <HKSAdminPanel data={data} onSave={handleSave} onClose={() => setShowAdmin(false)} />}
+      {selectedPipe  && <HKSProductModal pipe={selectedPipe} onClose={() => setSelectedPipe(null)} />}
 
       {/* ── Hero ── */}
       <div className="border-b border-neutral-800 py-20 px-6 relative overflow-hidden" style={{ background: '#0d1116' }}>
@@ -1332,8 +1533,8 @@ const HKSPage = () => {
                 <div key={item.id} className="bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-800 group hover:border-orange-500/50 transition-colors">
                   {/* Product image */}
                   <div className="h-56 bg-neutral-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-                    {item.imgUrl ? (
-                      <WatermarkedImage src={item.imgUrl} alt={item.model} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    {getFirstImage(item) ? (
+                      <WatermarkedImage src={getFirstImage(item)} alt={item.model} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     ) : (
                       <>
                         <div className="w-3/4 h-8 bg-neutral-800 rounded-full mb-2" />
@@ -1351,8 +1552,8 @@ const HKSPage = () => {
                     <p className="text-orange-400 text-sm font-bold mb-3">{item.type}</p>
                     {item.desc  && <p className="text-neutral-400 text-sm mb-4 leading-relaxed">{item.desc}</p>}
                     {item.price && <p className="text-white font-black text-lg mb-4">{item.price}</p>}
-                    <button className="w-full py-3 rounded-lg border border-neutral-700 hover:bg-white hover:text-black transition-colors font-bold text-sm">
-                      เช็คสต็อกและราคา
+                    <button onClick={() => setSelectedPipe(item)} className="w-full py-3 rounded-lg bg-orange-600 hover:bg-orange-700 text-white transition-colors font-bold text-sm">
+                      รายละเอียดสินค้า
                     </button>
                   </div>
                 </div>
