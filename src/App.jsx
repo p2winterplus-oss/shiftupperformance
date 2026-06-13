@@ -1261,6 +1261,18 @@ const HKSAdminPanel = ({ data, onSave, onClose }) => {
   };
 
   const [newMediaUrl, setNewMediaUrl] = useState({});
+  const [dragging,   setDragging]   = useState(null); // { pipeIdx, mediaIdx }
+  const [dragOver,   setDragOver]   = useState(null); // { pipeIdx, mediaIdx }
+
+  const reorderMedia = (pipeIdx, fromIdx, toIdx) => {
+    if (fromIdx === toIdx) return;
+    const pipes = [...draft.pipes];
+    const media = [...(pipes[pipeIdx].media || [])];
+    const [moved] = media.splice(fromIdx, 1);
+    media.splice(toIdx, 0, moved);
+    pipes[pipeIdx] = { ...pipes[pipeIdx], media };
+    setDraft({ ...draft, pipes });
+  };
 
   const addMedia = (pipeIdx, url) => {
     const trimmed = (url || '').trim();
@@ -1361,11 +1373,31 @@ const HKSAdminPanel = ({ data, onSave, onClose }) => {
                     <div className="flex flex-wrap gap-2 mb-3">
                       {(pipe.media || []).map((m, mi) => {
                         const thumb = m.type === 'video' ? getYtThumb(m.url) : m.url;
+                        const isDraggingThis = dragging?.pipeIdx === i && dragging?.mediaIdx === mi;
+                        const isOver = dragOver?.pipeIdx === i && dragOver?.mediaIdx === mi && !isDraggingThis;
                         return (
-                          <div key={mi} className="relative group">
+                          <div
+                            key={mi}
+                            className={`relative group cursor-grab active:cursor-grabbing select-none transition-all duration-150 ${isDraggingThis ? 'opacity-25 scale-90' : ''} ${isOver ? 'ring-2 ring-orange-500 rounded-lg scale-105' : ''}`}
+                            draggable
+                            onDragStart={(e) => {
+                              setDragging({ pipeIdx: i, mediaIdx: mi });
+                              e.dataTransfer.effectAllowed = 'move';
+                            }}
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              if (dragging?.pipeIdx === i) setDragOver({ pipeIdx: i, mediaIdx: mi });
+                            }}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              if (dragging?.pipeIdx === i) reorderMedia(i, dragging.mediaIdx, mi);
+                              setDragging(null); setDragOver(null);
+                            }}
+                            onDragEnd={() => { setDragging(null); setDragOver(null); }}
+                          >
                             <div className="w-16 h-16 rounded-lg overflow-hidden border border-neutral-700 bg-neutral-800">
                               {thumb
-                                ? <img src={thumb} alt="" className="w-full h-full object-cover" />
+                                ? <img src={thumb} alt="" className="w-full h-full object-cover pointer-events-none" />
                                 : <div className="w-full h-full bg-neutral-800 flex items-center justify-center text-orange-500 text-xl">▶</div>}
                               {m.type === 'video' && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-lg">
@@ -1373,10 +1405,15 @@ const HKSAdminPanel = ({ data, onSave, onClose }) => {
                                 </div>
                               )}
                             </div>
+                            {/* ลบ */}
                             <div className="absolute -top-1.5 -right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button onClick={() => removeMedia(i, mi)} className="w-5 h-5 bg-red-600 hover:bg-red-500 rounded-full text-white text-xs flex items-center justify-center leading-none">✕</button>
                             </div>
-                            <p className="text-center text-neutral-500 text-[9px] mt-0.5">{m.type === 'video' ? 'VDO' : 'IMG'}</p>
+                            {/* drag handle hint */}
+                            <div className="absolute bottom-0 left-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded-b-lg flex items-center justify-center py-0.5">
+                              <span className="text-neutral-400 text-[10px]">⠿⠿</span>
+                            </div>
+                            <p className="text-center text-neutral-500 text-[9px] mt-0.5">{m.type === 'video' ? 'VDO' : `${mi + 1}`}</p>
                           </div>
                         );
                       })}
