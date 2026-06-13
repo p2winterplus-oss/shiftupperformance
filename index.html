@@ -2,10 +2,137 @@
 <html lang="th">
   <head>
     <meta charset="UTF-8" />
+
+    <!-- Favicon -->
     <link rel="icon" type="image/png" href="/images/logo.png" />
+    <link rel="apple-touch-icon" href="/images/logo.png" />
+
+    <!-- Viewport + Theme -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Shiftup Performance บริการ Remap รถยนต์ผ่าน OBD2 พร้อมสินค้า HKS Exhaust และ Panthera Active Sound" />
-    <title>Shiftup Performance | Remap, HKS Exhaust, Panthera Active Sound</title>
+    <meta name="theme-color" content="#ea580c" />
+
+    <!-- ============================================================
+         TODO: เมื่อจด domain shiftupperformance.com แล้ว
+         ให้ Find & Replace ทั้งไฟล์:
+           https://shiftupperformance.com  →  https://www.shiftupperformance.com
+         (หรือ non-www ก็ได้ แต่ต้องใช้ให้เหมือนกันทุกจุด)
+    ============================================================ -->
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://shiftupperformance.com" />
+
+    <!-- Primary SEO -->
+    <title>Shiftup Performance | ECU Remap, HKS Exhaust, Panthera Active Sound</title>
+    <meta name="description" content="Shiftup Performance บริการ ECU Remap ผ่าน OBD2 เพิ่มแรงม้า แรงบิด ลดอาการอืด จำหน่าย HKS Exhaust และ Panthera Active Sound ราคาพิเศษ ปรึกษาฟรีผ่าน LINE" />
+    <meta name="keywords" content="ECU Remap, รีแมป, HKS Exhaust, ท่อ HKS, Panthera Active Sound, เพิ่มแรงม้า, จูนรถ, รีแมปรถยนต์, Shiftup Performance, P2W Interplus" />
+    <meta name="author" content="Shiftup Performance" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph — LINE, Facebook, IG แชร์ลิ้งค์จะอ่านจากนี้ -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Shiftup Performance" />
+    <meta property="og:title" content="Shiftup Performance | ECU Remap, HKS Exhaust, Panthera Active Sound" />
+    <meta property="og:description" content="บริการ ECU Remap ผ่าน OBD2 เพิ่มแรงม้า แรงบิด ลดอาการอืด จำหน่าย HKS Exhaust และ Panthera Active Sound ปรึกษาฟรีผ่าน LINE" />
+    <meta property="og:url" content="https://shiftupperformance.com" />
+    <meta property="og:image" content="https://shiftupperformance.com/images/logo.png" />
+    <meta property="og:image:alt" content="Shiftup Performance - ECU Remap, HKS Exhaust, Panthera Active Sound" />
+    <!-- แนะนำ: เพิ่มไฟล์ /images/og-cover.jpg ขนาด 1200x630px เพื่อ preview สวยงามบน LINE/Facebook -->
+    <meta property="og:locale" content="th_TH" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Shiftup Performance | ECU Remap, HKS Exhaust, Panthera Active Sound" />
+    <meta name="twitter:description" content="บริการ ECU Remap ผ่าน OBD2 เพิ่มแรงม้า จำหน่าย HKS Exhaust และ Panthera Active Sound ปรึกษาฟรีผ่าน LINE" />
+    <meta name="twitter:image" content="https://shiftupperformance.com/images/logo.png" />
+
+    <!-- JSON-LD Structured Data — Google อ่านข้อมูลร้านจากนี้ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "AutoRepair",
+          "@id": "https://shiftupperformance.com/#business",
+          "name": "Shiftup Performance",
+          "alternateName": "P2W Interplus",
+          "description": "บริการ ECU Remap ผ่าน OBD2 เพิ่มแรงม้า แรงบิด ลดอาการอืด จำหน่าย HKS Exhaust และ Panthera Active Sound",
+          "url": "https://shiftupperformance.com",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://shiftupperformance.com/images/logo.png"
+          },
+          "image": "https://shiftupperformance.com/images/logo.png",
+          "sameAs": [
+            "https://lin.ee/nZOMcph"
+          ],
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "customer service",
+            "url": "https://lin.ee/nZOMcph",
+            "availableLanguage": "Thai"
+          },
+          "areaServed": {
+            "@type": "Country",
+            "name": "Thailand"
+          },
+          "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "name": "บริการและสินค้า Shiftup Performance",
+            "itemListElement": [
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "ECU Remap",
+                  "description": "บริการ ECU Remap ผ่าน OBD2 ปรับจูนสมองกลรถยนต์ เพิ่มแรงม้า แรงบิด ลดอาการอืด ปลดล็อกพลังงานที่โรงงานกั๊กไว้",
+                  "url": "https://shiftupperformance.com/remap"
+                }
+              },
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Product",
+                  "name": "HKS Exhaust",
+                  "brand": {
+                    "@type": "Brand",
+                    "name": "HKS"
+                  },
+                  "description": "จำหน่ายท่อไอเสีย HKS ของแท้ ราคาพิเศษ รองรับหลายรุ่นรถ Ford, BMW, Honda, Toyota, Mazda, Mitsubishi, Nissan, Isuzu",
+                  "url": "https://shiftupperformance.com/hks"
+                }
+              },
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Product",
+                  "name": "Panthera Active Sound",
+                  "brand": {
+                    "@type": "Brand",
+                    "name": "Panthera"
+                  },
+                  "description": "ระบบเสียงไอเสียเทียม Panthera Active Sound ให้เสียงเครื่องยนต์สปอร์ตโดยไม่ต้องเปลี่ยนท่อไอเสีย",
+                  "url": "https://shiftupperformance.com/panthera"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://shiftupperformance.com/#website",
+          "url": "https://shiftupperformance.com",
+          "name": "Shiftup Performance",
+          "description": "บริการ ECU Remap, HKS Exhaust, Panthera Active Sound",
+          "publisher": {
+            "@id": "https://shiftupperformance.com/#business"
+          },
+          "inLanguage": "th-TH"
+        }
+      ]
+    }
+    </script>
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />

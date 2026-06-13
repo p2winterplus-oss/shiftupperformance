@@ -1,0 +1,12 @@
+# Shiftup Performance — robots.txt
+# TODO: เมื่อจด domain แล้ว ให้อัปเดต Sitemap URL ด้านล่าง
+
+User-agent: *
+Allow: /
+
+# ปิดกั้น admin และ API จาก search engines
+Disallow: /api/
+Disallow: /dashboard
+
+# Google, Bing, etc.
+Sitemap: https://shiftupperformance.com/sitemap.xml
