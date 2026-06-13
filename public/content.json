@@ -354,7 +354,13 @@
         "type": "HKS Tank 300 Diesel",
         "desc": "ท่อ HKS แท้ ตรงรุ่น TANK 300 Diesel\nสินค้าตรงรุ่น ไม่ต้องดัดแปลง\nถอดของเก่าออก ใส่ใหม่ได้ทันที\nสินค้ามีรับประกันจากโรงงาน 2 ปีเต็ม",
         "price": "25,000",
-        "imgUrl": "https://drive.google.com/thumbnail?id=1o_LjPbokU0-MJUo-vvTIFJozsl8jKq8P&sz=w1200"
+        "imgUrl": "https://drive.google.com/thumbnail?id=1o_LjPbokU0-MJUo-vvTIFJozsl8jKq8P&sz=w1200",
+        "media": [
+          {
+            "type": "video",
+            "url": "https://www.youtube.com/watch?v=EsKCLDSbDo4"
+          }
+        ]
       },
       {
         "id": 1781318392780,
