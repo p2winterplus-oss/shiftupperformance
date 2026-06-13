@@ -4,7 +4,7 @@
 เว็บไซต์ P2W Interplus — บริการ ECU Remap, HKS Exhaust, Panthera Active Sound
 - **URL**: deploy บน Railway (auto-deploy จาก GitHub main)
 - **Stack**: React 18 + Vite 5 + Tailwind CSS v3 + Express server
-- **วันที่อัปเดต**: 6 มิ.ย. 2569
+- **วันที่อัปเดต**: 9 มิ.ย. 2569
 
 ---
 
@@ -74,6 +74,7 @@ apps-script/Code.gs  — Google Apps Script (อัปเดต manual โดย
 - เนื้อหา (articles/portfolio/reviews/pricing) โหลดจาก `/content.json`
 - แก้ไขผ่าน Admin Panel → POST `/api/save-content` → commit ไป GitHub → Railway redeploy
 - **ไม่ใช้ localStorage** อีกต่อไป
+- **Instant refresh** (แก้ 9 มิ.ย. 2569): server เขียน `dist/content.json` ทันทีหลัง commit → F5 ก่อน Railway rebuild เสร็จก็ได้ข้อมูลใหม่เลย ไม่ต้องรอ 2-3 นาที
 
 ### Dashboard Flow
 ```
@@ -137,6 +138,8 @@ const LINE_URL = 'https://lin.ee/nZOMcph'
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxGc0JZJkZ0MtW73_MldOdcc-ILttkvcA5G_16-0MwhjrLtWLSFTlQrMdD3W-g-dmqIDg/exec'
 const ADMIN_PASS = 'Chev9872'
 const HKS_BRANDS = ['Ford','BMW','Honda','Isuzu','Mazda','Mitsubishi','Toyota','Nissan']
+// ⚠️ HKS_BRANDS นี้เป็นแค่ fallback — brands จริงอ่านจาก content.json → data.brands
+// แก้ไขผ่าน HKSAdminPanel (เพิ่ม/ลบ brand tab ได้)
 const HKS_PER_PAGE = 12
 ```
 
@@ -299,6 +302,8 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - [x] Click-to-filter จากสถิติ "หน้าที่เข้าชมมากสุด"
 - [x] Dashboard Sheet: Remap + Partner สองตารางเรียงซ้าย-ขวา
 - [x] Timezone GMT+7 ทุก timestamp (server.js + Code.gs + App.jsx)
+- [x] HKS admin: จัดการ brand tabs แบบ dynamic (เพิ่ม/ลบ brand ได้ ไม่ hardcode)
+- [x] Admin save: เขียน dist/content.json ทันที → F5 ได้ข้อมูลใหม่เลย (ไม่รอ Railway rebuild)
 
 ---
 
@@ -396,18 +401,28 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 ---
 
 ## Last Session
-**วันที่**: 6 มิ.ย. 2569
+**วันที่**: 9 มิ.ย. 2569
 
-**สิ่งที่ทำใน session นี้** (รวม 2 sessions):
-
-**Session ที่แล้ว:**
+**6 มิ.ย. 2569 — Session 1:**
 1. เพิ่ม column filter dropdowns ในตาราง visitor details (Dashboard)
 2. เพิ่ม click-to-filter บน "หน้าที่เข้าชมมากสุด"
 3. แก้ Dashboard Sheet: Remap + Partner สองตารางเรียงซ้าย-ขวา
 4. ย้าย visit tracking จาก browser มา server-side (แก้ Origin header issue)
 5. รวม GOOGLE_SCRIPT_URL เป็น deployment เดียว
 
-**Session นี้:**
+**6 มิ.ย. 2569 — Session 2:**
 1. แก้ visit tracking ลง Sheet ถาวร: เปลี่ยนจาก GET+params → POST JSON {source:'visit'}
 2. แก้ email ซ้ำ: ลบ sendEmail() ออกจาก Code.gs doPost
 3. แก้ timezone: เติม `{ timeZone: 'Asia/Bangkok' }` ทุกที่ใน server.js, Code.gs, App.jsx
+
+**8 มิ.ย. 2569 (เครื่องอื่น):**
+1. HKS admin: เพิ่ม brand management — เพิ่ม/ลบ brand tab ได้ผ่าน admin panel (ไม่ hardcode แล้ว)
+   - `DEFAULT_HKS` มี `brands` array ใน content.json
+   - HKSAdminPanel: เพิ่ม brand ด้วยชื่อ + ลบด้วยปุ่ม ✕
+   - เตือนก่อนลบ brand ที่มี pipe อยู่
+   - HKSPage filter tabs อ่านจาก `data.brands` (fallback HKS_BRANDS ถ้าข้อมูลเก่า)
+
+**9 มิ.ย. 2569 (เครื่องอื่น):**
+1. แก้ Admin save: server เขียน `dist/content.json` ทันทีหลัง GitHub commit
+   - เดิม: save → commit GitHub → รอ Railway rebuild 2-3 นาที → F5 ถึงเห็นข้อมูลใหม่
+   - ใหม่: save → commit GitHub + เขียน dist ทันที → F5 เห็นข้อมูลใหม่ทันที ✅
