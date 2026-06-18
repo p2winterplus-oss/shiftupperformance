@@ -75,8 +75,10 @@ const ShiftupApp = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Track page visits
+  // Track หน้าแรกเท่านั้น
   useEffect(() => {
+    if (activePage !== 'home') return;
+
     const KEY = 'shiftup_sid';
     const isFirst = !sessionStorage.getItem(KEY);
     let sid = sessionStorage.getItem(KEY);
@@ -87,7 +89,6 @@ const ShiftupApp = () => {
     const referrer = isFirst ? (document.referrer || '') : '';
     const language = navigator.language || '';
 
-    // detect browser + OS in browser (ส่งลง Sheet ได้)
     let detectedBrowser = 'Other';
     if      (/Edg\//i.test(ua))     detectedBrowser = 'Edge';
     else if (/OPR|Opera/i.test(ua)) detectedBrowser = 'Opera';
@@ -103,13 +104,12 @@ const ShiftupApp = () => {
     else if (/Linux/i.test(ua))       detectedOS = 'Linux';
 
     const payload = {
-      page: activePage, device, sessionId: sid, referrer, language,
+      page: 'home', device, sessionId: sid, referrer, language,
       browser: detectedBrowser, os: detectedOS,
       isoTimestamp: new Date().toISOString(),
       timestamp: new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }),
     };
 
-    // Server บันทึก visit + เรียก Apps Script Sheet ให้เอง (server-side ไม่มี CORS issue)
     fetch('/api/track-visit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
