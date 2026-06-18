@@ -896,6 +896,12 @@ const RemapPage = () => {
   const [showAdmin, setShowAdmin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState('');
+  const [openArticles, setOpenArticles] = useState(new Set());
+  const toggleArticle = (id) => setOpenArticles(prev => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
 
   useEffect(() => {
     fetch('/content.json')
@@ -939,48 +945,6 @@ const RemapPage = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 lg:px-8 space-y-24 mt-16">
-
-        {/* ── Articles ── */}
-        <section>
-          <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">บทความ & ความรู้ก่อนรีแมป</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {data.articles.map((art) => (
-              <div key={art.id} className="bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-800 hover:border-neutral-600 transition-colors cursor-pointer group">
-                <div className="h-48 bg-neutral-800 flex items-center justify-center overflow-hidden">
-                  {art.imgUrl
-                    ? <img src={art.imgUrl} alt={art.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    : <span className="text-neutral-600 text-sm">รูปภาพปกบทความ {art.id}</span>
-                  }
-                </div>
-                <div className="p-6">
-                  <div className="text-red-500 text-xs font-bold mb-2 tracking-widest">{art.tag}</div>
-                  <h3 className="text-base font-bold text-white mb-2 leading-snug">{art.title}</h3>
-                  <p className="text-neutral-400 text-sm leading-relaxed">{art.excerpt}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Portfolio 3D Slideshow ── */}
-        <section>
-          <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">ผลงานรีแมป (Portfolio)</h2>
-          <Portfolio3DSlideshow items={data.portfolio} />
-        </section>
-
-        {/* ── Reviews Carousel ── */}
-        <section>
-          <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">รีวิวจากผู้ใช้จริง</h2>
-          <ReviewsCarousel reviews={data.reviews} />
-        </section>
-
-        {/* ── CTA จองคิว ── */}
-        <div className="text-center py-4">
-          <a href={LINE_URL} target="_blank" rel="noreferrer"
-            className="inline-flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white font-black text-xl px-12 py-5 rounded-full shadow-[0_0_30px_rgba(220,38,38,0.4)] hover:shadow-[0_0_45px_rgba(220,38,38,0.6)] transition-all">
-            <MessageCircle size={24} /> จองคิวเลย
-          </a>
-        </div>
 
         {/* ── Pricing + Form ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
@@ -1068,6 +1032,61 @@ const RemapPage = () => {
             </form>
           </section>
         </div>
+
+        {/* ── CTA จองคิว ── */}
+        <div className="text-center py-4">
+          <a href={LINE_URL} target="_blank" rel="noreferrer"
+            className="inline-flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white font-black text-xl px-12 py-5 rounded-full shadow-[0_0_30px_rgba(220,38,38,0.4)] hover:shadow-[0_0_45px_rgba(220,38,38,0.6)] transition-all">
+            <MessageCircle size={24} /> จองคิวเลย
+          </a>
+        </div>
+
+        {/* ── Articles Accordion ── */}
+        <section>
+          <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">บทความ & ความรู้ก่อนรีแมป</h2>
+          <div className="space-y-3">
+            {data.articles.map((art) => {
+              const isOpen = openArticles.has(art.id);
+              return (
+                <div key={art.id} className="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden transition-colors hover:border-neutral-600">
+                  <button
+                    onClick={() => toggleArticle(art.id)}
+                    className="w-full flex items-center justify-between px-6 py-4 text-left gap-4"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="text-red-500 text-xs font-bold tracking-widest shrink-0">{art.tag}</span>
+                      <span className="text-white font-bold text-sm md:text-base leading-snug truncate">{art.title}</span>
+                    </div>
+                    <span className={`text-neutral-400 shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>▾</span>
+                  </button>
+                  {isOpen && (
+                    <div className="px-6 pb-6 border-t border-neutral-800">
+                      {art.imgUrl && (
+                        <div className="h-48 md:h-64 rounded-xl overflow-hidden mt-4 mb-4">
+                          <img src={art.imgUrl} alt={art.title} className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      <p className="text-neutral-400 text-sm leading-relaxed mt-4">{art.excerpt}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ── Portfolio 3D Slideshow ── */}
+        <section>
+          <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">ผลงานรีแมป (Portfolio)</h2>
+          <Portfolio3DSlideshow items={data.portfolio} />
+        </section>
+
+        {/* ── Reviews Carousel ── */}
+        <section>
+          <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">รีวิวจากผู้ใช้จริง</h2>
+          <ReviewsCarousel reviews={data.reviews} />
+        </section>
+
       </div>
 
       {/* ── Hidden Admin Button (bottom-right corner) ── */}
