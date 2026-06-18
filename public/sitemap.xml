@@ -1,42 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   TODO: เมื่อจด domain แล้ว ให้ Find & Replace:
-    https://shiftupperformance.com  →  URL จริงของคุณ
+    https://www.shiftupperformance.com  →  URL จริงของคุณ
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
   <!-- หน้าแรก -->
   <url>
-    <loc>https://shiftupperformance.com/</loc>
+    <loc>https://www.shiftupperformance.com/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
   <!-- ECU Remap -->
   <url>
-    <loc>https://shiftupperformance.com/remap</loc>
+    <loc>https://www.shiftupperformance.com/remap</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <!-- HKS Exhaust -->
   <url>
-    <loc>https://shiftupperformance.com/hks</loc>
+    <loc>https://www.shiftupperformance.com/hks</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <!-- Panthera Active Sound -->
   <url>
-    <loc>https://shiftupperformance.com/panthera</loc>
+    <loc>https://www.shiftupperformance.com/panthera</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- สมัคร Partner -->
   <url>
-    <loc>https://shiftupperformance.com/partner</loc>
+    <loc>https://www.shiftupperformance.com/partner</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

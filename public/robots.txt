@@ -9,4 +9,4 @@ Disallow: /api/
 Disallow: /dashboard
 
 # Google, Bing, etc.
-Sitemap: https://shiftupperformance.com/sitemap.xml
+Sitemap: https://www.shiftupperformance.com/sitemap.xml
