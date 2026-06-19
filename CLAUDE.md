@@ -5,7 +5,7 @@
 - **URL**: deploy บน Railway (auto-deploy จาก GitHub main)
 - **Domain**: `www.shiftupperformance.com` — live แล้ว (18 มิ.ย. 2569)
 - **Stack**: React 18 + Vite 5 + Tailwind CSS v3 + Express server
-- **วันที่อัปเดต**: 19 มิ.ย. 2569
+- **วันที่อัปเดต**: 19 มิ.ย. 2569 (session 2)
 
 ---
 
@@ -211,15 +211,16 @@ pipe.media = [
 ### Bot Filtering (เพิ่ม 19 มิ.ย. 2569)
 ```
 มี visit เข้ามา → getGeo(ip) → เช็ค ISP
-  ├─ ISP เป็น bot → ลบออกจาก visits[], เพิ่ม botVisits[] (แค่ timestamp)
-  │                  ไม่ส่งไป Sheet, ไม่บันทึก visits.json
+  ├─ ISP เป็น bot → ลบออกจาก visits[], เพิ่ม botVisits[] ({ isoTimestamp })
+  │                  ไม่ส่งไป Sheet
+  │                  visitsDirty = true → บันทึกลง visits.json ทุก 30 นาที ✅
   └─ ISP คนจริง → บันทึกปกติ → Sheet + visits.json
 ```
 
 **BOT_ISP_KEYWORDS** (server.js):
 `Amazon.com`, `Amazon Web Services`, `Google LLC`, `Microsoft Corporation`, `OVH SAS`, `Hetzner`, `DigitalOcean`, `Linode`, `Vultr`, `Facebook, Inc.`
 
-**botVisits** — เก็บใน RAM เท่านั้น (reset เมื่อ Railway restart) แค่นับตัวเลข ไม่เก็บรายละเอียด
+**botVisits** — persistent ใน visits.json (ไม่ reset เมื่อ Railway restart แล้ว) เก็บแค่ `{ isoTimestamp }` สูงสุด 5,000 entries
 
 ### sessionId Logic
 - เก็บใน `sessionStorage` key `shiftup_sid`
@@ -283,7 +284,9 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - เก็บสูงสุด 10,000 entries (ตัดแต่เก็บใหม่สุด)
 
 ### GitHub `public/visits.json`
-- Railway auto-commit ทุก 30 นาที: message `analytics: sync visits (N total)`
+- format ใหม่ (19 มิ.ย. 2569): `{ visits: [...], botVisits: [...] }` (เดิมเป็น array visits อย่างเดียว)
+- loadVisits() handle ทั้ง format เก่า (array) และ format ใหม่ (object) — backward compatible
+- Railway auto-commit ทุก 30 นาที: message `analytics: sync visits (N total, M bots)`
 - ถ้า push ไม่ได้หลัง Railway commit → `git pull --rebase origin main`
 
 ### Google Sheet `Visits` Tab
@@ -403,8 +406,9 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - [x] **Google Business Profile**: สร้างแล้ว (18 มิ.ย. 2569)
 - [x] SEO files อัปเดต URL → `www.shiftupperformance.com` ครบทุกไฟล์
 - [x] **Remap page restructure** (19 มิ.ย. 2569): ย้าย Pricing+Form ขึ้นมาก่อน + บทความเปลี่ยนเป็น Accordion (พับ/กาง)
-- [x] **Bot filtering** (19 มิ.ย. 2569): กรอง bot (Amazon/Google/OVH ฯลฯ) ออกจาก analytics — ไม่บันทึกลง Sheet/visits.json
-- [x] **Bot counter in Dashboard** (19 มิ.ย. 2569): แสดงตัวเลข 🤖 Bot ที่กรองออก (วันนี้ + ช่วงที่เลือก) แยกจากคนจริง
+- [x] **Bot filtering** (19 มิ.ย. 2569): กรอง bot (Amazon/Google/OVH ฯลฯ) ออกจาก analytics — ไม่ส่งลง Sheet
+- [x] **Bot persistence** (19 มิ.ย. 2569): botVisits บันทึกลง visits.json ทุก 30 นาที — ไม่ reset เมื่อ server restart
+- [x] **Bot vs Human Dashboard** (19 มิ.ย. 2569): stats 2 cards (วันนี้ + ช่วงที่เลือก) + donut pie chart เทียบ % แบบ real-time
 
 ---
 
@@ -495,7 +499,7 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 ---
 
 ## Last Session
-**วันที่**: 18 มิ.ย. 2569
+**วันที่**: 19 มิ.ย. 2569 (session 2)
 
 **6 มิ.ย. 2569 — Session 1:**
 1. เพิ่ม column filter dropdowns ในตาราง visitor details (Dashboard)
@@ -520,6 +524,17 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 2. HKS grid: แสดงรูปแรก (image) อัตโนมัติ, ปุ่มเปลี่ยนเป็น "รายละเอียดสินค้า"
 3. HKS Admin: drag-and-drop เรียงลำดับ gallery media
 4. SEO ครบชุด: index.html (meta/OG/JSON-LD), sitemap.xml, robots.txt, llms.txt
+
+**19 มิ.ย. 2569 — Session 1:**
+1. Remap page: ย้าย Pricing+Form ขึ้นมาก่อน + บทความเปลี่ยนเป็น Accordion
+2. Bot filtering: กรอง ISP datacenter ออกจาก analytics
+3. Bot counter in Dashboard: แสดงจำนวน bot แยกจากคนจริง
+
+**19 มิ.ย. 2569 — Session 2:**
+1. SEO ครบชุด: index.html (meta/OG/JSON-LD), sitemap.xml, robots.txt, llms.txt — canonical ชี้ `www.shiftupperformance.com`
+2. Bot vs Human Dashboard: redesign เป็น stats cards + donut pie chart แสดง % เทียบกัน
+3. Bot persistence: เปลี่ยน visits.json format เป็น `{ visits, botVisits }` — botVisits ไม่ reset แล้ว
+4. Dashboard layout: grid 50/50 + donut chart ขนาด 200×200
 
 **18 มิ.ย. 2569:**
 1. Watermark อัตโนมัติ (Portfolio + HKS) — CSS overlay, opacity 22%, -30°, 1.5x gap
