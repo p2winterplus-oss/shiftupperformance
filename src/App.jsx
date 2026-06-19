@@ -2196,41 +2196,75 @@ const AnalyticsSection = ({ visits = [], botVisits = [] }) => {
       {(() => {
         const totalToday   = todayCount + botToday;
         const totalInRange = filtered.length + botInRange;
-        const humanTodayPct  = totalToday   > 0 ? Math.round(todayCount      / totalToday   * 100) : 0;
-        const botTodayPct    = totalToday   > 0 ? Math.round(botToday        / totalToday   * 100) : 0;
-        const humanRangePct  = totalInRange > 0 ? Math.round(filtered.length / totalInRange * 100) : 0;
-        const botRangePct    = totalInRange > 0 ? Math.round(botInRange      / totalInRange * 100) : 0;
-        const Card = ({ label, human, bot, humanPct, botPct, total }) => (
-          <div className="bg-neutral-950 rounded-xl p-4">
-            <p className="text-neutral-500 text-xs mb-3 text-center">{label} <span className="text-neutral-700">(รวม {total})</span></p>
-            <div className="flex gap-3 items-center">
-              <div className="flex-1 text-center">
-                <p className="text-2xl font-black text-green-400">{human}</p>
-                <p className="text-green-500 text-xs font-bold mt-0.5">{humanPct}%</p>
-                <p className="text-neutral-600 text-xs mt-0.5">👤 คนจริง</p>
-              </div>
-              <div className="w-px h-12 bg-neutral-800" />
-              <div className="flex-1 text-center">
-                <p className="text-2xl font-black text-neutral-500">{bot}</p>
-                <p className="text-neutral-600 text-xs font-bold mt-0.5">{botPct}%</p>
-                <p className="text-neutral-600 text-xs mt-0.5">🤖 Bot</p>
-              </div>
-            </div>
-            {total > 0 && (
-              <div className="mt-3 h-1.5 rounded-full bg-neutral-800 overflow-hidden">
-                <div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${humanPct}%` }} />
-              </div>
-            )}
-          </div>
-        );
+        const humanRangePct = totalInRange > 0 ? Math.round(filtered.length / totalInRange * 100) : 0;
+
+        // SVG donut pie chart
+        const R = 54, CX = 70, CY = 70;
+        const mkArc = (pct) => {
+          if (pct <= 0) return null;
+          if (pct >= 100) return <circle cx={CX} cy={CY} r={R} fill="#22c55e" />;
+          const a  = (pct / 100) * 2 * Math.PI;
+          const x1 = CX + R * Math.cos(-Math.PI / 2);
+          const y1 = CY + R * Math.sin(-Math.PI / 2);
+          const x2 = CX + R * Math.cos(a - Math.PI / 2);
+          const y2 = CY + R * Math.sin(a - Math.PI / 2);
+          return <path d={`M${CX} ${CY} L${x1.toFixed(1)} ${y1.toFixed(1)} A${R} ${R} 0 ${pct > 50 ? 1 : 0} 1 ${x2.toFixed(1)} ${y2.toFixed(1)} Z`} fill="#22c55e" />;
+        };
+
         return (
           <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
             <p className="text-neutral-400 text-sm font-medium mb-4">👤 คนจริง vs 🤖 Bot</p>
-            <div className="grid grid-cols-2 gap-3">
-              <Card label="วันนี้"        human={todayCount}    bot={botToday}   humanPct={humanTodayPct}  botPct={botTodayPct}  total={totalToday} />
-              <Card label="ช่วงที่เลือก" human={filtered.length} bot={botInRange} humanPct={humanRangePct} botPct={botRangePct} total={totalInRange} />
+            <div className="flex gap-5 items-center">
+
+              {/* Left: stats */}
+              <div className="flex-1 space-y-3">
+                {[
+                  { label: 'วันนี้',       human: todayCount,      bot: botToday,   total: totalToday   },
+                  { label: 'ช่วงที่เลือก', human: filtered.length, bot: botInRange, total: totalInRange },
+                ].map(({ label, human, bot, total }) => {
+                  const hPct = total > 0 ? Math.round(human / total * 100) : 0;
+                  return (
+                    <div key={label} className="bg-neutral-950 rounded-xl p-4">
+                      <p className="text-neutral-600 text-xs mb-2">{label} <span className="text-neutral-700">(รวม {total})</span></p>
+                      <div className="flex gap-5 items-end">
+                        <div>
+                          <p className="text-2xl font-black text-green-400">{human}</p>
+                          <p className="text-green-600 text-xs font-bold">{hPct}%</p>
+                          <p className="text-neutral-600 text-xs">👤 คนจริง</p>
+                        </div>
+                        <div className="w-px h-10 bg-neutral-800" />
+                        <div>
+                          <p className="text-2xl font-black text-neutral-500">{bot}</p>
+                          <p className="text-neutral-700 text-xs font-bold">{100 - hPct}%</p>
+                          <p className="text-neutral-600 text-xs">🤖 Bot</p>
+                        </div>
+                      </div>
+                      <div className="mt-2 h-1.5 rounded-full bg-neutral-800 overflow-hidden">
+                        <div className="h-full bg-green-500 rounded-full" style={{ width: `${hPct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+                <p className="text-neutral-700 text-xs">⚠ Bot เก็บใน RAM เท่านั้น ไม่ใช่สถิติถาวร reset เมื่อ server restart</p>
+              </div>
+
+              {/* Right: pie chart (ช่วงที่เลือก) */}
+              <div className="flex flex-col items-center gap-2 shrink-0">
+                <svg width="140" height="140" viewBox="0 0 140 140">
+                  <circle cx={CX} cy={CY} r={R} fill="#404040" />
+                  {mkArc(humanRangePct)}
+                  <circle cx={CX} cy={CY} r={R * 0.55} fill="#171717" />
+                  <text x={CX} y={CY - 5}  textAnchor="middle" fill="#22c55e" fontSize="15" fontWeight="900">{humanRangePct}%</text>
+                  <text x={CX} y={CY + 10} textAnchor="middle" fill="#525252" fontSize="9">คนจริง</text>
+                </svg>
+                <div className="flex gap-3 text-xs text-neutral-500">
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500 inline-block" />คนจริง</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-neutral-600 inline-block" />Bot</span>
+                </div>
+                <p className="text-neutral-700 text-[10px]">ช่วงที่เลือก</p>
+              </div>
+
             </div>
-            <p className="text-neutral-700 text-xs text-center mt-3">* Bot counter เก็บใน RAM — reset เมื่อ server restart</p>
           </div>
         );
       })()}
