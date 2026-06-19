@@ -3,9 +3,9 @@
 ## Overview
 เว็บไซต์ P2W Interplus — บริการ ECU Remap, HKS Exhaust, Panthera Active Sound
 - **URL**: deploy บน Railway (auto-deploy จาก GitHub main)
-- **Domain (เร็วๆ นี้)**: `shiftupperformance.com` — จะจดเดือนหน้า (มิ.ย. 2569)
+- **Domain**: `www.shiftupperformance.com` — live แล้ว (18 มิ.ย. 2569)
 - **Stack**: React 18 + Vite 5 + Tailwind CSS v3 + Express server
-- **วันที่อัปเดต**: 13 มิ.ย. 2569
+- **วันที่อัปเดต**: 19 มิ.ย. 2569
 
 ---
 
@@ -208,6 +208,19 @@ pipe.media = [
 | city (เมือง) | ip-api.com (server) | ✅ | ✅ |
 | isp (ค่ายมือถือ) | ip-api.com (server) | ✅ | ✅ |
 
+### Bot Filtering (เพิ่ม 19 มิ.ย. 2569)
+```
+มี visit เข้ามา → getGeo(ip) → เช็ค ISP
+  ├─ ISP เป็น bot → ลบออกจาก visits[], เพิ่ม botVisits[] (แค่ timestamp)
+  │                  ไม่ส่งไป Sheet, ไม่บันทึก visits.json
+  └─ ISP คนจริง → บันทึกปกติ → Sheet + visits.json
+```
+
+**BOT_ISP_KEYWORDS** (server.js):
+`Amazon.com`, `Amazon Web Services`, `Google LLC`, `Microsoft Corporation`, `OVH SAS`, `Hetzner`, `DigitalOcean`, `Linode`, `Vultr`, `Facebook, Inc.`
+
+**botVisits** — เก็บใน RAM เท่านั้น (reset เมื่อ Railway restart) แค่นับตัวเลข ไม่เก็บรายละเอียด
+
 ### sessionId Logic
 - เก็บใน `sessionStorage` key `shiftup_sid`
 - ถ้าปิด browser tab แล้วเปิดใหม่ = session ใหม่
@@ -364,12 +377,12 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - [x] Brand tab pricing (Mazda/Honda/Toyota ฯลฯ) — editable
 - [x] Google Sheets integration (Remap + Partner forms)
 - [x] Email notification via **Resend API** → `p2w.interplus@gmail.com` ✅ (1 ฉบับต่อ submit)
-- [x] Visit analytics tracking (page, device, browser, OS, language, referrer, geo)
+- [x] Visit analytics tracking — track เฉพาะหน้าแรกเท่านั้น (18 มิ.ย. 2569)
 - [x] Admin Dashboard (Analytics bar chart + trend line + visitor table + pie chart)
 - [x] Hidden dashboard gear button (หน้าแรก มุมล่างขวา)
 - [x] Password-protected admin panels ทุกหน้า
 - [x] Watermark อัตโนมัติ (Portfolio + HKS) — `WatermarkedImage` component
-- [x] โลโก้ใหม่ `public/images/logo.png`
+- [x] โลโก้ใหม่ `public/images/logo.png` + ขนาด navbar h-20, footer h-24
 - [x] Visit tracking: browser→server→Apps Script doPost→Sheet ✅
 - [x] Visit persistence: GitHub `public/visits.json` (save ทุก 30 นาที)
 - [x] IP Geolocation: จังหวัด/เมือง/ISP via ip-api.com
@@ -385,13 +398,21 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - [x] HKS Admin: drag-and-drop เรียงลำดับ gallery media (HTML5 DnD)
 - [x] SEO: meta tags, Open Graph, JSON-LD (AutoRepair schema), canonical URL
 - [x] SEO: sitemap.xml, robots.txt, llms.txt
+- [x] **Domain live**: `www.shiftupperformance.com` (18 มิ.ย. 2569) — GoDaddy → Railway CNAME
+- [x] **Google Search Console**: verify + submit sitemap แล้ว
+- [x] **Google Business Profile**: สร้างแล้ว (18 มิ.ย. 2569)
+- [x] SEO files อัปเดต URL → `www.shiftupperformance.com` ครบทุกไฟล์
+- [x] **Remap page restructure** (19 มิ.ย. 2569): ย้าย Pricing+Form ขึ้นมาก่อน + บทความเปลี่ยนเป็น Accordion (พับ/กาง)
+- [x] **Bot filtering** (19 มิ.ย. 2569): กรอง bot (Amazon/Google/OVH ฯลฯ) ออกจาก analytics — ไม่บันทึกลง Sheet/visits.json
+- [x] **Bot counter in Dashboard** (19 มิ.ย. 2569): แสดงตัวเลข 🤖 Bot ที่กรองออก (วันนี้ + ช่วงที่เลือก) แยกจากคนจริง
 
 ---
 
 ## ค้างอยู่ / ต้องทำ
-- [ ] **จด domain `shiftupperformance.com`** (แผน: เดือนหน้า) → ดู checklist ใน SEO section
 - [ ] **OG Cover Image** — เพิ่ม `/images/og-cover.jpg` (1200×630px) เพื่อ LINE/FB preview สวยขึ้น
 - [ ] Watermark สำหรับ Panthera (user บอกยังไม่ทำ)
+- [ ] Google Business Profile — เพิ่มรูปภาพ, เวลาทำการ, คำอธิบายบริการให้ครบ
+- [ ] เนื้อหาบนเว็บ — เพิ่มบทความ/เนื้อหาภาษาไทยให้ Google index ได้ดีขึ้น (สำคัญสำหรับ SEO)
 
 ---
 
@@ -474,7 +495,7 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 ---
 
 ## Last Session
-**วันที่**: 13 มิ.ย. 2569
+**วันที่**: 18 มิ.ย. 2569
 
 **6 มิ.ย. 2569 — Session 1:**
 1. เพิ่ม column filter dropdowns ในตาราง visitor details (Dashboard)
@@ -499,4 +520,19 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 2. HKS grid: แสดงรูปแรก (image) อัตโนมัติ, ปุ่มเปลี่ยนเป็น "รายละเอียดสินค้า"
 3. HKS Admin: drag-and-drop เรียงลำดับ gallery media
 4. SEO ครบชุด: index.html (meta/OG/JSON-LD), sitemap.xml, robots.txt, llms.txt
-   - Canonical ชี้ `shiftupperformance.com` ไว้ล่วงหน้า (จะจด domain เดือนหน้า)
+
+**18 มิ.ย. 2569:**
+1. Watermark อัตโนมัติ (Portfolio + HKS) — CSS overlay, opacity 22%, -30°, 1.5x gap
+2. โลโก้ใหม่ `public/images/logo.png` + ขยายขนาด navbar h-20 / footer h-24
+3. HKS Admin: เพิ่ม/ลบ brand tabs ได้จาก admin panel
+4. แก้ F5 หลัง save — server เขียน dist/content.json ทันที ไม่รอ Railway rebuild
+5. **Domain live**: `www.shiftupperformance.com` — GoDaddy CNAME → Railway
+6. **Google Search Console**: verify + submit sitemap เรียบร้อย
+7. **Google Business Profile**: สร้างแล้ว
+8. อัปเดต SEO files ทุกไฟล์ → `www.shiftupperformance.com`
+9. Visit tracking: เปลี่ยนเป็น track หน้าแรกเท่านั้น (ลด noise)
+
+**19 มิ.ย. 2569:**
+1. Remap page: ย้าย Pricing+Form ขึ้นมาก่อน + บทความเปลี่ยนเป็น Accordion (แก้ปัญหามือถือไถเยอะ)
+2. Bot filtering: กรอง ISP datacenter (Amazon/Google/OVH/Microsoft ฯลฯ) ออกจาก visits — ไม่บันทึกลง Sheet
+3. Bot counter: Dashboard แสดง 🤖 จำนวน bot ที่กรองออก แยกจากคนจริง follow date filter
