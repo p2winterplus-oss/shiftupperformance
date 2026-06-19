@@ -19,8 +19,12 @@ app.use(express.static(join(__dirname, 'dist')));
 // ═══════════════════════════════════════════════════════════════════
 
 let visits = [];
+let botVisits = []; // { isoTimestamp } — bot hits (not sent to Sheet)
 let visitsDirty = false;
 const geoCache = new Map(); // IP → { province, city, isp }  cache 1hr
+
+const BOT_ISP_KEYWORDS = ['Amazon.com', 'Amazon Web Services', 'Google LLC', 'Microsoft Corporation', 'OVH SAS', 'Hetzner', 'DigitalOcean', 'Linode', 'Vultr', 'Facebook, Inc.'];
+const isBot = (isp) => BOT_ISP_KEYWORDS.some(k => (isp || '').includes(k));
 
 // doPost URL — same approach as remap/partner forms (POST body received before redirect ✓)
 const SHEET_DOPOST_URL = 'https://script.google.com/macros/s/AKfycbwMrK1ip9KWPihhA0VAkUMbYrsHBIqRrcsne099n-t0HBkgAKlFtTvhLDl0asMciy0TWw/exec';
@@ -175,6 +179,15 @@ app.post('/api/track-visit', async (req, res) => {
   setImmediate(async () => {
     try {
       const geo = await getGeo(ip);
+      if (isBot(geo.isp)) {
+        const idx = visits.indexOf(visit);
+        if (idx > -1) visits.splice(idx, 1);
+        botVisits.push({ isoTimestamp: visit.isoTimestamp });
+        if (botVisits.length > 5000) botVisits = botVisits.slice(-5000);
+        console.log(`[bot] filtered: isp=${geo.isp}`);
+        return;
+      }
+
       visit.province = geo.province;
       visit.city     = geo.city;
       visit.isp      = geo.isp;
@@ -315,14 +328,16 @@ app.get('/api/get-leads', async (req, res) => {
 
     res.json({
       ...data,
-      visits:  allVisits,
-      counts:  { ...data.counts, visits: allVisits.length },
+      visits:    allVisits,
+      botVisits: botVisits,
+      counts:    { ...data.counts, visits: allVisits.length },
     });
   } catch (err) {
     res.status(500).json({
       error: err.toString(),
       remapLeads: [], partnerApplications: [],
       visits,
+      botVisits,
       counts: { remap: 0, partner: 0, visits: visits.length },
     });
   }

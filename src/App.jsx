@@ -2036,7 +2036,7 @@ const PartnerPage = () => (
 );
 
 // ─── Analytics Section ───────────────────────────────────────────────────────
-const AnalyticsSection = ({ visits = [] }) => {
+const AnalyticsSection = ({ visits = [], botVisits = [] }) => {
   const [rangeType, setRangeType] = useState('7d');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo]   = useState('');
@@ -2081,6 +2081,9 @@ const AnalyticsSection = ({ visits = [] }) => {
   const weekCount   = visits.filter(v => { const d = safeDate(v.isoTimestamp); return d && d >= weekStart; }).length;
   const monthCount  = visits.filter(v => { const d = safeDate(v.isoTimestamp); return d && d >= monthStart; }).length;
   const yearCount   = visits.filter(v => { const d = safeDate(v.isoTimestamp); return d && d >= yearStart; }).length;
+
+  const botInRange  = botVisits.filter(v => { const d = safeDate(v.isoTimestamp); return d && d >= rangeStart && d <= rangeEnd; }).length;
+  const botToday    = botVisits.filter(v => { const d = safeDate(v.isoTimestamp); return d && d >= todayStart; }).length;
 
   const uniqueSessions = new Set(filtered.map(v => v.sessionId)).size;
   const avgPages       = uniqueSessions > 0 ? (filtered.length / uniqueSessions).toFixed(1) : '0';
@@ -2187,6 +2190,24 @@ const AnalyticsSection = ({ visits = [] }) => {
             <p className="text-neutral-600 text-xs mt-1">การเข้าชม</p>
           </div>
         ))}
+      </div>
+
+      {/* Bot counter */}
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🤖</span>
+          <span className="text-neutral-400 text-sm">Bot / Crawler ที่กรองออก</span>
+        </div>
+        <div className="flex items-center gap-6">
+          <div className="text-center">
+            <p className="text-neutral-500 text-xs mb-0.5">วันนี้</p>
+            <p className="text-xl font-black text-neutral-500">{botToday}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-neutral-500 text-xs mb-0.5">ช่วงที่เลือก</p>
+            <p className="text-xl font-black text-neutral-500">{botInRange}</p>
+          </div>
+        </div>
       </div>
 
       {/* Range selector */}
@@ -2535,7 +2556,7 @@ const DashboardPage = ({ onBack }) => {
           <>
             <div>
               <h2 className="text-white font-bold text-xl mb-6 border-l-4 border-blue-500 pl-4">📊 Analytics — การเข้าชมเว็บไซต์</h2>
-              <AnalyticsSection visits={data.visits || []} />
+              <AnalyticsSection visits={data.visits || []} botVisits={data.botVisits || []} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
