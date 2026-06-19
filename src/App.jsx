@@ -2192,23 +2192,48 @@ const AnalyticsSection = ({ visits = [], botVisits = [] }) => {
         ))}
       </div>
 
-      {/* Bot counter */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">🤖</span>
-          <span className="text-neutral-400 text-sm">Bot / Crawler ที่กรองออก</span>
-        </div>
-        <div className="flex items-center gap-6">
-          <div className="text-center">
-            <p className="text-neutral-500 text-xs mb-0.5">วันนี้</p>
-            <p className="text-xl font-black text-neutral-500">{botToday}</p>
+      {/* Human vs Bot comparison */}
+      {(() => {
+        const totalToday   = todayCount + botToday;
+        const totalInRange = filtered.length + botInRange;
+        const humanTodayPct  = totalToday   > 0 ? Math.round(todayCount      / totalToday   * 100) : 0;
+        const botTodayPct    = totalToday   > 0 ? Math.round(botToday        / totalToday   * 100) : 0;
+        const humanRangePct  = totalInRange > 0 ? Math.round(filtered.length / totalInRange * 100) : 0;
+        const botRangePct    = totalInRange > 0 ? Math.round(botInRange      / totalInRange * 100) : 0;
+        const Card = ({ label, human, bot, humanPct, botPct, total }) => (
+          <div className="bg-neutral-950 rounded-xl p-4">
+            <p className="text-neutral-500 text-xs mb-3 text-center">{label} <span className="text-neutral-700">(รวม {total})</span></p>
+            <div className="flex gap-3 items-center">
+              <div className="flex-1 text-center">
+                <p className="text-2xl font-black text-green-400">{human}</p>
+                <p className="text-green-500 text-xs font-bold mt-0.5">{humanPct}%</p>
+                <p className="text-neutral-600 text-xs mt-0.5">👤 คนจริง</p>
+              </div>
+              <div className="w-px h-12 bg-neutral-800" />
+              <div className="flex-1 text-center">
+                <p className="text-2xl font-black text-neutral-500">{bot}</p>
+                <p className="text-neutral-600 text-xs font-bold mt-0.5">{botPct}%</p>
+                <p className="text-neutral-600 text-xs mt-0.5">🤖 Bot</p>
+              </div>
+            </div>
+            {total > 0 && (
+              <div className="mt-3 h-1.5 rounded-full bg-neutral-800 overflow-hidden">
+                <div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${humanPct}%` }} />
+              </div>
+            )}
           </div>
-          <div className="text-center">
-            <p className="text-neutral-500 text-xs mb-0.5">ช่วงที่เลือก</p>
-            <p className="text-xl font-black text-neutral-500">{botInRange}</p>
+        );
+        return (
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
+            <p className="text-neutral-400 text-sm font-medium mb-4">👤 คนจริง vs 🤖 Bot</p>
+            <div className="grid grid-cols-2 gap-3">
+              <Card label="วันนี้"        human={todayCount}    bot={botToday}   humanPct={humanTodayPct}  botPct={botTodayPct}  total={totalToday} />
+              <Card label="ช่วงที่เลือก" human={filtered.length} bot={botInRange} humanPct={humanRangePct} botPct={botRangePct} total={totalInRange} />
+            </div>
+            <p className="text-neutral-700 text-xs text-center mt-3">* Bot counter เก็บใน RAM — reset เมื่อ server restart</p>
           </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* Range selector */}
       <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
