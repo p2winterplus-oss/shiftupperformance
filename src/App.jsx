@@ -2198,8 +2198,8 @@ const AnalyticsSection = ({ visits = [], botVisits = [] }) => {
         const totalInRange = filtered.length + botInRange;
         const humanRangePct = totalInRange > 0 ? Math.round(filtered.length / totalInRange * 100) : 0;
 
-        // SVG donut pie chart
-        const R = 54, CX = 70, CY = 70;
+        // SVG donut pie chart — ขนาด 200x200
+        const R = 76, CX = 100, CY = 100;
         const mkArc = (pct) => {
           if (pct <= 0) return null;
           if (pct >= 100) return <circle cx={CX} cy={CY} r={R} fill="#22c55e" />;
@@ -2214,13 +2214,13 @@ const AnalyticsSection = ({ visits = [], botVisits = [] }) => {
         return (
           <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
             <p className="text-neutral-400 text-sm font-medium mb-4">👤 คนจริง vs 🤖 Bot</p>
-            <div className="flex gap-5 items-center">
+            <div className="grid grid-cols-2 gap-5 items-center">
 
               {/* Left: stats */}
-              <div className="flex-1 space-y-3">
+              <div className="space-y-3">
                 {[
-                  { label: 'วันนี้',       human: todayCount,      bot: botToday,   total: totalToday   },
-                  { label: 'ช่วงที่เลือก', human: filtered.length, bot: botInRange, total: totalInRange },
+                  { label: 'วันนี้',        human: todayCount,      bot: botToday,   total: totalToday   },
+                  { label: 'ช่วงที่เลือก',  human: filtered.length, bot: botInRange, total: totalInRange },
                 ].map(({ label, human, bot, total }) => {
                   const hPct = total > 0 ? Math.round(human / total * 100) : 0;
                   return (
@@ -2245,23 +2245,23 @@ const AnalyticsSection = ({ visits = [], botVisits = [] }) => {
                     </div>
                   );
                 })}
-                <p className="text-neutral-700 text-xs">⚠ Bot เก็บใน RAM เท่านั้น ไม่ใช่สถิติถาวร reset เมื่อ server restart</p>
+                <p className="text-neutral-700 text-xs">💾 Bot บันทึกลง visits.json ทุก 30 นาที (persistent)</p>
               </div>
 
-              {/* Right: pie chart (ช่วงที่เลือก) */}
-              <div className="flex flex-col items-center gap-2 shrink-0">
-                <svg width="140" height="140" viewBox="0 0 140 140">
+              {/* Right: donut chart */}
+              <div className="flex flex-col items-center gap-3">
+                <svg width="200" height="200" viewBox="0 0 200 200">
                   <circle cx={CX} cy={CY} r={R} fill="#404040" />
                   {mkArc(humanRangePct)}
-                  <circle cx={CX} cy={CY} r={R * 0.55} fill="#171717" />
-                  <text x={CX} y={CY - 5}  textAnchor="middle" fill="#22c55e" fontSize="15" fontWeight="900">{humanRangePct}%</text>
-                  <text x={CX} y={CY + 10} textAnchor="middle" fill="#525252" fontSize="9">คนจริง</text>
+                  <circle cx={CX} cy={CY} r={R * 0.56} fill="#171717" />
+                  <text x={CX} y={CY - 8}  textAnchor="middle" fill="#22c55e" fontSize="20" fontWeight="900">{humanRangePct}%</text>
+                  <text x={CX} y={CY + 12} textAnchor="middle" fill="#525252" fontSize="11">คนจริง</text>
                 </svg>
-                <div className="flex gap-3 text-xs text-neutral-500">
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500 inline-block" />คนจริง</span>
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-neutral-600 inline-block" />Bot</span>
+                <div className="flex gap-4 text-xs text-neutral-500">
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block" />คนจริง</span>
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-neutral-600 inline-block" />Bot</span>
                 </div>
-                <p className="text-neutral-700 text-[10px]">ช่วงที่เลือก</p>
+                <p className="text-neutral-600 text-xs">ช่วงที่เลือก</p>
               </div>
 
             </div>

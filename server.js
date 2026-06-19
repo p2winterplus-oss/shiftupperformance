@@ -97,10 +97,18 @@ async function loadVisits() {
     const { url, branch } = visitsUrl();
     const res = await fetch(`${url}?ref=${branch}`, { headers: ghHeaders() });
     if (res.ok) {
-      const file       = await res.json();
-      const historical = JSON.parse(Buffer.from(file.content, 'base64').toString('utf-8'));
-      visits = [...historical, ...visits];
-      console.log(`[visits] loaded ${historical.length} historical visits`);
+      const file = await res.json();
+      const raw  = JSON.parse(Buffer.from(file.content, 'base64').toString('utf-8'));
+      if (Array.isArray(raw)) {
+        // old format — visits array only
+        visits = [...raw, ...visits];
+        console.log(`[visits] loaded ${raw.length} historical visits (old format)`);
+      } else {
+        // new format — { visits, botVisits }
+        visits    = [...(raw.visits    || []), ...visits];
+        botVisits = [...(raw.botVisits || []), ...botVisits];
+        console.log(`[visits] loaded ${visits.length} visits, ${botVisits.length} bots`);
+      }
     } else {
       console.log('[visits] no visits.json yet — starting fresh');
     }
@@ -120,10 +128,12 @@ async function saveVisits() {
     let sha = null;
     if (getRes.ok) sha = (await getRes.json()).sha;
 
-    const toSave = visits.length > 10000 ? visits.slice(-10000) : [...visits];
-    const body   = {
-      message: `analytics: sync visits (${toSave.length} total)`,
-      content:  Buffer.from(JSON.stringify(toSave)).toString('base64'),
+    const toSave    = visits.length > 10000    ? visits.slice(-10000)    : [...visits];
+    const botToSave = botVisits.length > 5000 ? botVisits.slice(-5000) : [...botVisits];
+    const payload   = { visits: toSave, botVisits: botToSave };
+    const body      = {
+      message: `analytics: sync visits (${toSave.length} total, ${botToSave.length} bots)`,
+      content:  Buffer.from(JSON.stringify(payload)).toString('base64'),
       branch,
     };
     if (sha) body.sha = sha;
@@ -184,6 +194,7 @@ app.post('/api/track-visit', async (req, res) => {
         if (idx > -1) visits.splice(idx, 1);
         botVisits.push({ isoTimestamp: visit.isoTimestamp });
         if (botVisits.length > 5000) botVisits = botVisits.slice(-5000);
+        visitsDirty = true; // persist bots too
         console.log(`[bot] filtered: isp=${geo.isp}`);
         return;
       }
