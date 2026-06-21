@@ -1,5 +1,4 @@
 # Shiftup Performance — robots.txt
-# TODO: เมื่อจด domain แล้ว ให้อัปเดต Sitemap URL ด้านล่าง
 
 User-agent: *
 Allow: /

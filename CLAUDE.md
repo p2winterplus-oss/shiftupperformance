@@ -319,19 +319,10 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 | `public/llms.txt` | AI (Perplexity, ChatGPT, Claude) | ✅ เข้าถึงได้ที่ `/llms.txt` |
 
 ### Canonical URL
-- ตอนนี้ชี้ไป `https://shiftupperformance.com` ไว้ล่วงหน้า
-- เว็บยังอยู่บน Railway ปกติ ไม่กระทบการใช้งาน
-- พอจด domain → ทุกอย่างพร้อมทันที
-
-### ⚠️ สิ่งที่ต้องทำเมื่อจด domain shiftupperformance.com
-```
-1. จด domain + ชี้ DNS → Railway
-2. Railway Dashboard → Settings → Domains → เพิ่ม shiftupperformance.com
-3. Find & Replace ใน 4 ไฟล์:
-      https://shiftupperformance.com  →  https://www.shiftupperformance.com
-   (ถ้าจะใช้ www — ถ้าใช้ non-www ไม่ต้องแก้)
-4. เปิด Google Search Console → เพิ่ม property → submit sitemap URL
-```
+- ✅ ชี้ไป `https://www.shiftupperformance.com` ครบทุกไฟล์แล้ว (18 มิ.ย. 2569)
+- ✅ Domain live แล้ว — GoDaddy CNAME → Railway
+- ✅ Google Search Console: verify + submit sitemap แล้ว
+- ✅ Google Business Profile: สร้างแล้ว
 
 ### OG Image
 - ตอนนี้ใช้ `/images/logo.png` เป็น OG image
