@@ -220,7 +220,7 @@ pipe.media = [
 **BOT_ISP_KEYWORDS** (server.js):
 `Amazon.com`, `Amazon Web Services`, `Google LLC`, `Microsoft Corporation`, `OVH SAS`, `Hetzner`, `DigitalOcean`, `Linode`, `Vultr`, `Facebook, Inc.`
 
-**botVisits** — persistent ใน visits.json (ไม่ reset เมื่อ Railway restart แล้ว) เก็บแค่ `{ isoTimestamp }` สูงสุด 5,000 entries
+**botVisits** — เก็บใน RAM เท่านั้น (reset เมื่อ Railway restart) เก็บแค่ `{ isoTimestamp }` สูงสุด 5,000 entries ไม่ได้บันทึกลง visits.json
 
 ### sessionId Logic
 - เก็บใน `sessionStorage` key `shiftup_sid`
@@ -397,9 +397,8 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - [x] **Google Business Profile**: สร้างแล้ว (18 มิ.ย. 2569)
 - [x] SEO files อัปเดต URL → `www.shiftupperformance.com` ครบทุกไฟล์
 - [x] **Remap page restructure** (19 มิ.ย. 2569): ย้าย Pricing+Form ขึ้นมาก่อน + บทความเปลี่ยนเป็น Accordion (พับ/กาง)
-- [x] **Bot filtering** (19 มิ.ย. 2569): กรอง bot (Amazon/Google/OVH ฯลฯ) ออกจาก analytics — ไม่ส่งลง Sheet
-- [x] **Bot persistence** (19 มิ.ย. 2569): botVisits บันทึกลง visits.json ทุก 30 นาที — ไม่ reset เมื่อ server restart
-- [x] **Bot vs Human Dashboard** (19 มิ.ย. 2569): stats 2 cards (วันนี้ + ช่วงที่เลือก) + donut pie chart เทียบ % แบบ real-time
+- [x] **Bot filtering** (19 มิ.ย. 2569): กรอง bot ISP (Amazon/Google/OVH/Microsoft ฯลฯ) ออกจาก visits — ไม่บันทึกลง Sheet/visits.json
+- [x] **Bot counter Dashboard** (19 มิ.ย. 2569): card 🤖 แสดงจำนวน bot วันนี้ + ช่วงที่เลือก แยกจากคนจริง follow date filter
 
 ---
 
@@ -516,17 +515,6 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 3. HKS Admin: drag-and-drop เรียงลำดับ gallery media
 4. SEO ครบชุด: index.html (meta/OG/JSON-LD), sitemap.xml, robots.txt, llms.txt
 
-**19 มิ.ย. 2569 — Session 1:**
-1. Remap page: ย้าย Pricing+Form ขึ้นมาก่อน + บทความเปลี่ยนเป็น Accordion
-2. Bot filtering: กรอง ISP datacenter ออกจาก analytics
-3. Bot counter in Dashboard: แสดงจำนวน bot แยกจากคนจริง
-
-**19 มิ.ย. 2569 — Session 2:**
-1. SEO ครบชุด: index.html (meta/OG/JSON-LD), sitemap.xml, robots.txt, llms.txt — canonical ชี้ `www.shiftupperformance.com`
-2. Bot vs Human Dashboard: redesign เป็น stats cards + donut pie chart แสดง % เทียบกัน
-3. Bot persistence: เปลี่ยน visits.json format เป็น `{ visits, botVisits }` — botVisits ไม่ reset แล้ว
-4. Dashboard layout: grid 50/50 + donut chart ขนาด 200×200
-
 **18 มิ.ย. 2569:**
 1. Watermark อัตโนมัติ (Portfolio + HKS) — CSS overlay, opacity 22%, -30°, 1.5x gap
 2. โลโก้ใหม่ `public/images/logo.png` + ขยายขนาด navbar h-20 / footer h-24
@@ -541,4 +529,5 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 **19 มิ.ย. 2569:**
 1. Remap page: ย้าย Pricing+Form ขึ้นมาก่อน + บทความเปลี่ยนเป็น Accordion (แก้ปัญหามือถือไถเยอะ)
 2. Bot filtering: กรอง ISP datacenter (Amazon/Google/OVH/Microsoft ฯลฯ) ออกจาก visits — ไม่บันทึกลง Sheet
-3. Bot counter: Dashboard แสดง 🤖 จำนวน bot ที่กรองออก แยกจากคนจริง follow date filter
+3. Bot counter: Dashboard แสดง 🤖 จำนวน bot ที่กรองออก (วันนี้ + ช่วงที่เลือก) แยกจากคนจริง
+4. บันทึก memory ลง .claude ครบชุด (user_profile, feedback, project, reference)
