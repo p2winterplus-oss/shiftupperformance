@@ -230,7 +230,6 @@ const ShiftupApp = () => {
               <h4 className="text-white font-bold mb-4">Contact Info</h4>
               <ul className="space-y-3 text-neutral-400">
                 <li><a href="tel:0830092554" className="hover:text-white transition-colors">Tel: 083-009-2554 (ปิง)</a></li>
-                <li><a href="tel:0887888364" className="hover:text-white transition-colors">Tel: 088-788-8364</a></li>
                 <li><a href={lineUrl} target="_blank" rel="noreferrer" className="hover:text-white transition-colors text-[#06C755]">LINE: @shiftup</a></li>
                 <li><a href="https://www.facebook.com/shiftupperformance" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Facebook Page</a></li>
               </ul>
