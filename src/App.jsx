@@ -158,13 +158,14 @@ const ShiftupApp = () => {
                 <button onClick={() => navigateTo('hks')} className={`hover:text-red-500 transition-colors px-3 py-2 text-sm font-medium tracking-wide ${activePage === 'hks' ? 'text-red-500' : 'text-neutral-300'}`}>HKS EXHAUST</button>
                 <button onClick={() => navigateTo('panthera')} className={`hover:text-red-500 transition-colors px-3 py-2 text-sm font-medium tracking-wide ${activePage === 'panthera' ? 'text-red-500' : 'text-neutral-300'}`}>PANTHERA</button>
                 <button onClick={() => navigateTo('partner')} className={`hover:text-red-500 transition-colors px-3 py-2 text-sm font-medium tracking-wide text-orange-400 ${activePage === 'partner' ? 'border-b-2 border-orange-400' : ''}`}>JOIN PARTNER</button>
+                <button onClick={() => navigateTo('about')} className={`hover:text-red-500 transition-colors px-3 py-2 text-sm font-medium tracking-wide ${activePage === 'about' ? 'text-red-500' : 'text-neutral-300'}`}>ABOUT US</button>
               </div>
             </div>
 
             <div className="hidden md:block">
               <a href={lineUrl} target="_blank" rel="noreferrer" className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-full text-sm font-bold tracking-wide transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:shadow-[0_0_25px_rgba(220,38,38,0.6)] flex items-center gap-2">
                 <MessageCircle size={18} />
-                ปรึกษาช่างเทคนิค
+                ติดต่อเรา
               </a>
             </div>
 
@@ -185,8 +186,9 @@ const ShiftupApp = () => {
               <button onClick={() => navigateTo('hks')} className="block px-3 py-2 text-base font-medium text-white text-left">HKS Exhaust</button>
               <button onClick={() => navigateTo('panthera')} className="block px-3 py-2 text-base font-medium text-white text-left">Panthera Active Exhaust Sound</button>
               <button onClick={() => navigateTo('partner')} className="block px-3 py-2 text-base font-medium text-orange-400 text-left">สมัคร Partner / ทีมงาน</button>
+              <button onClick={() => navigateTo('about')} className="block px-3 py-2 text-base font-medium text-neutral-300 text-left">About Us</button>
               <a href={lineUrl} target="_blank" rel="noreferrer" className="mt-4 bg-red-600 text-white px-4 py-3 rounded-md text-center font-bold flex justify-center items-center gap-2">
-                <MessageCircle size={18} /> คุยกับเราผ่าน LINE
+                <MessageCircle size={18} /> ติดต่อเรา
               </a>
             </div>
           </div>
@@ -200,6 +202,7 @@ const ShiftupApp = () => {
         {activePage === 'hks'      && <HKSPage />}
         {activePage === 'panthera' && <PantheraPage />}
         {activePage === 'partner'  && <PartnerPage />}
+        {activePage === 'about'    && <AboutPage lineUrl={lineUrl} />}
       </div>
 
       {/* ── Shared Footer ── */}
@@ -223,6 +226,7 @@ const ShiftupApp = () => {
                 <li><button onClick={() => navigateTo('hks')} className="hover:text-white transition-colors">HKS Exhaust</button></li>
                 <li><button onClick={() => navigateTo('panthera')} className="hover:text-white transition-colors">Panthera Active Exhaust Sound</button></li>
                 <li><button onClick={() => navigateTo('partner')} className="hover:text-orange-400 text-orange-500 transition-colors font-medium">ร่วมงานกับเรา (Partner)</button></li>
+                <li><button onClick={() => navigateTo('about')} className="hover:text-white transition-colors">About Us</button></li>
               </ul>
             </div>
 
@@ -2700,6 +2704,358 @@ const DashboardPage = ({ onBack }) => {
             </div>
           </>
         )}
+      </div>
+    </div>
+  );
+};
+
+// ─── About Page Default Data ──────────────────────────────────────────────────
+const DEFAULT_ABOUT = {
+  hero: {
+    title: 'Shiftup Performance',
+    subtitle: 'ผู้เชี่ยวชาญด้านการปรับแต่งสมรรถนะรถยนต์ครบวงจร โดย P2W Interplus',
+  },
+  whoWeAre: {
+    title: 'เราคือใคร',
+    content: 'Shiftup Performance (P2W Interplus) คือทีมช่างผู้เชี่ยวชาญด้านการปรับแต่งสมรรถนะรถยนต์ เราให้บริการ ECU Remap ผ่าน OBD2 โดยไม่ต้องถอดกล่อง พร้อมจำหน่ายท่อไอเสีย HKS ของแท้ และระบบเสียงไอเสียเทียม Panthera Active Sound สำหรับทั้งรถน้ำมันและรถ EV\n\nเราเชื่อว่าทุกคันควรมีคาแรกเตอร์เป็นของตัวเอง ด้วยประสบการณ์ตรงจากทีมช่างที่คลุกคลีกับวงการรถมาอย่างยาวนาน เราพร้อมดูแลและพัฒนารถของคุณให้ตรงกับสไตล์การขับขี่มากที่สุด',
+  },
+  whyUs: {
+    title: 'ทำไมต้องเลือกเรา',
+    items: [
+      { icon: '⚡', title: 'ช่างมีประสบการณ์จริง', desc: 'ทีมช่างเชี่ยวชาญด้าน ECU Remap และระบบไอเสีย คลุกคลีกับวงการรถมาอย่างยาวนาน' },
+      { icon: '🔧', title: 'บริการครบจบที่เดียว', desc: 'ตั้งแต่ ECU Remap, ท่อไอเสีย HKS, ไปจนถึงระบบเสียง Panthera ไม่ต้องวิ่งหลายที่' },
+      { icon: '📱', title: 'ไม่ต้องถอดกล่อง', desc: 'ใช้เทคนิค OBD2 Remap ปลอดภัย รวดเร็ว และไม่กระทบการรับประกันจากศูนย์' },
+      { icon: '✅', title: 'รองรับรถหลากหลายรุ่น', desc: 'รองรับรถยนต์จากหลายแบรนด์ ทั้งรถน้ำมัน ดีเซล และ EV' },
+      { icon: '💬', title: 'ปรึกษาฟรี ไม่มีค่าใช้จ่าย', desc: 'ทีมงานพร้อมแนะนำและประเมินรถก่อนตัดสินใจ ไม่มีค่าใช้จ่ายในการปรึกษา' },
+      { icon: '🚗', title: 'บริการ On-Site', desc: 'มีบริการ On-Site ถึงที่ สะดวกสบาย ไม่ต้องเสียเวลาเดินทาง (เงื่อนไขตามที่ตกลง)' },
+    ],
+  },
+  policy: {
+    title: 'นโยบายและเงื่อนไข',
+    items: [
+      { title: 'การรับประกันงาน', content: 'รับประกันงาน ECU Remap หากพบปัญหาจากการจูน ทางทีมช่างพร้อมแก้ไขให้ฟรีภายในระยะเวลาที่กำหนด' },
+      { title: 'ขั้นตอนการให้บริการ', content: '1. ปรึกษาและประเมินรถฟรีผ่าน LINE OA\n2. นัดหมายวันและเวลา\n3. ตรวจสอบสภาพรถก่อนเริ่มงาน\n4. ดำเนินการ Remap / ติดตั้ง\n5. ทดสอบและส่งมอบ พร้อมคำแนะนำหลังการใช้งาน' },
+      { title: 'เงื่อนไขการให้บริการ', content: 'รถควรอยู่ในสภาพพร้อมใช้งาน ไม่มีปัญหา Engine Light ก่อนรับบริการ Remap ทางทีมช่างขอสงวนสิทธิ์ในการประเมินและแนะนำก่อนเริ่มงานทุกครั้ง' },
+      { title: 'นโยบายความเป็นส่วนตัว', content: 'ข้อมูลลูกค้าที่กรอกในฟอร์มจะถูกใช้เพื่อการติดต่อและให้บริการเท่านั้น ไม่มีการเปิดเผยข้อมูลต่อบุคคลที่สาม' },
+    ],
+  },
+  contact: {
+    title: 'ติดต่อเรา',
+    desc: 'ปรึกษาฟรี ไม่มีค่าใช้จ่าย ทีมงานพร้อมตอบทุกคำถาม',
+    phone: '083-009-2554',
+    phoneName: 'ปิง',
+    lineId: '@shiftup',
+    lineUrl: 'https://lin.ee/nZOMcph',
+    facebookUrl: 'https://www.facebook.com/shiftupperformance',
+  },
+};
+
+// ─── About Admin Panel ────────────────────────────────────────────────────────
+const AboutAdminPanel = ({ data, onSave, onClose }) => {
+  const [d, setD] = useState(JSON.parse(JSON.stringify(data)));
+  const [tab, setTab] = useState('hero');
+
+  const tabBtn = (key, label) => (
+    <button key={key} onClick={() => setTab(key)}
+      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === key ? 'bg-red-600 text-white' : 'bg-neutral-800 text-neutral-400 hover:text-white'}`}>
+      {label}
+    </button>
+  );
+
+  const inputCls = 'w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-neutral-200 focus:outline-none focus:border-red-500';
+  const labelCls = 'block text-xs text-neutral-400 mb-1';
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-start justify-center overflow-y-auto p-4 pt-8">
+      <div className="bg-neutral-900 border border-neutral-700 rounded-2xl w-full max-w-3xl">
+        <div className="flex items-center justify-between p-5 border-b border-neutral-800">
+          <h2 className="text-white font-bold text-lg">✏️ แก้ไข About Us</h2>
+          <button onClick={onClose} className="text-neutral-400 hover:text-white"><X size={22} /></button>
+        </div>
+
+        <div className="p-5 flex gap-2 flex-wrap border-b border-neutral-800">
+          {tabBtn('hero', 'Hero')}
+          {tabBtn('whoWeAre', 'เราคือใคร')}
+          {tabBtn('whyUs', 'ทำไมเลือกเรา')}
+          {tabBtn('policy', 'นโยบาย')}
+          {tabBtn('contact', 'ติดต่อ')}
+        </div>
+
+        <div className="p-5 space-y-4">
+          {tab === 'hero' && (
+            <>
+              <div><label className={labelCls}>ชื่อหลัก (Title)</label>
+                <input className={inputCls} value={d.hero.title} onChange={e => setD({ ...d, hero: { ...d.hero, title: e.target.value } })} /></div>
+              <div><label className={labelCls}>คำอธิบายใต้ชื่อ (Subtitle)</label>
+                <textarea rows={3} className={inputCls} value={d.hero.subtitle} onChange={e => setD({ ...d, hero: { ...d.hero, subtitle: e.target.value } })} /></div>
+            </>
+          )}
+
+          {tab === 'whoWeAre' && (
+            <>
+              <div><label className={labelCls}>หัวข้อ</label>
+                <input className={inputCls} value={d.whoWeAre.title} onChange={e => setD({ ...d, whoWeAre: { ...d.whoWeAre, title: e.target.value } })} /></div>
+              <div><label className={labelCls}>เนื้อหา (ขึ้นบรรทัดใหม่ได้)</label>
+                <textarea rows={8} className={inputCls} value={d.whoWeAre.content} onChange={e => setD({ ...d, whoWeAre: { ...d.whoWeAre, content: e.target.value } })} /></div>
+            </>
+          )}
+
+          {tab === 'whyUs' && (
+            <>
+              <div><label className={labelCls}>หัวข้อ Section</label>
+                <input className={inputCls} value={d.whyUs.title} onChange={e => setD({ ...d, whyUs: { ...d.whyUs, title: e.target.value } })} /></div>
+              <div className="space-y-3">
+                {d.whyUs.items.map((item, i) => (
+                  <div key={i} className="bg-neutral-800 rounded-xl p-4 space-y-2">
+                    <div className="flex gap-2">
+                      <div className="w-20"><label className={labelCls}>Emoji</label>
+                        <input className={inputCls} value={item.icon} onChange={e => { const arr = [...d.whyUs.items]; arr[i] = { ...arr[i], icon: e.target.value }; setD({ ...d, whyUs: { ...d.whyUs, items: arr } }); }} /></div>
+                      <div className="flex-1"><label className={labelCls}>หัวข้อ</label>
+                        <input className={inputCls} value={item.title} onChange={e => { const arr = [...d.whyUs.items]; arr[i] = { ...arr[i], title: e.target.value }; setD({ ...d, whyUs: { ...d.whyUs, items: arr } }); }} /></div>
+                      <button onClick={() => { const arr = d.whyUs.items.filter((_, j) => j !== i); setD({ ...d, whyUs: { ...d.whyUs, items: arr } }); }} className="mt-4 text-red-500 hover:text-red-400 text-xs">ลบ</button>
+                    </div>
+                    <div><label className={labelCls}>คำอธิบาย</label>
+                      <textarea rows={2} className={inputCls} value={item.desc} onChange={e => { const arr = [...d.whyUs.items]; arr[i] = { ...arr[i], desc: e.target.value }; setD({ ...d, whyUs: { ...d.whyUs, items: arr } }); }} /></div>
+                  </div>
+                ))}
+                <button onClick={() => setD({ ...d, whyUs: { ...d.whyUs, items: [...d.whyUs.items, { icon: '⭐', title: 'หัวข้อใหม่', desc: 'คำอธิบาย' }] } })}
+                  className="w-full py-2 border border-dashed border-neutral-700 text-neutral-500 hover:text-neutral-300 rounded-lg text-sm">+ เพิ่มข้อ</button>
+              </div>
+            </>
+          )}
+
+          {tab === 'policy' && (
+            <>
+              <div><label className={labelCls}>หัวข้อ Section</label>
+                <input className={inputCls} value={d.policy.title} onChange={e => setD({ ...d, policy: { ...d.policy, title: e.target.value } })} /></div>
+              <div className="space-y-3">
+                {d.policy.items.map((item, i) => (
+                  <div key={i} className="bg-neutral-800 rounded-xl p-4 space-y-2">
+                    <div className="flex gap-2 items-center">
+                      <div className="flex-1"><label className={labelCls}>หัวข้อ</label>
+                        <input className={inputCls} value={item.title} onChange={e => { const arr = [...d.policy.items]; arr[i] = { ...arr[i], title: e.target.value }; setD({ ...d, policy: { ...d.policy, items: arr } }); }} /></div>
+                      <button onClick={() => { const arr = d.policy.items.filter((_, j) => j !== i); setD({ ...d, policy: { ...d.policy, items: arr } }); }} className="mt-4 text-red-500 hover:text-red-400 text-xs">ลบ</button>
+                    </div>
+                    <div><label className={labelCls}>เนื้อหา</label>
+                      <textarea rows={4} className={inputCls} value={item.content} onChange={e => { const arr = [...d.policy.items]; arr[i] = { ...arr[i], content: e.target.value }; setD({ ...d, policy: { ...d.policy, items: arr } }); }} /></div>
+                  </div>
+                ))}
+                <button onClick={() => setD({ ...d, policy: { ...d.policy, items: [...d.policy.items, { title: 'หัวข้อใหม่', content: 'เนื้อหา' }] } })}
+                  className="w-full py-2 border border-dashed border-neutral-700 text-neutral-500 hover:text-neutral-300 rounded-lg text-sm">+ เพิ่มข้อ</button>
+              </div>
+            </>
+          )}
+
+          {tab === 'contact' && (
+            <>
+              <div><label className={labelCls}>หัวข้อ Section</label>
+                <input className={inputCls} value={d.contact.title} onChange={e => setD({ ...d, contact: { ...d.contact, title: e.target.value } })} /></div>
+              <div><label className={labelCls}>คำอธิบาย</label>
+                <input className={inputCls} value={d.contact.desc} onChange={e => setD({ ...d, contact: { ...d.contact, desc: e.target.value } })} /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className={labelCls}>เบอร์โทร</label>
+                  <input className={inputCls} value={d.contact.phone} onChange={e => setD({ ...d, contact: { ...d.contact, phone: e.target.value } })} /></div>
+                <div><label className={labelCls}>ชื่อผู้รับ</label>
+                  <input className={inputCls} value={d.contact.phoneName} onChange={e => setD({ ...d, contact: { ...d.contact, phoneName: e.target.value } })} /></div>
+                <div><label className={labelCls}>LINE ID</label>
+                  <input className={inputCls} value={d.contact.lineId} onChange={e => setD({ ...d, contact: { ...d.contact, lineId: e.target.value } })} /></div>
+                <div><label className={labelCls}>LINE URL</label>
+                  <input className={inputCls} value={d.contact.lineUrl} onChange={e => setD({ ...d, contact: { ...d.contact, lineUrl: e.target.value } })} /></div>
+                <div className="col-span-2"><label className={labelCls}>Facebook URL</label>
+                  <input className={inputCls} value={d.contact.facebookUrl} onChange={e => setD({ ...d, contact: { ...d.contact, facebookUrl: e.target.value } })} /></div>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="p-5 border-t border-neutral-800 flex gap-3 justify-end">
+          <button onClick={onClose} className="px-5 py-2 rounded-lg bg-neutral-800 text-neutral-300 hover:text-white text-sm">ยกเลิก</button>
+          <button onClick={() => onSave(d)} className="px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-bold">บันทึก</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── About Page ───────────────────────────────────────────────────────────────
+const AboutPage = ({ lineUrl }) => {
+  const [data, setData] = useState(DEFAULT_ABOUT);
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [openPolicy, setOpenPolicy] = useState(null);
+
+  useEffect(() => {
+    fetch('/content.json')
+      .then(r => r.json())
+      .then(d => { if (d.about) setData(d.about); })
+      .catch(() => {});
+  }, []);
+
+  const handleSave = (nd) => { setData(nd); setShowAdmin(false); saveContent('about', nd); };
+
+  const services = [
+    { icon: <Zap size={28} />, title: 'ECU Remap', desc: 'เพิ่มแรงม้า แรงบิด ลดอาการอืด ผ่าน OBD2 ไม่ต้องถอดกล่อง', page: 'remap', color: 'text-red-400', border: 'border-red-900/40' },
+    { icon: <Volume2 size={28} />, title: 'HKS Exhaust', desc: 'ท่อไอเสีย HKS ของแท้ เสียงดี สวยงาม รองรับหลายรุ่น', page: 'hks', color: 'text-orange-400', border: 'border-orange-900/40' },
+    { icon: <Activity size={28} />, title: 'Panthera Active Sound', desc: 'ระบบเสียงไอเสียเทียม สำหรับรถน้ำมันและ EV ติดตั้งง่าย', page: 'panthera', color: 'text-blue-400', border: 'border-blue-900/40' },
+  ];
+
+  return (
+    <div className="pb-24 relative">
+      {showPassword && <PasswordModal onSuccess={() => { setShowPassword(false); setShowAdmin(true); }} onClose={() => setShowPassword(false)} />}
+      {showAdmin && <AboutAdminPanel data={data} onSave={handleSave} onClose={() => setShowAdmin(false)} />}
+
+      {/* Admin button */}
+      <button onClick={() => setShowPassword(true)} title="แก้ไข About Us"
+        className="fixed bottom-6 right-6 w-9 h-9 rounded-full bg-neutral-900/40 hover:bg-neutral-700 border border-neutral-800/50 flex items-center justify-center text-neutral-700 hover:text-neutral-300 transition-all duration-300 z-40 opacity-30 hover:opacity-100 text-sm">
+        ✏️
+      </button>
+
+      {/* ── Section 1: Hero ── */}
+      <section className="relative bg-neutral-900 border-b border-neutral-800 py-24 px-6 overflow-hidden">
+        <div className="absolute inset-0 flex items-center justify-center opacity-5"><ShieldCheck size={500} /></div>
+        <div className="absolute top-0 right-0 w-[40vw] h-[40vw] bg-red-600/8 rounded-full blur-[120px]" />
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-800/60 border border-neutral-700 mb-6">
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">P2W Interplus</span>
+          </div>
+          <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight mb-4">
+            {data.hero.title}
+          </h1>
+          <p className="text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto leading-relaxed">
+            {data.hero.subtitle}
+          </p>
+        </div>
+      </section>
+
+      <div className="max-w-5xl mx-auto px-6 lg:px-8 space-y-24 mt-20">
+
+        {/* ── Section 2: Who We Are ── */}
+        <section>
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-1 h-8 bg-red-500 rounded-full" />
+            <h2 className="text-3xl font-black text-white">{data.whoWeAre.title}</h2>
+          </div>
+          <div className="grid md:grid-cols-2 gap-10 items-center">
+            <div className="space-y-4">
+              {data.whoWeAre.content.split('\n\n').map((para, i) => (
+                <p key={i} className="text-neutral-400 leading-relaxed text-base">{para}</p>
+              ))}
+            </div>
+            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 flex flex-col items-center gap-4">
+              <img src={LOGO_SRC} alt="Shiftup Performance" className="h-28 w-auto opacity-90" />
+              <p className="text-neutral-500 text-sm text-center">Shiftup Performance<br />by P2W Interplus</p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Section 3: Our Services ── */}
+        <section>
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-1 h-8 bg-red-500 rounded-full" />
+            <h2 className="text-3xl font-black text-white">บริการของเรา</h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {services.map(s => (
+              <div key={s.title} className={`bg-neutral-900 border ${s.border} rounded-2xl p-6 flex flex-col gap-4`}>
+                <div className={s.color}>{s.icon}</div>
+                <div>
+                  <h3 className="text-white font-bold text-lg mb-2">{s.title}</h3>
+                  <p className="text-neutral-500 text-sm leading-relaxed">{s.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Section 4: Why Us ── */}
+        <section>
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-1 h-8 bg-red-500 rounded-full" />
+            <h2 className="text-3xl font-black text-white">{data.whyUs.title}</h2>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {data.whyUs.items.map((item, i) => (
+              <div key={i} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 flex gap-4">
+                <span className="text-3xl shrink-0">{item.icon}</span>
+                <div>
+                  <p className="text-white font-semibold text-sm mb-1">{item.title}</p>
+                  <p className="text-neutral-500 text-xs leading-relaxed">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Section 5: Policy ── */}
+        <section>
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-1 h-8 bg-red-500 rounded-full" />
+            <h2 className="text-3xl font-black text-white">{data.policy.title}</h2>
+          </div>
+          <div className="space-y-3">
+            {data.policy.items.map((item, i) => (
+              <div key={i} className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
+                <button onClick={() => setOpenPolicy(openPolicy === i ? null : i)}
+                  className="w-full flex items-center justify-between px-6 py-4 text-left">
+                  <span className="text-white font-semibold">{item.title}</span>
+                  <ChevronRight size={18} className={`text-neutral-500 transition-transform ${openPolicy === i ? 'rotate-90' : ''}`} />
+                </button>
+                {openPolicy === i && (
+                  <div className="px-6 pb-5">
+                    <div className="border-t border-neutral-800 pt-4">
+                      {item.content.split('\n').map((line, j) => (
+                        <p key={j} className="text-neutral-400 text-sm leading-relaxed">{line}</p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Section 6: Contact ── */}
+        <section className="mb-10">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-1 h-8 bg-red-500 rounded-full" />
+            <h2 className="text-3xl font-black text-white">{data.contact.title}</h2>
+          </div>
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8">
+            <p className="text-neutral-400 mb-8 text-base">{data.contact.desc}</p>
+            <div className="grid sm:grid-cols-3 gap-4 mb-8">
+              <a href={`tel:${data.contact.phone.replace(/-/g, '')}`}
+                className="flex items-center gap-3 bg-neutral-800 hover:bg-neutral-700 rounded-xl p-4 transition-colors">
+                <span className="text-2xl">📞</span>
+                <div>
+                  <p className="text-white font-semibold text-sm">{data.contact.phone}</p>
+                  <p className="text-neutral-500 text-xs">({data.contact.phoneName})</p>
+                </div>
+              </a>
+              <a href={data.contact.lineUrl} target="_blank" rel="noreferrer"
+                className="flex items-center gap-3 bg-neutral-800 hover:bg-neutral-700 rounded-xl p-4 transition-colors">
+                <span className="text-2xl">💬</span>
+                <div>
+                  <p className="text-[#06C755] font-semibold text-sm">LINE OA</p>
+                  <p className="text-neutral-500 text-xs">{data.contact.lineId}</p>
+                </div>
+              </a>
+              <a href={data.contact.facebookUrl} target="_blank" rel="noreferrer"
+                className="flex items-center gap-3 bg-neutral-800 hover:bg-neutral-700 rounded-xl p-4 transition-colors">
+                <span className="text-2xl">📘</span>
+                <div>
+                  <p className="text-blue-400 font-semibold text-sm">Facebook</p>
+                  <p className="text-neutral-500 text-xs">Shiftup Performance</p>
+                </div>
+              </a>
+            </div>
+            <a href={data.contact.lineUrl} target="_blank" rel="noreferrer"
+              className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full font-bold transition-all shadow-[0_0_20px_rgba(220,38,38,0.3)]">
+              <MessageCircle size={18} /> ปรึกษาฟรีผ่าน LINE
+            </a>
+          </div>
+        </section>
+
       </div>
     </div>
   );
