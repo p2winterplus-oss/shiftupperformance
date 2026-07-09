@@ -5,7 +5,7 @@
 - **URL**: deploy บน Railway (auto-deploy จาก GitHub main)
 - **Domain**: `www.shiftupperformance.com` — live แล้ว (18 มิ.ย. 2569)
 - **Stack**: React 18 + Vite 5 + Tailwind CSS v3 + Express server
-- **วันที่อัปเดต**: 9 ก.ค. 2569
+- **วันที่อัปเดต**: 9 ก.ค. 2569 (session 2)
 
 ---
 
@@ -49,12 +49,14 @@
 | ชื่อตัวแปร | ใช้ทำอะไร |
 |---|---|
 | `RESEND_API_KEY` | Email notification ผ่าน Resend API (re...xxxx) |
-| `GITHUB_TOKEN` | บันทึก visits.json + content.json ไป GitHub |
+| `GITHUB_TOKEN` | บันทึก visits.json + content.json + bookings.json ไป GitHub |
 | `GITHUB_OWNER` | GitHub username (เจ้าของ repo) |
 | `GITHUB_REPO` | ชื่อ repo |
 | `GITHUB_BRANCH` | `main` |
 | `NOTIFY_EMAIL` | อีเมลรับแจ้งเตือน (default: p2w.interplus@gmail.com) |
 | `NOTIFY_FROM` | ชื่อผู้ส่ง email (default: Shiftup Performance <onboarding@resend.dev>) |
+| `TELEGRAM_BOT_TOKEN` | Telegram Bot token สำหรับ notification |
+| `TELEGRAM_CHAT_ID` | Telegram Chat ID ของผู้รับ (6476070617) |
 
 > ⚠️ **Gmail SMTP ใช้ไม่ได้บน Railway** — Railway block SMTP port 465/587 ทำให้ nodemailer timeout
 > ✅ **ใช้ Resend API แทน** (HTTPS port 443) — สมัครฟรีที่ resend.com
@@ -64,14 +66,15 @@
 ## Architecture
 
 ```
-src/App.jsx          — React SPA (2000+ บรรทัด)
+src/App.jsx          — React SPA (3500+ บรรทัด)
 server.js            — Express server (Railway)
-public/content.json  — CMS data (บทความ/portfolio/ราคา)
+public/content.json  — CMS data (บทความ/portfolio/ราคา/booking config)
 public/visits.json   — Visit history สำรอง (GitHub persist ทุก 30 นาที)
+public/bookings.json — Booking history (GitHub persist ทุก 30 นาที)
 public/sitemap.xml   — Sitemap สำหรับ Google/Bing
 public/robots.txt    — บอก crawler ว่า crawl อะไรได้
 public/llms.txt      — บอก AI (Perplexity/ChatGPT/Claude) ว่าเว็บทำอะไร
-index.html           — SEO meta/OG/JSON-LD ทั้งหมดอยู่ที่นี่
+index.html           — SEO meta/OG/JSON-LD + Leaflet CDN
 apps-script/Code.gs  — Google Apps Script (อัปเดต manual โดย user)
 ```
 
@@ -116,19 +119,24 @@ browser useEffect → POST /api/track-visit → server.js
 
 | Component | หน้าที่ |
 |---|---|
-| `ShiftupApp` | Router หลัก + navbar + footer + dashboard gear button |
+| `ShiftupApp` | Router หลัก + navbar + footer + URL routing (pushState) |
 | `HomePage` | หน้าแรก |
 | `Portfolio3DSlideshow` | 3D coverflow slideshow (portfolio) |
 | `ReviewsCarousel` | Infinite auto-scroll reviews |
 | `AdminPanel` | Remap admin (articles/portfolio/reviews/brandPricing) |
 | `PasswordModal` | Password gate สำหรับทุก admin panel |
-| `RemapPage` | หน้า ECU Remap |
+| `RemapPage` | หน้า ECU Remap (มีปุ่ม "จองคิวรีแมป" animated border) |
 | `HKSAdminPanel` | HKS admin (จัดการ pipes + gallery media + brands) |
 | `HKSProductModal` | Modal แสดงรายละเอียดสินค้า HKS (gallery รูป+วิดีโอ) |
 | `HKSPage` | หน้า HKS Exhaust |
 | `PantheraAdminPanel` | Panthera admin |
 | `PantheraPage` | หน้า Panthera |
 | `PartnerPage` | หน้าสมัคร Partner |
+| `AboutPage` | หน้า About Us (6 sections) |
+| `AboutAdminPanel` | About admin |
+| `MapPicker` | Leaflet map modal สำหรับเลือกพิกัด GPS (booking form) |
+| `BookingPage` | หน้าจองคิว ECU Remap (/booking URL) |
+| `BookingAdminPanel` | Booking admin (slot config + per-date slot + list จอง) |
 | `AnalyticsSection` | กราฟ analytics ใน dashboard (bar chart + trend line + visitor table) |
 | `PieChart` | Pie chart ใน dashboard |
 | `DashboardPage` | หน้าหลังบ้านเต็ม |
@@ -402,6 +410,18 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - [x] **หน้า About Us** (28 มิ.ย. 2569): เพิ่ม tab navbar + 6 sections (Hero, Who We Are, Services, Why Us, Policy, Contact) + AboutAdminPanel
 - [x] **Footer Quick Links**: เพิ่ม About Us
 - [x] **CTA navbar**: เปลี่ยนจาก "ปรึกษาช่างเทคนิค" → "ติดต่อเรา"
+- [x] **ระบบจองคิว ECU Remap** (9 ก.ค. 2569): หน้า `/booking` + ปฏิทิน + slot เวลา + form + แผนที่ Leaflet
+- [x] **URL Routing**: pushState routing — แต่ละหน้ามี URL จริง (/, /remap, /hks, /panthera, /partner, /about, /booking)
+- [x] **MapPicker**: Leaflet.js + OpenStreetMap + Nominatim search + draggable pin + reverse geocode
+- [x] **สถานที่จอง**: 2 ช่องแยก — `locationName` (พิมพ์เอง) + `locationUrl` (GPS จาก MapPicker)
+- [x] **Telegram notification**: Bot API ส่ง alert ทุก booking / remap form / partner form
+- [x] **Booking persistence**: `public/bookings.json` → GitHub (save ทุก 30 นาที)
+- [x] **Booking Sheet**: Apps Script `doPost({source:'booking'})` → tab "Bookings" (14 columns)
+- [x] **BookingAdminPanel**: 2 tabs — ตั้งค่า Slot + รายการจองทั้งหมด
+- [x] **Per-date slot config** (9 ก.ค. 2569): กดวันไหนก็เลือก slot ได้อิสระ — 3 states: default/custom(amber)/closed(red)
+- [x] **Slot display ฝั่งลูกค้า**: slot ที่ปิด/จองแล้วแสดง "จองแล้ว" พร้อม strikethrough สีแดง ไม่ซ่อน
+- [x] **Urgency UI**: ⚡ เหลือ X ช่อง! กระพริบสีเหลืองเมื่อ slot ว่าง ≤ 3 ช่อง
+- [x] **MapPicker mobile fix**: กดครั้งที่ 2+ เปิดทันทีโดยไม่รอ GPS ใหม่ + 5s timeout fallback
 
 ---
 
@@ -410,6 +430,7 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - [ ] Watermark สำหรับ Panthera (user บอกยังไม่ทำ)
 - [ ] Google Business Profile — เพิ่มรูปภาพ, เวลาทำการ, คำอธิบายบริการให้ครบ
 - [ ] เนื้อหาบนเว็บ — เพิ่มบทความ/เนื้อหาภาษาไทยให้ Google index ได้ดีขึ้น (สำคัญสำหรับ SEO)
+- [ ] **Apps Script deploy** — user ต้อง deploy Code.gs ด้วยมือ (เพิ่ม Bookings tab) ยังไม่ได้ confirm ว่าทำแล้ว
 
 ---
 
@@ -463,14 +484,16 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 1. **อย่าแตะ server.js SHEET_DOGET_URL** — ใช้ทั้ง dashboard GET + visit tracking POST ถ้าเปลี่ยนพังทั้งคู่
 2. **อย่าสร้าง branch** — push main ตรงๆ เท่านั้น
 3. **Apps Script — user deploy เองด้วยมือ** ไม่ได้ auto-deploy จาก GitHub
-4. **content.json** — มีข้อมูลจริงของ user อยู่ ระวังอย่า overwrite ด้วย default data
-5. **visits.json** — Railway commit ทุก 30 นาที → ถ้า push conflict ให้ rebase
+4. **content.json** — มีข้อมูลจริงของ user อยู่ ระวังอย่า overwrite ด้วย default data (มี booking config ด้วยแล้ว)
+5. **visits.json / bookings.json** — Railway commit ทุก 30 นาที → ถ้า push conflict ให้ rebase
 6. **Browser → Apps Script ทำไม่ได้เลย** — Google block Origin header → 400
 7. **Server GET + params → Apps Script ทำไม่ได้** — Google block ที่ routing layer → 400
 8. **ใช้ POST JSON เท่านั้น** สำหรับ write ข้อมูลไป Apps Script
 9. **Gmail SMTP ใช้ไม่ได้** — Railway block SMTP → ใช้ Resend API เท่านั้น
 10. **Timestamp ทุกตัว** ต้องระบุ `{ timeZone: 'Asia/Bangkok' }` ใน server.js และ Code.gs
 11. **SEO files** — `index.html`, `sitemap.xml`, `robots.txt`, `llms.txt` ใช้ `shiftupperformance.com` เป็น canonical → อย่า overwrite ด้วย Railway URL
+12. **Leaflet CDN** อยู่ใน `index.html` — อย่าลบ ไม่งั้น MapPicker ใน BookingPage พัง
+13. **URL routing** — server.js มี `app.get('*', ...)` fallback อยู่แล้ว ทุก URL จะ serve index.html ถูกต้อง
 
 ---
 
@@ -492,7 +515,7 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 ---
 
 ## Last Session
-**วันที่**: 19 มิ.ย. 2569 (session 2)
+**วันที่**: 9 ก.ค. 2569 (session 2)
 
 **6 มิ.ย. 2569 — Session 1:**
 1. เพิ่ม column filter dropdowns ในตาราง visitor details (Dashboard)
@@ -539,3 +562,22 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 1. เพิ่มหน้า About Us — tab navbar (desktop + mobile) + 6 sections + AboutAdminPanel
 2. เพิ่ม About Us ใน footer Quick Links
 3. เปลี่ยนปุ่ม CTA navbar: "ปรึกษาช่างเทคนิค" → "ติดต่อเรา"
+
+**9 ก.ค. 2569 — Session 1 (context จาก summary):**
+1. ระบบจองคิว ECU Remap: BookingPage, MapPicker, BookingAdminPanel
+2. URL routing: pushState — /booking, /remap, /about ฯลฯ
+3. MapPicker: Leaflet + OSM tiles + Nominatim search + draggable pin
+4. สถานที่: 2 ช่อง (locationName + locationUrl แยกกัน)
+5. Telegram Bot notification (TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID)
+6. Booking persistence: bookings.json → GitHub
+7. Apps Script: เพิ่ม Bookings tab (14 columns) — user ต้อง deploy เอง
+8. Slot เวลา 2 ชั่วโมง: 09:00–21:00 (7 slots)
+9. ปุ่ม animated border บน RemapPage
+10. แก้ปฏิทิน grid + admin gear button ซ่อน
+
+**9 ก.ค. 2569 — Session 2:**
+1. Per-date slot config: กดวันไหนก็ตั้ง slot อิสระได้ — 3 states (default/custom/closed)
+2. Slot display ลูกค้า: แสดง "จองแล้ว" + strikethrough แดง แทนการซ่อน
+3. Urgency UI: ⚡ เหลือ X ช่อง! กระพริบเมื่อว่าง ≤ 3
+4. MapPicker mobile fix: กดครั้งที่ 2+ เปิดทันทีไม่รอ GPS + 5s timeout fallback
+5. อัปเดต memory + CLAUDE.md ครบชุด
