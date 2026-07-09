@@ -310,14 +310,10 @@ app.post('/api/notify-lead', async (req, res) => {
     return res.status(400).json({ success: false, reason: 'unknown source' });
   }
 
-  try {
-    await sendEmail(subject, text);
-    console.log(`[notify-lead] ✓ email sent: ${subject}`);
-    res.json({ success: true });
-  } catch (err) {
-    console.error('[notify-lead] error:', err.toString());
-    res.status(500).json({ success: false, error: err.toString() });
-  }
+  // ส่งทั้ง Telegram + Email พร้อมกัน (fire-and-forget แยกกัน ไม่ให้พังพร้อมกัน)
+  res.json({ success: true }); // ตอบทันที ไม่รอ
+  try { await sendTelegram(text); } catch (e) { console.warn('[notify-lead] telegram error:', e.message); }
+  try { await sendEmail(subject, text); console.log(`[notify-lead] ✓ email sent: ${subject}`); } catch (e) { console.warn('[notify-lead] email error:', e.message); }
 });
 
 // ═══════════════════════════════════════════════════════════════════
