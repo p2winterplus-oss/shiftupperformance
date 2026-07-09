@@ -1026,18 +1026,18 @@ const RemapPage = ({ navigateTo }) => {
 
         {/* ── CTA จองคิว ── */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center py-4">
-          <a href={LINE_URL} target="_blank" rel="noreferrer"
-            className="inline-flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 text-white font-black text-xl px-10 py-5 rounded-full shadow-[0_0_30px_rgba(220,38,38,0.4)] hover:shadow-[0_0_45px_rgba(220,38,38,0.6)] transition-all">
-            <MessageCircle size={24} /> ติดต่อเรา
-          </a>
-          <div style={{ background: 'linear-gradient(90deg,#ef4444,#f97316,#facc15,#f97316,#ef4444)', backgroundSize: '300% 300%', animation: 'border-run 2s linear infinite', padding: '2px', borderRadius: '9999px', display: 'inline-block' }}>
+          <div style={{ background: 'linear-gradient(90deg,#ef4444,#f97316,#facc15,#22d3ee,#f97316,#ef4444)', backgroundSize: '400% 400%', animation: 'border-run 1.8s linear infinite', padding: '3px', borderRadius: '9999px', display: 'inline-block', boxShadow: '0 0 24px rgba(239,68,68,0.5)' }}>
             <button
               onClick={() => navigateTo('booking')}
-              className="bg-neutral-950 text-white font-black text-xl px-10 py-5 rounded-full hover:bg-neutral-900 transition-colors flex items-center gap-3"
+              className="bg-red-600 hover:bg-red-700 text-white font-black text-xl px-10 py-5 rounded-full transition-colors flex items-center gap-3"
             >
               <CalendarDays size={24} /> จองคิวรีแมปรถยนต์
             </button>
           </div>
+          <a href={LINE_URL} target="_blank" rel="noreferrer"
+            className="inline-flex items-center justify-center gap-3 bg-neutral-800 hover:bg-neutral-700 text-white font-black text-xl px-10 py-5 rounded-full border border-neutral-600 transition-all">
+            <MessageCircle size={24} /> ติดต่อเรา
+          </a>
         </div>
 
         {/* ── Articles Accordion ── */}
@@ -3380,6 +3380,9 @@ const BookingPage = ({ navigateTo }) => {
   const [success, setSuccess] = useState(false);
   const [cancelCode, setCancelCode] = useState('');
   const [error, setError] = useState('');
+  const genCaptcha = () => { const a = Math.floor(Math.random()*9)+1; const b = Math.floor(Math.random()*9)+1; return { a, b, ans: a + b }; };
+  const [captcha, setCaptcha] = useState(() => genCaptcha());
+  const [captchaInput, setCaptchaInput] = useState('');
   const [showMapPicker, setShowMapPicker] = useState(false);
   const [mapCoords, setMapCoords] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
@@ -3425,6 +3428,9 @@ const BookingPage = ({ navigateTo }) => {
     e.preventDefault();
     if (!selectedDate || !selectedTime) return setError('กรุณาเลือกวันที่และเวลา');
     if (!form.name || !form.phone) return setError('กรุณากรอกชื่อและเบอร์โทร');
+    if (!form.lineId) return setError('กรุณากรอก LINE ID');
+    if (!form.carModel) return setError('กรุณากรอกรุ่นรถ');
+    if (parseInt(captchaInput) !== captcha.ans) { setCaptcha(genCaptcha()); setCaptchaInput(''); return setError('คำตอบยืนยันตัวตนไม่ถูกต้อง กรุณาลองใหม่'); }
     setSubmitting(true); setSending(true); setError('');
     try {
       const [data] = await Promise.all([
@@ -3438,9 +3444,11 @@ const BookingPage = ({ navigateTo }) => {
       if (data.success) {
         setBookedSlots(prev => ({ ...prev, [selectedDate]: [...(prev[selectedDate] || []), selectedTime] }));
         setCancelCode(data.cancelCode || '');
+        setCaptcha(genCaptcha()); setCaptchaInput('');
         setSuccess(true);
       } else {
         setError(data.error || 'เกิดข้อผิดพลาด');
+        setCaptcha(genCaptcha()); setCaptchaInput('');
       }
     } catch { setError('ไม่สามารถเชื่อมต่อได้'); }
     setSending(false); setSubmitting(false);
@@ -3794,13 +3802,13 @@ const BookingPage = ({ navigateTo }) => {
               <input value={form.phone} onChange={e => setForm(p => ({...p, phone: e.target.value}))} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="08x-xxx-xxxx" type="tel" required />
             </div>
             <div>
-              <label className="block text-sm text-neutral-400 mb-1">LINE ID</label>
-              <input value={form.lineId} onChange={e => setForm(p => ({...p, lineId: e.target.value}))} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="@ชื่อ LINE" />
+              <label className="block text-sm text-neutral-400 mb-1">LINE ID <span className="text-red-500">*</span></label>
+              <input value={form.lineId} onChange={e => setForm(p => ({...p, lineId: e.target.value}))} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="@ชื่อ LINE" required />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm text-neutral-400 mb-1">รุ่นรถ</label>
-                <input value={form.carModel} onChange={e => setForm(p => ({...p, carModel: e.target.value}))} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="Mazda 2" />
+                <label className="block text-sm text-neutral-400 mb-1">รุ่นรถ <span className="text-red-500">*</span></label>
+                <input value={form.carModel} onChange={e => setForm(p => ({...p, carModel: e.target.value}))} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="Mazda 2" required />
               </div>
               <div>
                 <label className="block text-sm text-neutral-400 mb-1">ปีรถ</label>
@@ -3814,6 +3822,17 @@ const BookingPage = ({ navigateTo }) => {
             <div>
               <label className="block text-sm text-neutral-400 mb-1">หมายเหตุ</label>
               <textarea value={form.note} onChange={e => setForm(p => ({...p, note: e.target.value}))} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 h-20 resize-none" placeholder="ข้อมูลเพิ่มเติม หรือสิ่งที่ต้องการปรึกษา" />
+            </div>
+
+            {/* Captcha ยืนยันตัวตน */}
+            <div className="bg-neutral-900 border border-neutral-700 rounded-xl px-4 py-3 flex items-center gap-3">
+              <span className="text-neutral-300 text-sm shrink-0">ยืนยันตัวตน: <span className="text-white font-bold">{captcha.a} + {captcha.b} = ?</span></span>
+              <input
+                type="number" inputMode="numeric" value={captchaInput}
+                onChange={e => setCaptchaInput(e.target.value)}
+                className="w-20 bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:border-red-500 text-sm"
+                placeholder="?"
+              />
             </div>
 
             {error && (
