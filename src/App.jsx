@@ -972,92 +972,49 @@ const RemapPage = ({ navigateTo }) => {
 
       <div className="max-w-7xl mx-auto px-6 lg:px-8 space-y-24 mt-16">
 
-        {/* ── Pricing + Form ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-          <section className="bg-gradient-to-br from-neutral-900 to-neutral-950 p-8 rounded-3xl border border-neutral-800">
-            <h2 className="text-3xl font-bold text-white mb-2">อัตราค่าบริการ (Pricing)</h2>
-            <p className="text-neutral-400 mb-5">ราคามาตรฐาน พร้อมบริการเช็คความพร้อมก่อนและหลังจูน</p>
+        {/* ── Pricing ── */}
+        <section className="bg-gradient-to-br from-neutral-900 to-neutral-950 p-8 rounded-3xl border border-neutral-800">
+          <h2 className="text-3xl font-bold text-white mb-2">อัตราค่าบริการ (Pricing)</h2>
+          <p className="text-neutral-400 mb-5">ราคามาตรฐาน พร้อมบริการเช็คความพร้อมก่อนและหลังจูน</p>
 
-            {/* Brand tabs */}
-            <div className="flex flex-wrap gap-2 mb-6">
-              {(data.brandPricing||[]).map(bp => (
-                <button key={bp.id}
-                  onClick={() => setSelectedBrand(bp.brand)}
-                  className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${
-                    selectedBrand === bp.brand
-                      ? 'bg-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.4)]'
-                      : 'bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700'
-                  }`}>
-                  {bp.brand}
-                </button>
-              ))}
-            </div>
-
-            {/* Packages for selected brand */}
-            <div className="space-y-3">
-              {((data.brandPricing||[]).find(bp => bp.brand === selectedBrand)?.packages || []).map((pkg) => (
-                <div key={pkg.id} className="bg-neutral-950 px-6 py-4 rounded-2xl border border-neutral-800 flex justify-between items-center">
-                  <div>
-                    <h3 className="text-lg font-bold text-white">{pkg.name}</h3>
-                    <p className="text-sm text-neutral-500">{pkg.desc}</p>
-                  </div>
-                  <div className="text-2xl font-black text-red-500 ml-4 shrink-0 whitespace-nowrap">
-                    {pkg.price.startsWith('+') || pkg.price === 'สอบถาม' ? pkg.price : `฿ ${pkg.price}`}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <ul className="mt-8 space-y-2 text-sm text-neutral-400">
-              {data.perks.map((perk, i) => (
-                <li key={i} className="flex items-center gap-2">
-                  <CheckCircle2 size={16} className="text-green-500 shrink-0" /> {perk}
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <section className="bg-neutral-900 p-8 rounded-3xl border border-neutral-800 shadow-2xl">
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-              <MessageCircle className="text-red-500" /> ประเมินรถของคุณฟรี
-            </h2>
-            <form className="space-y-4" onSubmit={async (e) => {
-              e.preventDefault();
-              const fd = new FormData(e.target);
-              const remapData = { source:'remap', name:fd.get('name'), contact:fd.get('contact'), car:fd.get('car'), location:fd.get('location'), detail:fd.get('detail') };
-              await submitToSheets(remapData);
-              notifyServer(remapData);
-              alert('ส่งข้อมูลเรียบร้อย ทีมงานจะติดต่อกลับเร็วๆ นี้ครับ');
-              e.target.reset();
-            }}>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-400 mb-1">ชื่อ - นามสกุล *</label>
-                  <input name="name" type="text" required className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="ระบุชื่อ" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutral-400 mb-1">เบอร์ติดต่อ / LINE ID *</label>
-                  <input name="contact" type="text" required className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="เบอร์โทร หรือไอดีไลน์" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-400 mb-1">รุ่นรถ และ ปี (เช่น Mazda 2 ดีเซล 2018) *</label>
-                <input name="car" type="text" required className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="ยี่ห้อ / รุ่น / เครื่องยนต์ / ปี" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-400 mb-1">สถานที่ / เขตที่พักอาศัย</label>
-                <input name="location" type="text" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="เพื่อประเมินการเดินทาง" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-400 mb-1">รายละเอียดที่ต้องการ / อาการปัจจุบัน</label>
-                <textarea name="detail" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 h-28 resize-none" placeholder="เช่น อยากได้ต้นจัดขึ้น, ปัจจุบันรถมีอาการอืดตอนออกตัว, มีของแต่งอะไรใส่มาบ้างแล้ว" />
-              </div>
-              <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors">
-                <Send size={18} /> ส่งข้อมูลเพื่อรับคำปรึกษา
+          {/* Brand tabs */}
+          <div className="flex flex-wrap gap-2 mb-6">
+            {(data.brandPricing||[]).map(bp => (
+              <button key={bp.id}
+                onClick={() => setSelectedBrand(bp.brand)}
+                className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${
+                  selectedBrand === bp.brand
+                    ? 'bg-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.4)]'
+                    : 'bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700'
+                }`}>
+                {bp.brand}
               </button>
-            </form>
-          </section>
-        </div>
+            ))}
+          </div>
+
+          {/* Packages grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 mb-8">
+            {((data.brandPricing||[]).find(bp => bp.brand === selectedBrand)?.packages || []).map((pkg) => (
+              <div key={pkg.id} className="bg-neutral-950 px-6 py-4 rounded-2xl border border-neutral-800 flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-bold text-white">{pkg.name}</h3>
+                  <p className="text-sm text-neutral-500">{pkg.desc}</p>
+                </div>
+                <div className="text-2xl font-black text-red-500 ml-4 shrink-0 whitespace-nowrap">
+                  {pkg.price.startsWith('+') || pkg.price === 'สอบถาม' ? pkg.price : `฿ ${pkg.price}`}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <ul className="flex flex-wrap gap-x-8 gap-y-2 text-sm text-neutral-400">
+            {data.perks.map((perk, i) => (
+              <li key={i} className="flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-green-500 shrink-0" /> {perk}
+              </li>
+            ))}
+          </ul>
+        </section>
 
         {/* ── CTA จองคิว ── */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center py-4">
@@ -1119,6 +1076,51 @@ const RemapPage = ({ navigateTo }) => {
         <section>
           <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">รีวิวจากผู้ใช้จริง</h2>
           <ReviewsCarousel reviews={data.reviews} />
+        </section>
+
+        {/* ── Consult Form (bottom) ── */}
+        <section className="max-w-2xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-white mb-3">ประเมินรถของคุณฟรี</h2>
+            <p className="text-neutral-400">กรอกข้อมูลด้านล่าง ทีมงานจะติดต่อกลับเพื่อประเมินและแนะนำแพ็กเกจที่เหมาะกับรถคุณ</p>
+          </div>
+          <div className="bg-neutral-900 p-8 rounded-3xl border border-neutral-800 shadow-2xl">
+            <form className="space-y-4" onSubmit={async (e) => {
+              e.preventDefault();
+              const fd = new FormData(e.target);
+              const remapData = { source:'remap', name:fd.get('name'), contact:fd.get('contact'), car:fd.get('car'), location:fd.get('location'), detail:fd.get('detail') };
+              await submitToSheets(remapData);
+              notifyServer(remapData);
+              alert('ส่งข้อมูลเรียบร้อย ทีมงานจะติดต่อกลับเร็วๆ นี้ครับ');
+              e.target.reset();
+            }}>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-400 mb-1">ชื่อ - นามสกุล *</label>
+                  <input name="name" type="text" required className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="ระบุชื่อ" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-400 mb-1">เบอร์ติดต่อ / LINE ID *</label>
+                  <input name="contact" type="text" required className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="เบอร์โทร หรือไอดีไลน์" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-neutral-400 mb-1">รุ่นรถ และ ปี (เช่น Mazda 2 ดีเซล 2018) *</label>
+                <input name="car" type="text" required className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="ยี่ห้อ / รุ่น / เครื่องยนต์ / ปี" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-neutral-400 mb-1">สถานที่ / เขตที่พักอาศัย</label>
+                <input name="location" type="text" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="เพื่อประเมินการเดินทาง" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-neutral-400 mb-1">รายละเอียดที่ต้องการ / อาการปัจจุบัน</label>
+                <textarea name="detail" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 h-28 resize-none" placeholder="เช่น อยากได้ต้นจัดขึ้น, ปัจจุบันรถมีอาการอืดตอนออกตัว, มีของแต่งอะไรใส่มาบ้างแล้ว" />
+              </div>
+              <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors">
+                <Send size={18} /> ส่งข้อมูลเพื่อรับคำปรึกษา
+              </button>
+            </form>
+          </div>
         </section>
 
       </div>
