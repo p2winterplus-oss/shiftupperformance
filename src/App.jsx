@@ -3,7 +3,7 @@ import {
   Menu, X, ChevronRight, Zap, Volume2, Settings, MessageCircle, Activity,
   ShieldCheck, Wrench, Star, PlayCircle, CheckCircle2, UserPlus, Send,
   CalendarDays, ChevronLeft, Clock, MapPin, Phone, User, Car, AlertCircle,
-  CheckCircle, XCircle, Trash2, Plus, Minus, ChevronDown, ChevronUp
+  CheckCircle, XCircle, Trash2, Plus, Minus, ChevronDown, ChevronUp, CalendarCheck
 } from 'lucide-react';
 
 /* ── Image constants ─────────────────────────────────────────── */
@@ -182,9 +182,13 @@ const ShiftupApp = () => {
               </div>
             </div>
 
-            <div className="hidden md:block">
-              <a href={lineUrl} target="_blank" rel="noreferrer" className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-full text-sm font-bold tracking-wide transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:shadow-[0_0_25px_rgba(220,38,38,0.6)] flex items-center gap-2">
-                <MessageCircle size={18} />
+            <div className="hidden md:flex items-center gap-2">
+              <button onClick={() => navigateTo('booking')} className="bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-1.5 rounded-full text-xs font-bold tracking-wide transition-all border border-neutral-700 hover:border-red-500/50 flex items-center gap-1.5">
+                <CalendarCheck size={14} />
+                จองคิวรีแมป
+              </button>
+              <a href={lineUrl} target="_blank" rel="noreferrer" className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-full text-xs font-bold tracking-wide transition-all shadow-[0_0_12px_rgba(220,38,38,0.35)] hover:shadow-[0_0_20px_rgba(220,38,38,0.55)] flex items-center gap-1.5">
+                <MessageCircle size={14} />
                 ติดต่อเรา
               </a>
             </div>
@@ -207,7 +211,10 @@ const ShiftupApp = () => {
               <button onClick={() => navigateTo('panthera')} className="block px-3 py-2 text-base font-medium text-white text-left">Panthera Active Exhaust Sound</button>
               <button onClick={() => navigateTo('partner')} className="block px-3 py-2 text-base font-medium text-orange-400 text-left">สมัคร Partner / ทีมงาน</button>
               <button onClick={() => navigateTo('about')} className="block px-3 py-2 text-base font-medium text-neutral-300 text-left">About Us</button>
-              <a href={lineUrl} target="_blank" rel="noreferrer" className="mt-4 bg-red-600 text-white px-4 py-3 rounded-md text-center font-bold flex justify-center items-center gap-2">
+              <button onClick={() => { navigateTo('booking'); setMobileMenuOpen(false); }} className="mt-2 bg-neutral-800 border border-neutral-700 text-white px-4 py-2.5 rounded-md text-center font-bold flex justify-center items-center gap-2 text-sm">
+                <CalendarCheck size={16} /> จองคิวรีแมปรถยนต์
+              </button>
+              <a href={lineUrl} target="_blank" rel="noreferrer" className="mt-2 bg-red-600 text-white px-4 py-3 rounded-md text-center font-bold flex justify-center items-center gap-2">
                 <MessageCircle size={18} /> ติดต่อเรา
               </a>
             </div>

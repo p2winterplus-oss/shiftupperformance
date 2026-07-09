@@ -500,9 +500,10 @@ app.get('/api/booking-config', async (req, res) => {
       if (content.booking) config = content.booking;
     }
 
-    // Build booked slots map { "2026-07-15": ["09:00", "10:30"] }
+    // Build booked slots map — exclude cancelled bookings
     const bookedSlots = {};
     for (const b of bookings) {
+      if (b.status === 'cancelled') continue;
       if (!bookedSlots[b.date]) bookedSlots[b.date] = [];
       bookedSlots[b.date].push(b.time);
     }
@@ -640,13 +641,21 @@ app.get('/api/bookings', (_req, res) => {
 });
 
 // ── POST /api/cancel-booking → admin cancels a booking ───────────
-app.post('/api/cancel-booking', (req, res) => {
+app.post('/api/cancel-booking', async (req, res) => {
   const { id } = req.body || {};
   const idx = bookings.findIndex(b => b.id === id);
   if (idx === -1) return res.status(404).json({ success: false });
   bookings[idx].status = 'cancelled';
   bookingsDirty = true;
   res.json({ success: true });
+  // Notify Sheet — Apps Script will update row status to "ยกเลิก"
+  try {
+    await fetch(SHEET_DOPOST_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source: 'cancel-booking', id, date: bookings[idx].date, time: bookings[idx].time }),
+    });
+  } catch (e) { console.error('[cancel-booking sheet]', e.message); }
 });
 
 // SPA fallback
