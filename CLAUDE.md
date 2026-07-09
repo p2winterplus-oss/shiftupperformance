@@ -5,7 +5,7 @@
 - **URL**: deploy บน Railway (auto-deploy จาก GitHub main)
 - **Domain**: `www.shiftupperformance.com` — live แล้ว (18 มิ.ย. 2569)
 - **Stack**: React 18 + Vite 5 + Tailwind CSS v3 + Express server
-- **วันที่อัปเดต**: 9 ก.ค. 2569 (session 4)
+- **วันที่อัปเดต**: 9 ก.ค. 2569 (session 5)
 
 ---
 
@@ -435,6 +435,16 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - [x] **Duplicate booking check ข้าม cancelled** (9 ก.ค. 2569 session 4): slot ที่ถูกยกเลิกสามารถจองใหม่ได้
 - [x] **ระบบลูกค้ายกเลิกเอง** (9 ก.ค. 2569 session 4): รหัส 4 หลักสุ่มเมื่อจองสำเร็จ, หน้า `/cancel`, deadline 12 ชม.ก่อนนัด, Telegram แจ้ง admin, POST Sheet `{source:'cancel-booking'}`
 - [x] **URL route `/cancel`** (9 ก.ค. 2569 session 4): เพิ่มใน PATH_MAP + router
+- [x] **Footer phone fix** (9 ก.ค. 2569 session 5): ลบเบอร์ 088-788-8364 ออก, เบอร์ 083-009-2554 เป็น `href="tel:0830092554"` กด = โทรออกได้บนมือถือ
+- [x] **Navbar button prominence swap** (9 ก.ค. 2569 session 5): "จองคิวรีแมป" เป็นสีแดง (`bg-red-600`) เด่นกว่า — "ติดต่อเรา" เป็น `bg-neutral-800 border border-neutral-700` เล็กกว่า (ทั้ง desktop + mobile)
+- [x] **BookingPage cancel links** (9 ก.ค. 2569 session 5): เพิ่มลิงก์ยกเลิกการจองสองจุด — (1) ข้อความลิงก์ในส่วน header ของ BookingPage (2) ปุ่มบน success screen หลังจองสำเร็จ
+- [x] **RemapPage CTA swap** (9 ก.ค. 2569 session 5): "จองคิวรีแมปรถยนต์" = สีแดง animated border เด่นสุด — "ติดต่อเรา" = `bg-neutral-800` สีเทา
+- [x] **Booking form: LINE ID + รุ่นรถ required** (9 ก.ค. 2569 session 5): validate ก่อน submit — error หาก field ว่าง
+- [x] **Math captcha** (9 ก.ค. 2569 session 5): `genCaptcha()` สุ่ม a+b=? ใน BookingPage — reset เมื่อตอบผิด
+- [x] **RemapPage hero bg image** (9 ก.ค. 2569 session 5): Google Drive thumbnail id=`14phTvXtXXaoh0thcbO3NEoiU5Ch1dPK8`, opacity-65, overlay bg-neutral-950/20
+- [x] **RemapPage pricing bg image** (9 ก.ค. 2569 session 5): Google Drive thumbnail id=`1aqfxgrPBf88tILTPoq0j44wPhm9XHnX5`, opacity-55, gradient overlay
+- [x] **RemapPage portfolio section bg image** (9 ก.ค. 2569 session 5): full-width (`-mx-6 lg:-mx-8 px-6 lg:px-8`), id=`1uhFl-6GMWMp7xbOBVYUgXnOtLuitbTwo`, opacity-80, overlay bg-neutral-950/15 — รูปรีแมป (carousel) อยู่ตรงกลาง object-center ทุก device
+- [x] **RemapPage consult form section bg image** (9 ก.ค. 2569 session 5): full-width, id=`1L0aX2BWxl5VPwP59LaAVUixvFFlaAuGr`, opacity-25, overlay bg-neutral-950/65 — สว่างน้อยให้ form เด่น
 
 ---
 
@@ -621,3 +631,16 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
    - deadline: ยกเลิกได้ก่อนเวลานัด 12 ชม. เท่านั้น
    - ยกเลิกสำเร็จ → slot ว่างทันที + Telegram แจ้ง admin
 5. อัปเดต memory + CLAUDE.md ครบชุด
+
+**9 ก.ค. 2569 — Session 5:**
+1. Footer: ลบเบอร์ 088-788-8364 ออก — เหลือแค่ 083-009-2554 เป็น `href="tel:0830092554"` (กดโทรออกได้)
+2. Navbar prominence swap: "จองคิวรีแมป" = bg-red-600 เด่นกว่า | "ติดต่อเรา" = bg-neutral-800 เล็กกว่า (desktop + mobile)
+3. BookingPage: เพิ่มลิงก์ยกเลิกการจอง 2 จุด (header text link + success screen button)
+4. RemapPage CTA: "จองคิวรีแมปรถยนต์" = แดง animated border | "ติดต่อเรา" = เทา
+5. Booking form: LINE ID + รุ่นรถ required + math captcha (a+b=? สุ่มทุก attempt)
+6. RemapPage background images:
+   - Hero: id=`14phTvXtXXaoh0thcbO3NEoiU5Ch1dPK8` opacity-65
+   - Pricing: id=`1aqfxgrPBf88tILTPoq0j44wPhm9XHnX5` opacity-55
+   - Portfolio section (full-width): id=`1uhFl-6GMWMp7xbOBVYUgXnOtLuitbTwo` opacity-80 object-center
+   - Consult form section (full-width): id=`1L0aX2BWxl5VPwP59LaAVUixvFFlaAuGr` opacity-25
+7. อัปเดต CLAUDE.md ครบชุด
