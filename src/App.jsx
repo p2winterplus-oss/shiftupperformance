@@ -3272,6 +3272,7 @@ const BookingPage = ({ navigateTo }) => {
   const [selectedTime, setSelectedTime] = useState(null);
   const [form, setForm] = useState({ name: '', phone: '', lineId: '', carModel: '', carYear: '', carColor: '', note: '', locationName: '', locationUrl: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [sending, setSending] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [showMapPicker, setShowMapPicker] = useState(false);
@@ -3319,25 +3320,165 @@ const BookingPage = ({ navigateTo }) => {
     e.preventDefault();
     if (!selectedDate || !selectedTime) return setError('กรุณาเลือกวันที่และเวลา');
     if (!form.name || !form.phone) return setError('กรุณากรอกชื่อและเบอร์โทร');
-    setSubmitting(true); setError('');
+    setSubmitting(true); setSending(true); setError('');
     try {
-      const res = await fetch('/api/book', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: selectedDate, time: selectedTime, ...form }),
-      });
-      const data = await res.json();
+      const [data] = await Promise.all([
+        fetch('/api/book', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date: selectedDate, time: selectedTime, ...form }),
+        }).then(r => r.json()),
+        new Promise(resolve => setTimeout(resolve, 7000)),
+      ]);
       if (data.success) {
-        setSuccess(true);
         setBookedSlots(prev => ({ ...prev, [selectedDate]: [...(prev[selectedDate] || []), selectedTime] }));
+        setSuccess(true);
       } else {
         setError(data.error || 'เกิดข้อผิดพลาด');
       }
     } catch { setError('ไม่สามารถเชื่อมต่อได้'); }
-    setSubmitting(false);
+    setSending(false); setSubmitting(false);
   };
 
   if (!config) return <div className="min-h-screen flex items-center justify-center text-neutral-400">กำลังโหลด...</div>;
+
+  if (sending) return (
+    <div className="min-h-screen flex items-center justify-center px-6 bg-neutral-950 overflow-hidden">
+      <style>{`
+        @keyframes car-slide {
+          0%   { transform: translateX(-180px) }
+          100% { transform: translateX(calc(100vw + 180px)) }
+        }
+        @keyframes line-rush {
+          0%   { transform: translateX(60px) scaleX(0); opacity: 0 }
+          30%  { opacity: 1 }
+          100% { transform: translateX(-120vw) scaleX(1); opacity: 0 }
+        }
+        @keyframes prog-fill {
+          0%   { width: 0% }
+          100% { width: 97% }
+        }
+        @keyframes rpm-spin {
+          0%   { transform: rotate(-120deg) }
+          100% { transform: rotate(120deg) }
+        }
+        @keyframes data-fade { 0%,100%{opacity:.25} 50%{opacity:1} }
+        @keyframes item-in {
+          from { opacity:0; transform: translateY(12px) }
+          to   { opacity:1; transform: translateY(0) }
+        }
+        @keyframes glow-pulse {
+          0%,100% { box-shadow: 0 0 8px rgba(239,68,68,0.4) }
+          50%     { box-shadow: 0 0 24px rgba(239,68,68,0.9) }
+        }
+      `}</style>
+
+      <div className="w-full max-w-md text-center">
+
+        {/* Header */}
+        <p className="text-neutral-500 text-xs uppercase tracking-[0.25em] mb-1">ECU REMAP BOOKING SYSTEM</p>
+        <h2 className="text-white text-xl font-bold mb-8">
+          กำลังส่งข้อมูลการจอง
+          <span style={{ animation: 'data-fade 1s ease-in-out infinite 0.0s' }}>.</span>
+          <span style={{ animation: 'data-fade 1s ease-in-out infinite 0.3s' }}>.</span>
+          <span style={{ animation: 'data-fade 1s ease-in-out infinite 0.6s' }}>.</span>
+        </h2>
+
+        {/* Racing track */}
+        <div className="relative h-20 mb-6 overflow-hidden">
+          {/* Road */}
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-neutral-800" />
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-neutral-700" style={{ top: '50%' }} />
+
+          {/* Speed lines */}
+          {[0,1,2,3,4].map(i => (
+            <div key={i} className="absolute rounded-full bg-red-500/60"
+              style={{
+                height: 2,
+                width: `${40 + i * 20}px`,
+                top: `${28 + i * 8}px`,
+                left: '60%',
+                animation: `line-rush ${0.5 + i * 0.08}s linear infinite`,
+                animationDelay: `${i * 0.12}s`,
+              }} />
+          ))}
+          {[0,1,2].map(i => (
+            <div key={`w${i}`} className="absolute rounded-full bg-orange-400/40"
+              style={{
+                height: 1,
+                width: `${25 + i * 15}px`,
+                top: `${35 + i * 10}px`,
+                left: '55%',
+                animation: `line-rush ${0.4 + i * 0.1}s linear infinite`,
+                animationDelay: `${0.05 + i * 0.15}s`,
+              }} />
+          ))}
+
+          {/* Car SVG */}
+          <div className="absolute" style={{ bottom: 4, animation: 'car-slide 1.6s linear infinite' }}>
+            <svg width="110" height="44" viewBox="0 0 110 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Body */}
+              <rect x="8" y="20" width="94" height="18" rx="5" fill="#dc2626"/>
+              {/* Cabin */}
+              <path d="M28 20 L38 6 L76 6 L88 20 Z" fill="#b91c1c"/>
+              {/* Windshield */}
+              <path d="M40 8 L36 20 L76 20 L74 8 Z" fill="#1e293b" opacity="0.9"/>
+              {/* Side window */}
+              <path d="M42 9 L39 18 L68 18 L70 9 Z" fill="#334155" opacity="0.7"/>
+              {/* Spoiler */}
+              <rect x="98" y="16" width="8" height="3" rx="1" fill="#991b1b"/>
+              <rect x="104" y="12" width="2" height="7" rx="1" fill="#7f1d1d"/>
+              {/* Front bumper */}
+              <rect x="2" y="26" width="8" height="8" rx="2" fill="#991b1b"/>
+              {/* Headlight */}
+              <rect x="3" y="24" width="6" height="3" rx="1" fill="#fbbf24"/>
+              {/* Exhaust glow */}
+              <ellipse cx="102" cy="36" rx="4" ry="2" fill="#f97316" opacity="0.7"/>
+              {/* Front wheel */}
+              <circle cx="28" cy="38" r="7" fill="#1e293b"/>
+              <circle cx="28" cy="38" r="4" fill="#374151"/>
+              <circle cx="28" cy="38" r="1.5" fill="#dc2626"/>
+              {/* Rear wheel */}
+              <circle cx="82" cy="38" r="7" fill="#1e293b"/>
+              <circle cx="82" cy="38" r="4" fill="#374151"/>
+              <circle cx="82" cy="38" r="1.5" fill="#dc2626"/>
+              {/* Door line */}
+              <line x1="55" y1="21" x2="55" y2="36" stroke="#991b1b" strokeWidth="1"/>
+            </svg>
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div className="relative h-2 bg-neutral-800 rounded-full overflow-hidden mb-2" style={{ animation: 'glow-pulse 1s ease-in-out infinite' }}>
+          <div className="h-full rounded-full" style={{
+            background: 'linear-gradient(90deg, #dc2626, #f97316, #facc15)',
+            animation: 'prog-fill 7s linear forwards',
+          }} />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" style={{ animation: 'line-rush 1.2s linear infinite' }} />
+        </div>
+        <p className="text-neutral-600 text-xs mb-8">กำลังเชื่อมต่อระบบ...</p>
+
+        {/* Booking detail chips */}
+        <div className="space-y-2.5 text-left">
+          {[
+            { icon: '👤', label: 'ชื่อ', value: form.name, delay: '0.5s' },
+            { icon: '📅', label: 'วันที่', value: selectedDate ? thDateFull(selectedDate) : '', delay: '1.5s' },
+            { icon: '⏰', label: 'เวลา', value: selectedTime ? `${selectedTime} น.` : '', delay: '2.5s' },
+            { icon: '🚗', label: 'รถ', value: [form.carModel, form.carYear, form.carColor].filter(Boolean).join(' '), delay: '3.5s' },
+            form.locationName ? { icon: '📍', label: 'สถานที่', value: form.locationName, delay: '4.5s' } : null,
+          ].filter(Boolean).map((item, i) => (
+            <div key={i} className="flex items-center gap-3 bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-2.5 opacity-0"
+              style={{ animation: `item-in 0.5s ease forwards`, animationDelay: item.delay }}>
+              <span className="text-lg shrink-0">{item.icon}</span>
+              <span className="text-neutral-500 text-xs w-14 shrink-0">{item.label}</span>
+              <span className="text-white text-sm font-medium truncate">{item.value || '—'}</span>
+              <span className="ml-auto text-green-500 text-xs shrink-0" style={{ animation: `data-fade 1s ease-in-out infinite`, animationDelay: `${i * 0.2}s` }}>✓</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   if (success) return (
     <div className="min-h-screen flex items-center justify-center px-6">
