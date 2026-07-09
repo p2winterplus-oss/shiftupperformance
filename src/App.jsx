@@ -3092,6 +3092,72 @@ const AboutPage = ({ lineUrl }) => {
   );
 };
 
+// ── Map Picker Modal (Leaflet + OpenStreetMap, ฟรีไม่ต้อง API key) ──
+const { useRef: useMapRef } = React;
+const MapPicker = ({ initialLat, initialLng, onConfirm, onClose }) => {
+  const containerRef = useMapRef(null);
+  const mapRef       = useMapRef(null);
+  const markerRef    = useMapRef(null);
+  const [address, setAddress] = React.useState('กำลังหาที่อยู่...');
+  const [coords,  setCoords]  = React.useState({ lat: initialLat, lng: initialLng });
+
+  const reverseGeocode = async (lat, lng) => {
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=th`);
+      const d = await r.json();
+      setAddress(d.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+    } catch {
+      setAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+    }
+  };
+
+  useEffect(() => {
+    if (!window.L || !containerRef.current) return;
+    const L   = window.L;
+    const map = L.map(containerRef.current).setView([initialLat, initialLng], 16);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+    }).addTo(map);
+
+    const marker = L.marker([initialLat, initialLng], { draggable: true }).addTo(map);
+    markerRef.current = marker;
+    mapRef.current    = map;
+
+    marker.on('dragend', (e) => {
+      const { lat, lng } = e.target.getLatLng();
+      setCoords({ lat, lng });
+      reverseGeocode(lat, lng);
+    });
+
+    reverseGeocode(initialLat, initialLng);
+    return () => map.remove();
+  }, []);
+
+  const handleConfirm = () => {
+    const mapsUrl = `https://maps.google.com/?q=${coords.lat},${coords.lng}`;
+    onConfirm(mapsUrl, address);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="bg-neutral-900 rounded-2xl overflow-hidden w-full max-w-lg shadow-2xl">
+        <div className="px-5 pt-5 pb-3">
+          <h3 className="text-white font-bold text-lg">📍 เลือกตำแหน่งนัดหมาย</h3>
+          <p className="text-neutral-400 text-sm mt-1">ลากหมุดแดงเพื่อปรับตำแหน่ง</p>
+        </div>
+        <div ref={containerRef} style={{ height: 320, width: '100%' }} />
+        <div className="px-5 py-4">
+          <p className="text-neutral-300 text-sm leading-relaxed mb-4 min-h-[2.5rem]">{address}</p>
+          <div className="flex gap-2">
+            <button onClick={onClose} className="flex-1 bg-neutral-800 hover:bg-neutral-700 text-white py-3 rounded-xl font-bold text-sm transition-colors">ยกเลิก</button>
+            <button onClick={handleConfirm} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold text-sm transition-colors">✓ ยืนยันตำแหน่ง</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ═══════════════════════════════════════════════════════════════════
 //  BOOKING PAGE
 // ═══════════════════════════════════════════════════════════════════
@@ -3105,6 +3171,8 @@ const BookingPage = ({ navigateTo }) => {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [showMapPicker, setShowMapPicker] = useState(false);
+  const [mapCoords, setMapCoords] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
   const [adminPw, setAdminPw] = useState('');
   const [adminAuth, setAdminAuth] = useState(false);
@@ -3254,28 +3322,45 @@ const BookingPage = ({ navigateTo }) => {
           {/* Customer location input */}
           <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 mt-6">
             <h3 className="text-white font-bold mb-3 flex items-center gap-2"><MapPin size={18} className="text-red-500" /> สถานที่นัดหมาย</h3>
-            <p className="text-neutral-400 text-sm mb-3">กรอกที่อยู่หรือแชร์พิกัด Google Maps ที่ต้องการให้ช่างเข้าพื้นที่</p>
-            <textarea
+            <p className="text-neutral-400 text-sm mb-3">พิมพ์ชื่อสถานที่ หรือกด GPS เพื่อปักหมุดแผนที่</p>
+            <input
               value={form.location || ''}
               onChange={e => setForm(p => ({ ...p, location: e.target.value }))}
-              className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 h-20 resize-none text-sm"
-              placeholder="เช่น บ้านเลขที่ 99/1 ซอยลาดพร้าว 10 หรือวาง link Google Maps"
+              className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 text-sm"
+              placeholder="เช่น บิ๊กซีลำลูกกา, หน้าปั๊ม PT ลาดพร้าว..."
             />
             <button
               type="button"
               onClick={() => {
-                if (navigator.geolocation) {
-                  navigator.geolocation.getCurrentPosition(pos => {
-                    const url = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
-                    setForm(p => ({ ...p, location: url }));
-                  });
-                }
+                if (!navigator.geolocation) return;
+                navigator.geolocation.getCurrentPosition(
+                  pos => { setMapCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setShowMapPicker(true); },
+                  () => alert('ไม่สามารถเข้าถึง GPS ได้ กรุณาอนุญาตการเข้าถึงตำแหน่ง')
+                );
               }}
-              className="mt-2 inline-flex items-center gap-2 text-sm text-red-400 hover:text-red-300 transition-colors"
+              className="mt-3 inline-flex items-center gap-2 text-sm text-red-400 hover:text-red-300 transition-colors"
             >
-              <MapPin size={14} /> ใช้ตำแหน่งปัจจุบัน (GPS)
+              <MapPin size={14} /> ใช้ตำแหน่งปัจจุบัน (GPS) — ลากหมุดปรับได้
             </button>
+            {form.location && form.location.startsWith('https://maps.google.com') && (
+              <a href={form.location} target="_blank" rel="noreferrer" className="mt-2 flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-300 transition-colors">
+                <MapPin size={11} /> ดูตำแหน่งที่เลือก
+              </a>
+            )}
           </div>
+
+          {/* Map Picker Modal */}
+          {showMapPicker && mapCoords && (
+            <MapPicker
+              initialLat={mapCoords.lat}
+              initialLng={mapCoords.lng}
+              onConfirm={(url, addr) => {
+                setForm(p => ({ ...p, location: url }));
+                setShowMapPicker(false);
+              }}
+              onClose={() => setShowMapPicker(false)}
+            />
+          )}
         </div>
 
         {/* Booking Form */}
