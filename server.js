@@ -404,6 +404,249 @@ app.post('/api/save-content', async (req, res) => {
   }
 });
 
+// ═══════════════════════════════════════════════════════════════════
+//  BOOKING SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+
+let bookings = [];
+let bookingsDirty = false;
+
+function bookingsUrl() {
+  const { owner, repo, branch } = ghConf();
+  return {
+    url: `https://api.github.com/repos/${owner}/${repo}/contents/public/bookings.json`,
+    branch,
+  };
+}
+
+async function loadBookings() {
+  try {
+    const { url, branch } = bookingsUrl();
+    const res = await fetch(`${url}?ref=${branch}`, { headers: ghHeaders() });
+    if (res.ok) {
+      const file = await res.json();
+      const raw  = JSON.parse(Buffer.from(file.content, 'base64').toString('utf-8'));
+      bookings = Array.isArray(raw) ? raw : [];
+      console.log(`[bookings] loaded ${bookings.length} bookings`);
+    } else {
+      console.log('[bookings] no bookings.json yet — starting fresh');
+    }
+  } catch (err) {
+    console.log('[bookings] load error:', err.message);
+  }
+}
+
+async function saveBookings() {
+  if (!bookingsDirty || bookings.length === 0) return;
+  bookingsDirty = false;
+  try {
+    const { url, branch } = bookingsUrl();
+    const headers = ghHeaders();
+    const getRes  = await fetch(`${url}?ref=${branch}`, { headers });
+    let sha = null;
+    if (getRes.ok) sha = (await getRes.json()).sha;
+
+    const body = {
+      message: `bookings: sync (${bookings.length} total)`,
+      content:  Buffer.from(JSON.stringify(bookings, null, 2)).toString('base64'),
+      branch,
+    };
+    if (sha) body.sha = sha;
+
+    const putRes = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(body) });
+    if (putRes.ok) {
+      console.log(`[bookings] saved ${bookings.length} bookings to GitHub`);
+    } else {
+      bookingsDirty = true;
+      const e = await putRes.json().catch(() => ({}));
+      console.error('[bookings] save failed:', e.message || putRes.status);
+    }
+  } catch (err) {
+    bookingsDirty = true;
+    console.error('[bookings] save error:', err.toString());
+  }
+}
+
+loadBookings();
+setInterval(saveBookings, 30 * 60 * 1000);
+
+// ── Telegram notification ─────────────────────────────────────────
+async function sendTelegram(text) {
+  const token  = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!token || !chatId) return;
+  try {
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+    });
+  } catch (err) {
+    console.warn('[telegram] send error:', err.message);
+  }
+}
+
+// ── GET /api/booking-config → config + booked slots ─────────────
+app.get('/api/booking-config', async (req, res) => {
+  try {
+    const { owner, repo, branch } = ghConf();
+    const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/public/content.json`;
+    const getRes  = await fetch(`${apiBase}?ref=${branch}`, { headers: ghHeaders() });
+    let config = {
+      advanceDays: 30,
+      defaultSlots: ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00', '19:30', '21:00'],
+      closedDates: [],
+      customSlots: {},
+    };
+    if (getRes.ok) {
+      const file    = await getRes.json();
+      const content = JSON.parse(Buffer.from(file.content, 'base64').toString('utf-8'));
+      if (content.booking) config = content.booking;
+    }
+
+    // Build booked slots map { "2026-07-15": ["09:00", "10:30"] }
+    const bookedSlots = {};
+    for (const b of bookings) {
+      if (!bookedSlots[b.date]) bookedSlots[b.date] = [];
+      bookedSlots[b.date].push(b.time);
+    }
+
+    res.json({ config, bookedSlots });
+  } catch (err) {
+    res.status(500).json({ error: err.toString() });
+  }
+});
+
+// ── POST /api/book → create booking ─────────────────────────────
+app.post('/api/book', async (req, res) => {
+  try {
+    const { date, time, name, phone, lineId, carModel, carYear, carColor, note } = req.body || {};
+    if (!date || !time || !name || !phone) {
+      return res.status(400).json({ success: false, error: 'กรุณากรอกข้อมูลให้ครบ' });
+    }
+
+    // ตรวจว่า slot ซ้ำไหม
+    const already = bookings.find(b => b.date === date && b.time === time);
+    if (already) return res.status(409).json({ success: false, error: 'เวลานี้มีคนจองแล้ว' });
+
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const booking = {
+      id, date, time, name, phone,
+      lineId: lineId || '',
+      carModel: carModel || '',
+      carYear: carYear || '',
+      carColor: carColor || '',
+      note: note || '',
+      isoTimestamp: new Date().toISOString(),
+      timestamp: new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }),
+      status: 'confirmed',
+    };
+    bookings.push(booking);
+    bookingsDirty = true;
+
+    // Notification (fire-and-forget)
+    setImmediate(async () => {
+      const msg = `📅 <b>จองคิวใหม่!</b>\nวันที่: ${date} เวลา: ${time}\nชื่อ: ${name}\nโทร: ${phone}\nLine: ${lineId || '-'}\nรถ: ${carModel} ${carYear} ${carColor}\nหมายเหตุ: ${note || '-'}`;
+      await sendTelegram(msg);
+
+      // Email via Resend
+      const resendKey = process.env.RESEND_API_KEY;
+      if (resendKey) {
+        try {
+          const resend = new Resend(resendKey);
+          await resend.emails.send({
+            from: process.env.NOTIFY_FROM || 'Shiftup Performance <onboarding@resend.dev>',
+            to: [process.env.NOTIFY_EMAIL || 'p2w.interplus@gmail.com'],
+            subject: `📅 จองคิว: ${name} — ${date} ${time}`,
+            html: `<h2>จองคิวรีแมปใหม่</h2><table><tr><td><b>วันที่</b></td><td>${date}</td></tr><tr><td><b>เวลา</b></td><td>${time}</td></tr><tr><td><b>ชื่อ</b></td><td>${name}</td></tr><tr><td><b>โทร</b></td><td>${phone}</td></tr><tr><td><b>Line ID</b></td><td>${lineId || '-'}</td></tr><tr><td><b>รถ</b></td><td>${carModel} ${carYear} ${carColor}</td></tr><tr><td><b>หมายเหตุ</b></td><td>${note || '-'}</td></tr></table>`,
+          });
+        } catch (e) {
+          console.warn('[booking] email error:', e.message);
+        }
+      }
+
+      // Save to Google Sheet
+      try {
+        await fetch(SHEET_DOPOST_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source: 'booking', ...booking }),
+        });
+      } catch (e) {
+        console.warn('[booking] sheet error:', e.message);
+      }
+
+      // Persist to GitHub now
+      await saveBookings();
+    });
+
+    res.json({ success: true, id });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.toString() });
+  }
+});
+
+// ── POST /api/save-booking-config → admin saves slot config ──────
+app.post('/api/save-booking-config', async (req, res) => {
+  try {
+    const { config } = req.body || {};
+    if (!config) return res.status(400).json({ success: false, error: 'missing config' });
+
+    const { token, owner, repo, branch } = ghConf();
+    const filePath = 'public/content.json';
+    const apiBase  = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+    const headers  = ghHeaders();
+
+    const getRes  = await fetch(`${apiBase}?ref=${branch}`, { headers });
+    let current = {}, sha = null;
+    if (getRes.ok) {
+      const file = await getRes.json();
+      sha     = file.sha;
+      current = JSON.parse(Buffer.from(file.content, 'base64').toString('utf-8'));
+    }
+
+    current.booking = config;
+
+    const body = {
+      message: 'booking: update slot config via admin panel',
+      content:  Buffer.from(JSON.stringify(current, null, 2)).toString('base64'),
+      branch,
+    };
+    if (sha) body.sha = sha;
+
+    const putRes = await fetch(apiBase, { method: 'PUT', headers, body: JSON.stringify(body) });
+    if (!putRes.ok) {
+      const err = await putRes.json();
+      return res.status(500).json({ success: false, error: err.message });
+    }
+
+    // Instant local update
+    try {
+      const localPath = join(__dirname, 'dist', 'content.json');
+      writeFileSync(localPath, JSON.stringify(current, null, 2), 'utf-8');
+    } catch {}
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.toString() });
+  }
+});
+
+// ── GET /api/bookings → admin views all bookings ─────────────────
+app.get('/api/bookings', (_req, res) => {
+  res.json({ bookings });
+});
+
+// ── POST /api/cancel-booking → admin cancels a booking ───────────
+app.post('/api/cancel-booking', (req, res) => {
+  const { id } = req.body || {};
+  const idx = bookings.findIndex(b => b.id === id);
+  if (idx === -1) return res.status(404).json({ success: false });
+  bookings[idx].status = 'cancelled';
+  bookingsDirty = true;
+  res.json({ success: true });
+});
+
 // SPA fallback
 app.get('*', (_req, res) => {
   res.sendFile(join(__dirname, 'dist', 'index.html'));

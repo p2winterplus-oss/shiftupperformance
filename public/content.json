@@ -563,5 +563,11 @@
       "lineUrl": "https://lin.ee/nZOMcph",
       "facebookUrl": "https://www.facebook.com/shiftupperformance"
     }
+  },
+  "booking": {
+    "advanceDays": 30,
+    "defaultSlots": ["09:00", "10:30", "12:00", "13:30", "15:00", "16:30", "18:00", "19:30", "21:00"],
+    "closedDates": [],
+    "customSlots": {}
   }
 }

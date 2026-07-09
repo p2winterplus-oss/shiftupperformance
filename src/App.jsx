@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
   Menu, X, ChevronRight, Zap, Volume2, Settings, MessageCircle, Activity,
-  ShieldCheck, Wrench, Star, PlayCircle, CheckCircle2, UserPlus, Send
+  ShieldCheck, Wrench, Star, PlayCircle, CheckCircle2, UserPlus, Send,
+  CalendarDays, ChevronLeft, Clock, MapPin, Phone, User, Car, AlertCircle,
+  CheckCircle, XCircle, Trash2, Plus, Minus, ChevronDown, ChevronUp
 } from 'lucide-react';
 
 /* ── Image constants ─────────────────────────────────────────── */
@@ -134,6 +136,7 @@ const ShiftupApp = () => {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-200 font-sans selection:bg-red-600 selection:text-white">
+      <style>{`@keyframes border-run{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}`}</style>
       {showDashPw && (
         <PasswordModal
           onSuccess={() => { setShowDashPw(false); setActivePage('dashboard'); }}
@@ -198,7 +201,8 @@ const ShiftupApp = () => {
       {/* Page Content */}
       <div className="pt-20">
         {activePage === 'home'     && <HomePage navigateTo={navigateTo} lineUrl={lineUrl} />}
-        {activePage === 'remap'    && <RemapPage />}
+        {activePage === 'remap'    && <RemapPage navigateTo={navigateTo} />}
+        {activePage === 'booking'  && <BookingPage navigateTo={navigateTo} />}
         {activePage === 'hks'      && <HKSPage />}
         {activePage === 'panthera' && <PantheraPage />}
         {activePage === 'partner'  && <PartnerPage />}
@@ -299,12 +303,14 @@ const HomePage = ({ navigateTo, lineUrl }) => {
               <a href={lineUrl} target="_blank" rel="noreferrer" className="bg-white text-black hover:bg-neutral-200 px-8 py-4 rounded-full font-bold text-center transition-colors flex items-center justify-center gap-2">
                 ประเมินรถกับทีมงาน <ChevronRight size={20} />
               </a>
-              <button
-                onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })}
-                className="px-8 py-4 rounded-full font-bold text-center border border-neutral-700 hover:bg-neutral-800 transition-colors text-white"
-              >
-                ดูบริการของเรา
-              </button>
+              <div style={{ background: 'linear-gradient(90deg,#ef4444,#f97316,#facc15,#f97316,#ef4444)', backgroundSize: '300% 300%', animation: 'border-run 2s linear infinite', padding: '2px', borderRadius: '9999px', display: 'inline-block' }}>
+                <button
+                  onClick={() => navigateTo('booking')}
+                  className="bg-neutral-950 text-white font-bold px-8 py-4 rounded-full hover:bg-neutral-900 transition-colors"
+                >
+                  จองคิวรีแมปรถยนต์
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -894,7 +900,7 @@ const PasswordModal = ({ onSuccess, onClose }) => {
 };
 
 // --- PAGE 2: ECU REMAP ---
-const RemapPage = () => {
+const RemapPage = ({ navigateTo }) => {
   const [data, setData] = useState(DEFAULT_REMAP);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -1037,11 +1043,19 @@ const RemapPage = () => {
         </div>
 
         {/* ── CTA จองคิว ── */}
-        <div className="text-center py-4">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center py-4">
           <a href={LINE_URL} target="_blank" rel="noreferrer"
-            className="inline-flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white font-black text-xl px-12 py-5 rounded-full shadow-[0_0_30px_rgba(220,38,38,0.4)] hover:shadow-[0_0_45px_rgba(220,38,38,0.6)] transition-all">
-            <MessageCircle size={24} /> จองคิวเลย
+            className="inline-flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 text-white font-black text-xl px-10 py-5 rounded-full shadow-[0_0_30px_rgba(220,38,38,0.4)] hover:shadow-[0_0_45px_rgba(220,38,38,0.6)] transition-all">
+            <MessageCircle size={24} /> ติดต่อเรา
           </a>
+          <div style={{ background: 'linear-gradient(90deg,#ef4444,#f97316,#facc15,#f97316,#ef4444)', backgroundSize: '300% 300%', animation: 'border-run 2s linear infinite', padding: '2px', borderRadius: '9999px', display: 'inline-block' }}>
+            <button
+              onClick={() => navigateTo('booking')}
+              className="bg-neutral-950 text-white font-black text-xl px-10 py-5 rounded-full hover:bg-neutral-900 transition-colors flex items-center gap-3"
+            >
+              <CalendarDays size={24} /> จองคิวรีแมปรถยนต์
+            </button>
+          </div>
         </div>
 
         {/* ── Articles Accordion ── */}
@@ -3057,6 +3071,415 @@ const AboutPage = ({ lineUrl }) => {
         </section>
 
       </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════
+//  BOOKING PAGE
+// ═══════════════════════════════════════════════════════════════════
+const BookingPage = ({ navigateTo }) => {
+  const ADMIN_PASS = 'Chev9872';
+  const [config, setConfig] = useState(null);
+  const [bookedSlots, setBookedSlots] = useState({});
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null);
+  const [form, setForm] = useState({ name: '', phone: '', lineId: '', carModel: '', carYear: '', carColor: '', note: '' });
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [adminPw, setAdminPw] = useState('');
+  const [adminAuth, setAdminAuth] = useState(false);
+  const [adminError, setAdminError] = useState('');
+
+  useEffect(() => {
+    fetch('/api/booking-config')
+      .then(r => r.json())
+      .then(d => { setConfig(d.config); setBookedSlots(d.bookedSlots || {}); })
+      .catch(() => setConfig({ advanceDays: 30, defaultSlots: ['09:00','10:30','12:00','13:30','15:00','16:30','18:00','19:30','21:00'], closedDates: [], customSlots: {} }));
+  }, []);
+
+  const getDates = () => {
+    if (!config) return [];
+    const days = [];
+    const now = new Date();
+    for (let i = 0; i < config.advanceDays; i++) {
+      const d = new Date(now);
+      d.setDate(now.getDate() + i);
+      const key = d.toLocaleDateString('sv-SE'); // YYYY-MM-DD
+      if (!config.closedDates?.includes(key)) days.push({ key, d });
+    }
+    return days;
+  };
+
+  const getSlots = (dateKey) => {
+    if (!config) return [];
+    return config.customSlots?.[dateKey] || config.defaultSlots || [];
+  };
+
+  const isBooked = (dateKey, time) => (bookedSlots[dateKey] || []).includes(time);
+
+  const thDate = (d) => d.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short' });
+  const thDateFull = (key) => {
+    const d = new Date(key + 'T00:00:00');
+    return d.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedDate || !selectedTime) return setError('กรุณาเลือกวันที่และเวลา');
+    if (!form.name || !form.phone) return setError('กรุณากรอกชื่อและเบอร์โทร');
+    setSubmitting(true); setError('');
+    try {
+      const res = await fetch('/api/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: selectedDate, time: selectedTime, ...form }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSuccess(true);
+        setBookedSlots(prev => ({ ...prev, [selectedDate]: [...(prev[selectedDate] || []), selectedTime] }));
+      } else {
+        setError(data.error || 'เกิดข้อผิดพลาด');
+      }
+    } catch { setError('ไม่สามารถเชื่อมต่อได้'); }
+    setSubmitting(false);
+  };
+
+  if (!config) return <div className="min-h-screen flex items-center justify-center text-neutral-400">กำลังโหลด...</div>;
+
+  if (success) return (
+    <div className="min-h-screen flex items-center justify-center px-6">
+      <div className="text-center max-w-md">
+        <CheckCircle size={64} className="text-green-500 mx-auto mb-6" />
+        <h2 className="text-3xl font-black text-white mb-4">จองคิวสำเร็จ!</h2>
+        <p className="text-neutral-400 mb-2">วันที่: <span className="text-white font-bold">{thDateFull(selectedDate)}</span></p>
+        <p className="text-neutral-400 mb-6">เวลา: <span className="text-white font-bold">{selectedTime} น.</span></p>
+        <p className="text-sm text-neutral-500 mb-8">ทีมงานจะติดต่อกลับเพื่อยืนยันการนัดหมายผ่านเบอร์โทรหรือ LINE ของคุณ</p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <button onClick={() => { setSuccess(false); setSelectedDate(null); setSelectedTime(null); setForm({ name:'',phone:'',lineId:'',carModel:'',carYear:'',carColor:'',note:'' }); }} className="px-6 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-full font-bold transition-colors">จองคิวใหม่</button>
+          <button onClick={() => navigateTo('home')} className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold transition-colors">กลับหน้าแรก</button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const dates = getDates();
+  const WEEKDAYS = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+
+  return (
+    <div className="max-w-5xl mx-auto px-6 lg:px-8 py-12">
+      {/* Header */}
+      <div className="mb-10">
+        <button onClick={() => navigateTo('remap')} className="flex items-center gap-2 text-neutral-400 hover:text-white text-sm mb-6 transition-colors">
+          <ChevronLeft size={16} /> กลับหน้า ECU Remap
+        </button>
+        <h1 className="text-4xl font-black text-white mb-3">จองคิวรีแมปรถยนต์</h1>
+        <p className="text-neutral-400">เลือกวันและเวลาที่สะดวก ทีมงานจะยืนยันผ่าน LINE</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Calendar + Slots */}
+        <div>
+          {/* Calendar */}
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 mb-6">
+            <h3 className="text-white font-bold mb-4 flex items-center gap-2"><CalendarDays size={18} className="text-red-500" /> เลือกวันที่</h3>
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {WEEKDAYS.map(d => <div key={d} className="text-center text-xs text-neutral-500 py-1">{d}</div>)}
+            </div>
+            {/* fill empty days at start of first week */}
+            {(() => {
+              const items = [];
+              if (dates.length > 0) {
+                const firstDay = dates[0].d.getDay();
+                for (let i = 0; i < firstDay; i++) items.push(<div key={`e${i}`} />);
+              }
+              dates.forEach(({ key, d }) => {
+                const booked = (bookedSlots[key] || []).length;
+                const total  = getSlots(key).length;
+                const full   = booked >= total;
+                const active = selectedDate === key;
+                items.push(
+                  <button key={key}
+                    onClick={() => { setSelectedDate(key); setSelectedTime(null); }}
+                    className={`rounded-lg py-2 text-sm font-bold transition-all text-center
+                      ${active ? 'bg-red-600 text-white' : full ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed' : 'hover:bg-neutral-700 text-white'}`}
+                    disabled={full}
+                    title={full ? 'เต็มแล้ว' : ''}
+                  >
+                    {d.getDate()}
+                    {full && <div className="text-[9px] text-neutral-500">เต็ม</div>}
+                  </button>
+                );
+              });
+              return items;
+            })()}
+          </div>
+
+          {/* Time slots */}
+          {selectedDate && (
+            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+              <h3 className="text-white font-bold mb-4 flex items-center gap-2"><Clock size={18} className="text-red-500" /> เลือกเวลา — {thDateFull(selectedDate)}</h3>
+              <div className="grid grid-cols-3 gap-2">
+                {getSlots(selectedDate).map(t => {
+                  const booked = isBooked(selectedDate, t);
+                  const active = selectedTime === t;
+                  return (
+                    <button key={t}
+                      onClick={() => !booked && setSelectedTime(t)}
+                      disabled={booked}
+                      className={`py-3 rounded-xl text-sm font-bold transition-all
+                        ${booked ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed' : active ? 'bg-red-600 text-white' : 'bg-neutral-800 hover:bg-neutral-700 text-white'}`}
+                    >
+                      {booked ? <span className="text-xs">เต็มแล้ว</span> : t}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Location */}
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 mt-6">
+            <h3 className="text-white font-bold mb-3 flex items-center gap-2"><MapPin size={18} className="text-red-500" /> ที่ตั้ง</h3>
+            <p className="text-neutral-400 text-sm mb-3">P2W Interplus — บริการรีแมปและอัพเกรดรถยนต์</p>
+            <a
+              href="https://maps.app.goo.gl/shiftup"
+              target="_blank" rel="noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-red-400 hover:text-red-300 transition-colors"
+            >
+              <MapPin size={14} /> ดูแผนที่ใน Google Maps
+            </a>
+          </div>
+        </div>
+
+        {/* Booking Form */}
+        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+          <h3 className="text-white font-bold mb-6 flex items-center gap-2"><User size={18} className="text-red-500" /> ข้อมูลการจอง</h3>
+
+          {selectedDate && selectedTime && (
+            <div className="bg-red-600/10 border border-red-600/30 rounded-xl px-4 py-3 mb-6 text-sm">
+              <span className="text-red-400 font-bold">✓ เลือกแล้ว: </span>
+              <span className="text-white">{thDateFull(selectedDate)} เวลา {selectedTime} น.</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm text-neutral-400 mb-1">ชื่อ-นามสกุล <span className="text-red-500">*</span></label>
+              <input value={form.name} onChange={e => setForm(p => ({...p, name: e.target.value}))} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="สมชาย ใจดี" required />
+            </div>
+            <div>
+              <label className="block text-sm text-neutral-400 mb-1">เบอร์โทร <span className="text-red-500">*</span></label>
+              <input value={form.phone} onChange={e => setForm(p => ({...p, phone: e.target.value}))} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="08x-xxx-xxxx" type="tel" required />
+            </div>
+            <div>
+              <label className="block text-sm text-neutral-400 mb-1">LINE ID</label>
+              <input value={form.lineId} onChange={e => setForm(p => ({...p, lineId: e.target.value}))} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="@ชื่อ LINE" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm text-neutral-400 mb-1">รุ่นรถ</label>
+                <input value={form.carModel} onChange={e => setForm(p => ({...p, carModel: e.target.value}))} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="Mazda 2" />
+              </div>
+              <div>
+                <label className="block text-sm text-neutral-400 mb-1">ปีรถ</label>
+                <input value={form.carYear} onChange={e => setForm(p => ({...p, carYear: e.target.value}))} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="2022" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm text-neutral-400 mb-1">สีรถ</label>
+              <input value={form.carColor} onChange={e => setForm(p => ({...p, carColor: e.target.value}))} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="ขาว / แดง / ดำ" />
+            </div>
+            <div>
+              <label className="block text-sm text-neutral-400 mb-1">หมายเหตุ</label>
+              <textarea value={form.note} onChange={e => setForm(p => ({...p, note: e.target.value}))} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 h-20 resize-none" placeholder="ข้อมูลเพิ่มเติม หรือสิ่งที่ต้องการปรึกษา" />
+            </div>
+
+            {error && (
+              <div className="flex items-center gap-2 text-red-400 text-sm bg-red-600/10 border border-red-600/30 rounded-lg px-4 py-3">
+                <AlertCircle size={16} /> {error}
+              </div>
+            )}
+
+            <button type="submit" disabled={submitting || !selectedDate || !selectedTime}
+              className="w-full bg-red-600 hover:bg-red-700 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 transition-colors text-lg">
+              {submitting ? 'กำลังจอง...' : <><CalendarDays size={20} /> ยืนยันการจอง</>}
+            </button>
+
+            {(!selectedDate || !selectedTime) && (
+              <p className="text-center text-sm text-neutral-500">← เลือกวันที่และเวลาก่อน</p>
+            )}
+          </form>
+
+          {/* Admin link */}
+          <div className="mt-8 pt-6 border-t border-neutral-800 text-center">
+            {!showAdmin ? (
+              <button onClick={() => setShowAdmin(true)} className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors">⚙ จัดการตารางนัดหมาย (Admin)</button>
+            ) : !adminAuth ? (
+              <div className="space-y-2">
+                <input type="password" value={adminPw} onChange={e => setAdminPw(e.target.value)} placeholder="รหัสผ่าน Admin" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-red-500" />
+                {adminError && <p className="text-red-400 text-xs">{adminError}</p>}
+                <button onClick={() => { if (adminPw === ADMIN_PASS) setAdminAuth(true); else setAdminError('รหัสผ่านผิด'); }} className="w-full bg-neutral-800 hover:bg-neutral-700 text-white py-2 rounded-lg text-sm font-bold transition-colors">เข้าสู่ระบบ</button>
+              </div>
+            ) : (
+              <BookingAdminPanel config={config} onConfigSaved={(cfg) => setConfig(cfg)} onClose={() => { setShowAdmin(false); setAdminAuth(false); }} />
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════
+//  BOOKING ADMIN PANEL
+// ═══════════════════════════════════════════════════════════════════
+const BookingAdminPanel = ({ config: initConfig, onConfigSaved, onClose }) => {
+  const [cfg, setCfg] = useState(() => JSON.parse(JSON.stringify(initConfig)));
+  const [bookings, setBookings] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState('');
+  const [tab, setTab] = useState('slots'); // 'slots' | 'bookings'
+  const [newSlot, setNewSlot] = useState('');
+
+  useEffect(() => {
+    fetch('/api/bookings').then(r => r.json()).then(d => setBookings(d.bookings || []));
+  }, []);
+
+  const saveConfig = async () => {
+    setSaving(true); setMsg('');
+    try {
+      const res = await fetch('/api/save-booking-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config: cfg }),
+      });
+      const d = await res.json();
+      if (d.success) { setMsg('บันทึกสำเร็จ'); onConfigSaved(cfg); }
+      else setMsg('เกิดข้อผิดพลาด: ' + d.error);
+    } catch { setMsg('ไม่สามารถเชื่อมต่อได้'); }
+    setSaving(false);
+  };
+
+  const toggleClosed = (dateKey) => {
+    setCfg(prev => {
+      const closed = [...(prev.closedDates || [])];
+      const idx = closed.indexOf(dateKey);
+      if (idx > -1) closed.splice(idx, 1);
+      else closed.push(dateKey);
+      return { ...prev, closedDates: closed };
+    });
+  };
+
+  const addDefaultSlot = () => {
+    if (!newSlot || cfg.defaultSlots.includes(newSlot)) return;
+    const sorted = [...cfg.defaultSlots, newSlot].sort();
+    setCfg(prev => ({ ...prev, defaultSlots: sorted }));
+    setNewSlot('');
+  };
+
+  const removeDefaultSlot = (t) => setCfg(prev => ({ ...prev, defaultSlots: prev.defaultSlots.filter(s => s !== t) }));
+
+  const cancelBooking = async (id) => {
+    await fetch('/api/cancel-booking', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b));
+  };
+
+  const formatDate = (key) => new Date(key + 'T00:00:00').toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short' });
+
+  // upcoming dates for closed toggle
+  const futureDates = Array.from({ length: 30 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    return d.toLocaleDateString('sv-SE');
+  });
+
+  return (
+    <div className="text-left mt-4">
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="text-white font-bold">⚙ Admin — ตารางนัดหมาย</h4>
+        <button onClick={onClose} className="text-neutral-500 hover:text-white text-sm">ปิด</button>
+      </div>
+
+      <div className="flex gap-2 mb-4">
+        <button onClick={() => setTab('slots')} className={`px-3 py-1 rounded-lg text-sm font-bold transition-colors ${tab === 'slots' ? 'bg-red-600 text-white' : 'bg-neutral-800 text-neutral-400 hover:text-white'}`}>ตั้งค่า Slot</button>
+        <button onClick={() => setTab('bookings')} className={`px-3 py-1 rounded-lg text-sm font-bold transition-colors ${tab === 'bookings' ? 'bg-red-600 text-white' : 'bg-neutral-800 text-neutral-400 hover:text-white'}`}>การจองทั้งหมด ({bookings.filter(b => b.status === 'confirmed').length})</button>
+      </div>
+
+      {tab === 'slots' && (
+        <div className="space-y-5">
+          {/* Advance days */}
+          <div>
+            <label className="text-sm text-neutral-400 block mb-1">จองล่วงหน้าได้ (วัน)</label>
+            <input type="number" min={1} max={90} value={cfg.advanceDays} onChange={e => setCfg(p => ({ ...p, advanceDays: +e.target.value }))} className="w-24 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500" />
+          </div>
+
+          {/* Default slots */}
+          <div>
+            <label className="text-sm text-neutral-400 block mb-2">Slot เวลาเริ่มต้น (HH:MM)</label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {cfg.defaultSlots.map(t => (
+                <span key={t} className="flex items-center gap-1 bg-neutral-800 rounded-lg px-3 py-1 text-sm text-white">
+                  {t}
+                  <button onClick={() => removeDefaultSlot(t)} className="text-neutral-500 hover:text-red-400 ml-1"><XCircle size={13} /></button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input type="time" value={newSlot} onChange={e => setNewSlot(e.target.value)} className="bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500" />
+              <button onClick={addDefaultSlot} className="bg-neutral-800 hover:bg-neutral-700 text-white px-3 py-2 rounded-lg text-sm font-bold transition-colors"><Plus size={14} /></button>
+            </div>
+          </div>
+
+          {/* Closed dates */}
+          <div>
+            <label className="text-sm text-neutral-400 block mb-2">วันที่ปิดรับจอง (30 วันข้างหน้า)</label>
+            <div className="grid grid-cols-4 gap-1 max-h-44 overflow-y-auto pr-1">
+              {futureDates.map(key => {
+                const closed = (cfg.closedDates || []).includes(key);
+                return (
+                  <button key={key} onClick={() => toggleClosed(key)}
+                    className={`text-xs py-2 rounded-lg font-bold transition-colors ${closed ? 'bg-red-600/20 border border-red-600/50 text-red-400' : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}`}>
+                    {formatDate(key)}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {msg && <p className={`text-sm ${msg.includes('สำเร็จ') ? 'text-green-400' : 'text-red-400'}`}>{msg}</p>}
+          <button onClick={saveConfig} disabled={saving} className="w-full bg-red-600 hover:bg-red-700 disabled:bg-neutral-700 text-white font-bold py-3 rounded-xl text-sm transition-colors">
+            {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
+          </button>
+        </div>
+      )}
+
+      {tab === 'bookings' && (
+        <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+          {bookings.length === 0 && <p className="text-neutral-500 text-sm text-center py-4">ยังไม่มีการจอง</p>}
+          {[...bookings].sort((a, b) => a.date > b.date ? 1 : -1).map(b => (
+            <div key={b.id} className={`border rounded-xl p-4 text-sm ${b.status === 'cancelled' ? 'border-neutral-800 opacity-50' : 'border-neutral-700 bg-neutral-800/50'}`}>
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-white font-bold">{b.date} เวลา {b.time}</p>
+                  <p className="text-neutral-300">{b.name} — {b.phone}</p>
+                  {b.carModel && <p className="text-neutral-400">{b.carModel} {b.carYear} {b.carColor}</p>}
+                  {b.note && <p className="text-neutral-500 text-xs mt-1">{b.note}</p>}
+                </div>
+                {b.status === 'confirmed' && (
+                  <button onClick={() => cancelBooking(b.id)} className="shrink-0 text-neutral-500 hover:text-red-400 transition-colors" title="ยกเลิก">
+                    <XCircle size={18} />
+                  </button>
+                )}
+                {b.status === 'cancelled' && <span className="shrink-0 text-xs text-red-500">ยกเลิก</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
