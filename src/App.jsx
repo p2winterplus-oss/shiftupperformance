@@ -2611,16 +2611,21 @@ const DashboardPage = ({ onBack }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
   const [data, setData]       = useState({ remapLeads:[], partnerApplications:[], visits:[], counts:{remap:0,partner:0} });
+  const [bookings, setBookings] = useState([]);
 
   useEffect(() => {
     fetch('/api/get-leads')
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false); })
       .catch(() => { setError('โหลดข้อมูลไม่ได้ กรุณาตรวจสอบการเชื่อมต่อ'); setLoading(false); });
+    fetch('/api/bookings')
+      .then(r => r.json())
+      .then(d => setBookings(d.bookings || []));
   }, []);
 
   const { remapLeads, partnerApplications, counts } = data;
   const total = counts.remap + counts.partner;
+  const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
   const thCls = 'px-4 py-3 text-left text-xs font-bold text-neutral-400 uppercase tracking-wider';
   const tdCls = 'px-4 py-3 text-sm';
 
@@ -2654,7 +2659,7 @@ const DashboardPage = ({ onBack }) => {
               <AnalyticsSection visits={data.visits || []} botVisits={data.botVisits || []} />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center">
                 <p className="text-neutral-500 text-sm mb-3 uppercase tracking-wider">ECU Remap Leads</p>
                 <p className="text-6xl font-black text-red-500">{counts.remap}</p>
@@ -2664,8 +2669,12 @@ const DashboardPage = ({ onBack }) => {
                 <p className="text-6xl font-black text-orange-500">{counts.partner}</p>
               </div>
               <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center">
-                <p className="text-neutral-500 text-sm mb-3 uppercase tracking-wider">รวมทั้งหมด</p>
-                <p className="text-6xl font-black text-white">{total}</p>
+                <p className="text-neutral-500 text-sm mb-3 uppercase tracking-wider">📅 การจองคิว</p>
+                <p className="text-6xl font-black text-blue-400">{confirmedBookings.length}</p>
+              </div>
+              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center">
+                <p className="text-neutral-500 text-sm mb-3 uppercase tracking-wider">รวม Leads + จอง</p>
+                <p className="text-6xl font-black text-white">{total + confirmedBookings.length}</p>
               </div>
             </div>
 
@@ -2729,6 +2738,45 @@ const DashboardPage = ({ onBack }) => {
                           <td className={`${tdCls} text-neutral-300`}>{row.phone}</td>
                           <td className={`${tdCls} text-neutral-400`}>{row.province}</td>
                           <td className={`${tdCls} text-neutral-400 text-xs`}>{row.expertise}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-white font-bold text-xl mb-4 border-l-4 border-blue-400 pl-4">
+                📅 การจองคิวรีแมป <span className="text-neutral-500 font-normal text-base ml-2">({confirmedBookings.length} รายการ)</span>
+              </h2>
+              <div className="overflow-x-auto rounded-2xl border border-neutral-800">
+                <table className="w-full">
+                  <thead className="bg-neutral-900 border-b border-neutral-800">
+                    <tr>
+                      <th className={thCls}>วันจอง</th><th className={thCls}>วันนัด</th>
+                      <th className={thCls}>เวลา</th><th className={thCls}>ชื่อ</th>
+                      <th className={thCls}>โทร / LINE</th><th className={thCls}>รถ</th>
+                      <th className={thCls}>สถานที่</th><th className={thCls}>หมายเหตุ</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-900">
+                    {bookings.length === 0
+                      ? <tr><td colSpan={8} className="px-4 py-12 text-center text-neutral-600">ยังไม่มีการจอง</td></tr>
+                      : [...bookings].sort((a,b) => a.date > b.date ? 1 : -1).map((b, i) => (
+                        <tr key={i} className={`transition-colors ${b.status === 'cancelled' ? 'opacity-40 bg-neutral-950' : 'bg-neutral-950 hover:bg-neutral-900'}`}>
+                          <td className={`${tdCls} text-neutral-500 whitespace-nowrap text-xs`}>{b.timestamp}</td>
+                          <td className={`${tdCls} text-white font-bold whitespace-nowrap`}>{b.date}</td>
+                          <td className={`${tdCls} text-blue-400 font-bold whitespace-nowrap`}>{b.time}</td>
+                          <td className={`${tdCls} text-white font-medium`}>{b.name}</td>
+                          <td className={`${tdCls} text-neutral-300 text-xs`}>{b.phone}{b.lineId ? ` / ${b.lineId}` : ''}</td>
+                          <td className={`${tdCls} text-neutral-300 text-xs whitespace-nowrap`}>{[b.carModel, b.carYear, b.carColor].filter(Boolean).join(' ')}</td>
+                          <td className={`${tdCls} text-neutral-400 text-xs max-w-xs`}>
+                            {b.locationName && <span className="block">{b.locationName}</span>}
+                            {b.locationUrl && <a href={b.locationUrl} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline text-xs">📍 ดูแผนที่</a>}
+                          </td>
+                          <td className={`${tdCls} text-neutral-500 text-xs max-w-xs truncate`}>
+                            {b.status === 'cancelled' ? <span className="text-red-500 font-bold">ยกเลิก</span> : b.note || '-'}
+                          </td>
                         </tr>
                       ))}
                   </tbody>

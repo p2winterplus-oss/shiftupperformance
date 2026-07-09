@@ -26,8 +26,8 @@ const geoCache = new Map(); // IP → { province, city, isp }  cache 1hr
 const BOT_ISP_KEYWORDS = ['Amazon.com', 'Amazon Web Services', 'Google LLC', 'Microsoft Corporation', 'OVH SAS', 'Hetzner', 'DigitalOcean', 'Linode', 'Vultr', 'Facebook, Inc.'];
 const isBot = (isp) => BOT_ISP_KEYWORDS.some(k => (isp || '').includes(k));
 
-// doPost URL — same approach as remap/partner forms (POST body received before redirect ✓)
-const SHEET_DOPOST_URL = 'https://script.google.com/macros/s/AKfycbwMrK1ip9KWPihhA0VAkUMbYrsHBIqRrcsne099n-t0HBkgAKlFtTvhLDl0asMciy0TWw/exec';
+// ใช้ deployment เดียวกับ SHEET_DOGET_URL — Bookings tab อยู่ใน deployment นั้น
+const SHEET_DOPOST_URL = 'https://script.google.com/macros/s/AKfycbxGc0JZJkZ0MtW73_MldOdcc-ILttkvcA5G_16-0MwhjrLtWLSFTlQrMdD3W-g-dmqIDg/exec';
 
 // ── Helper: parse User-Agent ─────────────────────────────────────
 function parseUA(ua = '') {
