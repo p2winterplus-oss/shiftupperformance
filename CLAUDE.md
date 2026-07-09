@@ -422,6 +422,9 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - [x] **Slot display ฝั่งลูกค้า**: slot ที่ปิด/จองแล้วแสดง "จองแล้ว" พร้อม strikethrough สีแดง ไม่ซ่อน
 - [x] **Urgency UI**: ⚡ เหลือ X ช่อง! กระพริบสีเหลืองเมื่อ slot ว่าง ≤ 3 ช่อง
 - [x] **MapPicker mobile fix**: กดครั้งที่ 2+ เปิดทันทีโดยไม่รอ GPS ใหม่ + 5s timeout fallback
+- [x] **Remap page layout ใหม่** (9 ก.ค. 2569 session 3): Pricing full-width + packages grid 3 คอลัมน์, form "ประเมินรถฟรี" ย้ายไปล่างสุด (หลัง Reviews)
+- [x] **Dashboard Bookings** (9 ก.ค. 2569 session 3): เพิ่มตาราง "การจองคิวรีแมป" + card นับจอง (4 cards) พร้อมลิงก์ 📍 แผนที่
+- [x] **Bug fix: Booking Sheet** (9 ก.ค. 2569 session 3): แก้ `SHEET_DOPOST_URL` ใน server.js ชี้ผิด deployment → บันทึก Sheet ได้แล้ว
 
 ---
 
@@ -476,6 +479,14 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - **อาการ**: เวลาใน Sheet / อีเมล ช้ากว่าความเป็นจริง 7 ชั่วโมง
 - **สาเหตุ**: Railway/Google servers อยู่ใน UTC → `new Date().toLocaleString('th-TH')` ได้ UTC
 - **แก้**: เติม `{ timeZone: 'Asia/Bangkok' }` ทุกที่ใน server.js, Code.gs, App.jsx
+
+---
+
+### 🐛 #5 — Booking ไม่บันทึกลง Google Sheet (9 ก.ค. 2569)
+- **อาการ**: จองคิวแล้วมีอีเมล+Telegram แต่ไม่มีแถวใหม่ใน Sheet tab "Bookings"
+- **สาเหตุ**: `SHEET_DOPOST_URL` (line 30 ใน server.js) ชี้ไปยัง deployment ID คนละตัวกับที่มี Bookings tab handler ใน Code.gs
+- **แก้**: เปลี่ยน `SHEET_DOPOST_URL` ให้ใช้ URL เดียวกับ `SHEET_DOGET_URL` (deployment ที่ user deploy ล่าสุด)
+- **หมายเหตุ**: ทั้งสอง URL ต้องเป็น deployment เดียวกันเสมอ อย่าให้ต่างกัน
 
 ---
 
@@ -581,3 +592,9 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 3. Urgency UI: ⚡ เหลือ X ช่อง! กระพริบเมื่อว่าง ≤ 3
 4. MapPicker mobile fix: กดครั้งที่ 2+ เปิดทันทีไม่รอ GPS + 5s timeout fallback
 5. อัปเดต memory + CLAUDE.md ครบชุด
+
+**9 ก.ค. 2569 — Session 3:**
+1. Remap page: Pricing full-width grid 3 คอลัมน์, Form "ประเมินรถฟรี" ย้ายล่างสุด (หลัง Reviews)
+2. Dashboard: เพิ่มตาราง "การจองคิวรีแมป" + 4 summary cards (เพิ่ม Bookings + รวม Leads+จอง)
+3. Bug fix: `SHEET_DOPOST_URL` ชี้ผิด deployment → แก้ให้ใช้ URL เดียวกับ DOGET_URL → บันทึก Sheet ได้แล้ว
+4. อัปเดต memory + CLAUDE.md ครบชุด
