@@ -3084,7 +3084,7 @@ const BookingPage = ({ navigateTo }) => {
   const [bookedSlots, setBookedSlots] = useState({});
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
-  const [form, setForm] = useState({ name: '', phone: '', lineId: '', carModel: '', carYear: '', carColor: '', note: '' });
+  const [form, setForm] = useState({ name: '', phone: '', lineId: '', carModel: '', carYear: '', carColor: '', note: '', location: '' });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -3159,7 +3159,7 @@ const BookingPage = ({ navigateTo }) => {
         <p className="text-neutral-400 mb-6">เวลา: <span className="text-white font-bold">{selectedTime} น.</span></p>
         <p className="text-sm text-neutral-500 mb-8">ทีมงานจะติดต่อกลับเพื่อยืนยันการนัดหมายผ่านเบอร์โทรหรือ LINE ของคุณ</p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <button onClick={() => { setSuccess(false); setSelectedDate(null); setSelectedTime(null); setForm({ name:'',phone:'',lineId:'',carModel:'',carYear:'',carColor:'',note:'' }); }} className="px-6 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-full font-bold transition-colors">จองคิวใหม่</button>
+          <button onClick={() => { setSuccess(false); setSelectedDate(null); setSelectedTime(null); setForm({ name:'',phone:'',lineId:'',carModel:'',carYear:'',carColor:'',note:'',location:'' }); }} className="px-6 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-full font-bold transition-colors">จองคิวใหม่</button>
           <button onClick={() => navigateTo('home')} className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold transition-colors">กลับหน้าแรก</button>
         </div>
       </div>
@@ -3186,36 +3186,29 @@ const BookingPage = ({ navigateTo }) => {
           {/* Calendar */}
           <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 mb-6">
             <h3 className="text-white font-bold mb-4 flex items-center gap-2"><CalendarDays size={18} className="text-red-500" /> เลือกวันที่</h3>
-            <div className="grid grid-cols-7 gap-1 mb-2">
+            <div className="grid grid-cols-7 gap-1">
               {WEEKDAYS.map(d => <div key={d} className="text-center text-xs text-neutral-500 py-1">{d}</div>)}
-            </div>
-            {/* fill empty days at start of first week */}
-            {(() => {
-              const items = [];
-              if (dates.length > 0) {
-                const firstDay = dates[0].d.getDay();
-                for (let i = 0; i < firstDay; i++) items.push(<div key={`e${i}`} />);
-              }
-              dates.forEach(({ key, d }) => {
+              {/* empty cells to align first day correctly */}
+              {dates.length > 0 && Array.from({ length: dates[0].d.getDay() }, (_, i) => <div key={`e${i}`} />)}
+              {dates.map(({ key, d }) => {
                 const booked = (bookedSlots[key] || []).length;
                 const total  = getSlots(key).length;
-                const full   = booked >= total;
+                const full   = total > 0 && booked >= total;
                 const active = selectedDate === key;
-                items.push(
+                return (
                   <button key={key}
                     onClick={() => { setSelectedDate(key); setSelectedTime(null); }}
-                    className={`rounded-lg py-2 text-sm font-bold transition-all text-center
-                      ${active ? 'bg-red-600 text-white' : full ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed' : 'hover:bg-neutral-700 text-white'}`}
                     disabled={full}
                     title={full ? 'เต็มแล้ว' : ''}
+                    className={`rounded-lg py-2 text-sm font-bold transition-all text-center leading-none
+                      ${active ? 'bg-red-600 text-white' : full ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed' : 'hover:bg-neutral-700 text-white'}`}
                   >
-                    {d.getDate()}
-                    {full && <div className="text-[9px] text-neutral-500">เต็ม</div>}
+                    <span className="block">{d.getDate()}</span>
+                    {full && <span className="block text-[9px] text-neutral-500 mt-0.5">เต็ม</span>}
                   </button>
                 );
-              });
-              return items;
-            })()}
+              })}
+            </div>
           </div>
 
           {/* Time slots */}
@@ -3241,17 +3234,30 @@ const BookingPage = ({ navigateTo }) => {
             </div>
           )}
 
-          {/* Location */}
+          {/* Customer location input */}
           <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 mt-6">
-            <h3 className="text-white font-bold mb-3 flex items-center gap-2"><MapPin size={18} className="text-red-500" /> ที่ตั้ง</h3>
-            <p className="text-neutral-400 text-sm mb-3">P2W Interplus — บริการรีแมปและอัพเกรดรถยนต์</p>
-            <a
-              href="https://maps.app.goo.gl/shiftup"
-              target="_blank" rel="noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-red-400 hover:text-red-300 transition-colors"
+            <h3 className="text-white font-bold mb-3 flex items-center gap-2"><MapPin size={18} className="text-red-500" /> สถานที่นัดหมาย</h3>
+            <p className="text-neutral-400 text-sm mb-3">กรอกที่อยู่หรือแชร์พิกัด Google Maps ที่ต้องการให้ช่างเข้าพื้นที่</p>
+            <textarea
+              value={form.location || ''}
+              onChange={e => setForm(p => ({ ...p, location: e.target.value }))}
+              className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 h-20 resize-none text-sm"
+              placeholder="เช่น บ้านเลขที่ 99/1 ซอยลาดพร้าว 10 หรือวาง link Google Maps"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                if (navigator.geolocation) {
+                  navigator.geolocation.getCurrentPosition(pos => {
+                    const url = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
+                    setForm(p => ({ ...p, location: url }));
+                  });
+                }
+              }}
+              className="mt-2 inline-flex items-center gap-2 text-sm text-red-400 hover:text-red-300 transition-colors"
             >
-              <MapPin size={14} /> ดูแผนที่ใน Google Maps
-            </a>
+              <MapPin size={14} /> ใช้ตำแหน่งปัจจุบัน (GPS)
+            </button>
           </div>
         </div>
 
@@ -3314,21 +3320,32 @@ const BookingPage = ({ navigateTo }) => {
             )}
           </form>
 
-          {/* Admin link */}
-          <div className="mt-8 pt-6 border-t border-neutral-800 text-center">
-            {!showAdmin ? (
-              <button onClick={() => setShowAdmin(true)} className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors">⚙ จัดการตารางนัดหมาย (Admin)</button>
-            ) : !adminAuth ? (
-              <div className="space-y-2">
-                <input type="password" value={adminPw} onChange={e => setAdminPw(e.target.value)} placeholder="รหัสผ่าน Admin" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-red-500" />
-                {adminError && <p className="text-red-400 text-xs">{adminError}</p>}
-                <button onClick={() => { if (adminPw === ADMIN_PASS) setAdminAuth(true); else setAdminError('รหัสผ่านผิด'); }} className="w-full bg-neutral-800 hover:bg-neutral-700 text-white py-2 rounded-lg text-sm font-bold transition-colors">เข้าสู่ระบบ</button>
-              </div>
-            ) : (
+          {/* Admin — hidden gear icon bottom-right */}
+          {adminAuth && (
+            <div className="mt-6 pt-6 border-t border-neutral-800">
               <BookingAdminPanel config={config} onConfigSaved={(cfg) => setConfig(cfg)} onClose={() => { setShowAdmin(false); setAdminAuth(false); }} />
-            )}
-          </div>
+            </div>
+          )}
         </div>
+      </div>
+
+      {/* Floating admin gear — fixed bottom-right, barely visible */}
+      <div className="fixed bottom-6 right-6 z-40">
+        {!showAdmin ? (
+          <button onClick={() => setShowAdmin(true)} className="w-8 h-8 flex items-center justify-center text-neutral-800 hover:text-neutral-500 transition-colors" title="Admin">
+            <Settings size={16} />
+          </button>
+        ) : !adminAuth ? (
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 shadow-xl w-64">
+            <p className="text-white text-sm font-bold mb-3">⚙ Booking Admin</p>
+            <input type="password" value={adminPw} onChange={e => setAdminPw(e.target.value)} onKeyDown={e => e.key === 'Enter' && (adminPw === ADMIN_PASS ? setAdminAuth(true) : setAdminError('รหัสผ่านผิด'))} placeholder="รหัสผ่าน" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500 mb-2" autoFocus />
+            {adminError && <p className="text-red-400 text-xs mb-2">{adminError}</p>}
+            <div className="flex gap-2">
+              <button onClick={() => { if (adminPw === ADMIN_PASS) setAdminAuth(true); else setAdminError('รหัสผ่านผิด'); }} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg text-sm font-bold transition-colors">เข้าสู่ระบบ</button>
+              <button onClick={() => { setShowAdmin(false); setAdminPw(''); setAdminError(''); }} className="px-3 bg-neutral-800 hover:bg-neutral-700 text-white py-2 rounded-lg text-sm transition-colors">ยกเลิก</button>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
