@@ -3439,7 +3439,7 @@ const BookingPage = ({ navigateTo }) => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm text-neutral-400 mb-1">ชื่อ-นามสกุล <span className="text-red-500">*</span></label>
-              <input value={form.name} onChange={e => setForm(p => ({...p, name: e.target.value}))} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="สมชาย ใจดี" required />
+              <input value={form.name} onChange={e => setForm(p => ({...p, name: e.target.value}))} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500" placeholder="ชื่อ-นามสกุล" required />
             </div>
             <div>
               <label className="block text-sm text-neutral-400 mb-1">เบอร์โทร <span className="text-red-500">*</span></label>
