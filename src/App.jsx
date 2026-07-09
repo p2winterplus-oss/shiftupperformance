@@ -1082,7 +1082,7 @@ const RemapPage = ({ navigateTo }) => {
 
         {/* ── Portfolio 3D Slideshow ── */}
         <section className="relative -mx-6 lg:-mx-8 px-6 lg:px-8 py-16 overflow-hidden">
-          <img src="https://drive.google.com/thumbnail?id=1mN6B8sqAjq6y1iReoxhueJrMwQVGvQaZ&sz=w1200" alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-80" />
+          <img src="https://drive.google.com/thumbnail?id=1uhFl-6GMWMp7xbOBVYUgXnOtLuitbTwo&sz=w1200" alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-80" />
           <div className="absolute inset-0 bg-neutral-950/15" />
           <div className="relative z-10">
             <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">ผลงานรีแมป (Portfolio)</h2>
@@ -1098,7 +1098,7 @@ const RemapPage = ({ navigateTo }) => {
 
         {/* ── Consult Form (bottom) ── */}
         <section className="relative -mx-6 lg:-mx-8 px-6 lg:px-8 py-16 overflow-hidden">
-          <img src="https://drive.google.com/thumbnail?id=1y-LlWqGzrLskUMsj9BDSke-Ye2S95p-E&sz=w1200" alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-25" />
+          <img src="https://drive.google.com/thumbnail?id=1L0aX2BWxl5VPwP59LaAVUixvFFlaAuGr&sz=w1200" alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-25" />
           <div className="absolute inset-0 bg-neutral-950/65" />
           <div className="relative z-10 max-w-2xl mx-auto">
           <div className="text-center mb-8">
