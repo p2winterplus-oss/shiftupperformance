@@ -3095,20 +3095,45 @@ const AboutPage = ({ lineUrl }) => {
 // ── Map Picker Modal (Leaflet + OpenStreetMap, ฟรีไม่ต้อง API key) ──
 const { useRef: useMapRef } = React;
 const MapPicker = ({ initialLat, initialLng, onConfirm, onClose }) => {
-  const containerRef = useMapRef(null);
-  const mapRef       = useMapRef(null);
-  const markerRef    = useMapRef(null);
-  const [address, setAddress] = React.useState('กำลังหาที่อยู่...');
-  const [coords,  setCoords]  = React.useState({ lat: initialLat, lng: initialLng });
+  const containerRef  = useMapRef(null);
+  const mapRef        = useMapRef(null);
+  const markerRef     = useMapRef(null);
+  const searchTimer   = useMapRef(null);
+  const [address,     setAddress]     = React.useState('กำลังหาที่อยู่...');
+  const [coords,      setCoords]      = React.useState({ lat: initialLat, lng: initialLng });
+  const [searchQ,     setSearchQ]     = React.useState('');
+  const [searchRes,   setSearchRes]   = React.useState([]);
+  const [searching,   setSearching]   = React.useState(false);
 
   const reverseGeocode = async (lat, lng) => {
+    setAddress('กำลังหาที่อยู่...');
     try {
       const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=th`);
       const d = await r.json();
-      setAddress(d.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+      setAddress(d.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`);
     } catch {
-      setAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+      setAddress(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
     }
+  };
+
+  const moveTo = (lat, lng, zoom = 17) => {
+    if (!mapRef.current || !markerRef.current) return;
+    const latlng = window.L.latLng(lat, lng);
+    markerRef.current.setLatLng(latlng);
+    mapRef.current.setView(latlng, zoom);
+    setCoords({ lat, lng });
+    reverseGeocode(lat, lng);
+  };
+
+  const doSearch = async (q) => {
+    if (!q.trim()) { setSearchRes([]); return; }
+    setSearching(true);
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&accept-language=th&countrycodes=th`);
+      const d = await r.json();
+      setSearchRes(d);
+    } catch { setSearchRes([]); }
+    setSearching(false);
   };
 
   useEffect(() => {
@@ -3118,39 +3143,67 @@ const MapPicker = ({ initialLat, initialLng, onConfirm, onClose }) => {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
     }).addTo(map);
-
     const marker = L.marker([initialLat, initialLng], { draggable: true }).addTo(map);
     markerRef.current = marker;
     mapRef.current    = map;
-
     marker.on('dragend', (e) => {
       const { lat, lng } = e.target.getLatLng();
       setCoords({ lat, lng });
       reverseGeocode(lat, lng);
     });
-
     reverseGeocode(initialLat, initialLng);
     return () => map.remove();
   }, []);
 
-  const handleConfirm = () => {
-    const mapsUrl = `https://maps.google.com/?q=${coords.lat},${coords.lng}`;
-    onConfirm(mapsUrl, address);
+  const handleSearchChange = (e) => {
+    const q = e.target.value;
+    setSearchQ(q);
+    clearTimeout(searchTimer.current);
+    if (q.length > 1) searchTimer.current = setTimeout(() => doSearch(q), 500);
+    else setSearchRes([]);
+  };
+
+  const selectResult = (item) => {
+    moveTo(parseFloat(item.lat), parseFloat(item.lon));
+    setSearchQ(item.display_name);
+    setSearchRes([]);
   };
 
   return (
     <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="bg-neutral-900 rounded-2xl overflow-hidden w-full max-w-lg shadow-2xl">
-        <div className="px-5 pt-5 pb-3">
-          <h3 className="text-white font-bold text-lg">📍 เลือกตำแหน่งนัดหมาย</h3>
-          <p className="text-neutral-400 text-sm mt-1">ลากหมุดแดงเพื่อปรับตำแหน่ง</p>
+      <div className="bg-neutral-900 rounded-2xl overflow-hidden w-full max-w-lg shadow-2xl" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+        {/* Header + Search */}
+        <div className="px-5 pt-5 pb-3 flex-shrink-0">
+          <h3 className="text-white font-bold text-lg mb-3">📍 เลือกตำแหน่งนัดหมาย</h3>
+          <div className="relative">
+            <input
+              value={searchQ}
+              onChange={handleSearchChange}
+              placeholder="ค้นหาสถานที่... เช่น บิ๊กซีลำลูกกา"
+              className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-red-500 pr-10"
+            />
+            {searching && <span className="absolute right-3 top-2.5 text-neutral-400 text-xs">...</span>}
+            {searchRes.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-neutral-800 border border-neutral-700 rounded-xl overflow-hidden z-10 shadow-xl">
+                {searchRes.map((item, i) => (
+                  <button key={i} onClick={() => selectResult(item)}
+                    className="w-full text-left px-4 py-2.5 text-sm text-neutral-200 hover:bg-neutral-700 transition-colors border-b border-neutral-700 last:border-0">
+                    {item.display_name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <p className="text-neutral-500 text-xs mt-2">หรือลากหมุดบนแผนที่เพื่อปรับตำแหน่ง</p>
         </div>
-        <div ref={containerRef} style={{ height: 320, width: '100%' }} />
-        <div className="px-5 py-4">
-          <p className="text-neutral-300 text-sm leading-relaxed mb-4 min-h-[2.5rem]">{address}</p>
+        {/* Map */}
+        <div ref={containerRef} style={{ height: 280, width: '100%', flexShrink: 0 }} />
+        {/* Address + Buttons */}
+        <div className="px-5 py-4 flex-shrink-0">
+          <p className="text-neutral-300 text-sm leading-relaxed mb-4 min-h-[2rem] line-clamp-2">{address}</p>
           <div className="flex gap-2">
             <button onClick={onClose} className="flex-1 bg-neutral-800 hover:bg-neutral-700 text-white py-3 rounded-xl font-bold text-sm transition-colors">ยกเลิก</button>
-            <button onClick={handleConfirm} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold text-sm transition-colors">✓ ยืนยันตำแหน่ง</button>
+            <button onClick={() => onConfirm(`https://maps.google.com/?q=${coords.lat},${coords.lng}`, address)} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold text-sm transition-colors">✓ ยืนยันตำแหน่ง</button>
           </div>
         </div>
       </div>
@@ -3167,7 +3220,7 @@ const BookingPage = ({ navigateTo }) => {
   const [bookedSlots, setBookedSlots] = useState({});
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
-  const [form, setForm] = useState({ name: '', phone: '', lineId: '', carModel: '', carYear: '', carColor: '', note: '', location: '' });
+  const [form, setForm] = useState({ name: '', phone: '', lineId: '', carModel: '', carYear: '', carColor: '', note: '', locationName: '', locationUrl: '' });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -3244,7 +3297,7 @@ const BookingPage = ({ navigateTo }) => {
         <p className="text-neutral-400 mb-6">เวลา: <span className="text-white font-bold">{selectedTime} น.</span></p>
         <p className="text-sm text-neutral-500 mb-8">ทีมงานจะติดต่อกลับเพื่อยืนยันการนัดหมายผ่านเบอร์โทรหรือ LINE ของคุณ</p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <button onClick={() => { setSuccess(false); setSelectedDate(null); setSelectedTime(null); setForm({ name:'',phone:'',lineId:'',carModel:'',carYear:'',carColor:'',note:'',location:'' }); }} className="px-6 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-full font-bold transition-colors">จองคิวใหม่</button>
+          <button onClick={() => { setSuccess(false); setSelectedDate(null); setSelectedTime(null); setForm({ name:'',phone:'',lineId:'',carModel:'',carYear:'',carColor:'',note:'',locationName:'',locationUrl:'' }); }} className="px-6 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-full font-bold transition-colors">จองคิวใหม่</button>
           <button onClick={() => navigateTo('home')} className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold transition-colors">กลับหน้าแรก</button>
         </div>
       </div>
@@ -3319,34 +3372,46 @@ const BookingPage = ({ navigateTo }) => {
             </div>
           )}
 
-          {/* Customer location input */}
-          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 mt-6">
-            <h3 className="text-white font-bold mb-3 flex items-center gap-2"><MapPin size={18} className="text-red-500" /> สถานที่นัดหมาย</h3>
-            <p className="text-neutral-400 text-sm mb-3">พิมพ์ชื่อสถานที่ หรือกด GPS เพื่อปักหมุดแผนที่</p>
-            <input
-              value={form.location || ''}
-              onChange={e => setForm(p => ({ ...p, location: e.target.value }))}
-              className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 text-sm"
-              placeholder="เช่น บิ๊กซีลำลูกกา, หน้าปั๊ม PT ลาดพร้าว..."
-            />
-            <button
-              type="button"
-              onClick={() => {
-                if (!navigator.geolocation) return;
-                navigator.geolocation.getCurrentPosition(
-                  pos => { setMapCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setShowMapPicker(true); },
-                  () => alert('ไม่สามารถเข้าถึง GPS ได้ กรุณาอนุญาตการเข้าถึงตำแหน่ง')
-                );
-              }}
-              className="mt-3 inline-flex items-center gap-2 text-sm text-red-400 hover:text-red-300 transition-colors"
-            >
-              <MapPin size={14} /> ใช้ตำแหน่งปัจจุบัน (GPS) — ลากหมุดปรับได้
-            </button>
-            {form.location && form.location.startsWith('https://maps.google.com') && (
-              <a href={form.location} target="_blank" rel="noreferrer" className="mt-2 flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-300 transition-colors">
-                <MapPin size={11} /> ดูตำแหน่งที่เลือก
-              </a>
-            )}
+          {/* Customer location input — 2 ช่องแยกกัน */}
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 mt-6 space-y-4">
+            <h3 className="text-white font-bold flex items-center gap-2"><MapPin size={18} className="text-red-500" /> สถานที่นัดหมาย</h3>
+
+            {/* ช่อง 1: ชื่อสถานที่ (พิมพ์เอง) */}
+            <div>
+              <label className="block text-xs text-neutral-400 mb-1">ชื่อสถานที่ / จุดสังเกต</label>
+              <input
+                value={form.locationName}
+                onChange={e => setForm(p => ({ ...p, locationName: e.target.value }))}
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 text-sm"
+                placeholder="เช่น บิ๊กซีลำลูกกา, หน้าปั๊ม PT ลาดพร้าว..."
+              />
+            </div>
+
+            {/* ช่อง 2: พิกัด GPS (ได้จากการปักหมุด) */}
+            <div>
+              <label className="block text-xs text-neutral-400 mb-1">พิกัด GPS <span className="text-neutral-600">(ไม่บังคับ)</span></label>
+              {form.locationUrl ? (
+                <div className="flex items-center gap-2 bg-neutral-950 border border-neutral-700 rounded-lg px-4 py-3">
+                  <MapPin size={14} className="text-red-400 shrink-0" />
+                  <a href={form.locationUrl} target="_blank" rel="noreferrer" className="text-red-400 hover:text-red-300 text-sm truncate flex-1">ดูตำแหน่งบน Google Maps</a>
+                  <button type="button" onClick={() => setForm(p => ({ ...p, locationUrl: '' }))} className="text-neutral-600 hover:text-neutral-400 text-xs shrink-0">✕ ลบ</button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!navigator.geolocation) return alert('browser ไม่รองรับ GPS');
+                    navigator.geolocation.getCurrentPosition(
+                      pos => { setMapCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setShowMapPicker(true); },
+                      () => { setMapCoords({ lat: 13.7563, lng: 100.5018 }); setShowMapPicker(true); }
+                    );
+                  }}
+                  className="w-full flex items-center justify-center gap-2 border border-dashed border-neutral-700 hover:border-red-500/50 rounded-lg py-3 text-sm text-neutral-400 hover:text-red-400 transition-colors"
+                >
+                  <MapPin size={15} /> ปักหมุดตำแหน่งบนแผนที่
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Map Picker Modal */}
@@ -3354,10 +3419,7 @@ const BookingPage = ({ navigateTo }) => {
             <MapPicker
               initialLat={mapCoords.lat}
               initialLng={mapCoords.lng}
-              onConfirm={(url, addr) => {
-                setForm(p => ({ ...p, location: url }));
-                setShowMapPicker(false);
-              }}
+              onConfirm={(url) => { setForm(p => ({ ...p, locationUrl: url })); setShowMapPicker(false); }}
               onClose={() => setShowMapPicker(false)}
             />
           )}
