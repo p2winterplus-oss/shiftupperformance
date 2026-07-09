@@ -520,7 +520,7 @@ app.get('/api/booking-config', async (req, res) => {
 // ── POST /api/book → create booking ─────────────────────────────
 app.post('/api/book', async (req, res) => {
   try {
-    const { date, time, name, phone, lineId, carModel, carYear, carColor, note } = req.body || {};
+    const { date, time, name, phone, lineId, carModel, carYear, carColor, note, locationName, locationUrl } = req.body || {};
     if (!date || !time || !name || !phone) {
       return res.status(400).json({ success: false, error: 'กรุณากรอกข้อมูลให้ครบ' });
     }
@@ -537,6 +537,8 @@ app.post('/api/book', async (req, res) => {
       carYear: carYear || '',
       carColor: carColor || '',
       note: note || '',
+      locationName: locationName || '',
+      locationUrl: locationUrl || '',
       isoTimestamp: new Date().toISOString(),
       timestamp: new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }),
       status: 'confirmed',
@@ -546,7 +548,10 @@ app.post('/api/book', async (req, res) => {
 
     // Notification (fire-and-forget)
     setImmediate(async () => {
-      const msg = `📅 <b>จองคิวใหม่!</b>\nวันที่: ${date} เวลา: ${time}\nชื่อ: ${name}\nโทร: ${phone}\nLine: ${lineId || '-'}\nรถ: ${carModel} ${carYear} ${carColor}\nหมายเหตุ: ${note || '-'}`;
+      const locLine = locationName || locationUrl
+        ? `\n📍 สถานที่    : ${locationName || ''}${locationName && locationUrl ? '\n🗺 พิกัด       : ' + locationUrl : locationUrl ? locationUrl : ''}`
+        : '';
+      const msg = `📅 <b>จองคิวใหม่!</b>\nวันที่: ${date} เวลา: ${time}\nชื่อ: ${name}\nโทร: ${phone}\nLine: ${lineId || '-'}\nรถ: ${carModel} ${carYear} ${carColor}${locLine}\nหมายเหตุ: ${note || '-'}`;
       await sendTelegram(msg);
 
       // Email via Resend
@@ -554,11 +559,12 @@ app.post('/api/book', async (req, res) => {
       if (resendKey) {
         try {
           const resend = new Resend(resendKey);
+          const mapLink = locationUrl ? `<a href="${locationUrl}">${locationUrl}</a>` : '-';
           await resend.emails.send({
             from: process.env.NOTIFY_FROM || 'Shiftup Performance <onboarding@resend.dev>',
             to: [process.env.NOTIFY_EMAIL || 'p2w.interplus@gmail.com'],
             subject: `📅 จองคิว: ${name} — ${date} ${time}`,
-            html: `<h2>จองคิวรีแมปใหม่</h2><table><tr><td><b>วันที่</b></td><td>${date}</td></tr><tr><td><b>เวลา</b></td><td>${time}</td></tr><tr><td><b>ชื่อ</b></td><td>${name}</td></tr><tr><td><b>โทร</b></td><td>${phone}</td></tr><tr><td><b>Line ID</b></td><td>${lineId || '-'}</td></tr><tr><td><b>รถ</b></td><td>${carModel} ${carYear} ${carColor}</td></tr><tr><td><b>หมายเหตุ</b></td><td>${note || '-'}</td></tr></table>`,
+            html: `<h2>จองคิวรีแมปใหม่</h2><table style="border-collapse:collapse;width:100%"><tr><td style="padding:6px 12px;color:#666"><b>วันที่</b></td><td style="padding:6px 12px">${date}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>เวลา</b></td><td style="padding:6px 12px">${time}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>ชื่อ</b></td><td style="padding:6px 12px">${name}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>โทร</b></td><td style="padding:6px 12px">${phone}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>Line ID</b></td><td style="padding:6px 12px">${lineId || '-'}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>รถ</b></td><td style="padding:6px 12px">${carModel} ${carYear} ${carColor}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>สถานที่</b></td><td style="padding:6px 12px">${locationName || '-'}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>พิกัด</b></td><td style="padding:6px 12px">${mapLink}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>หมายเหตุ</b></td><td style="padding:6px 12px">${note || '-'}</td></tr></table>`,
           });
         } catch (e) {
           console.warn('[booking] email error:', e.message);
