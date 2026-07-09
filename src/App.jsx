@@ -3253,6 +3253,7 @@ const BookingPage = ({ navigateTo }) => {
 
   const getSlots = (dateKey) => {
     if (!config) return [];
+    if ((config.closedDates || []).includes(dateKey)) return [];
     return config.customSlots?.[dateKey] || config.defaultSlots || [];
   };
 
@@ -3523,8 +3524,9 @@ const BookingAdminPanel = ({ config: initConfig, onConfigSaved, onClose }) => {
   const [bookings, setBookings] = useState([]);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
-  const [tab, setTab] = useState('slots'); // 'slots' | 'bookings'
+  const [tab, setTab] = useState('slots');
   const [newSlot, setNewSlot] = useState('');
+  const [editingDate, setEditingDate] = useState(null);
 
   useEffect(() => {
     fetch('/api/bookings').then(r => r.json()).then(d => setBookings(d.bookings || []));
@@ -3545,16 +3547,6 @@ const BookingAdminPanel = ({ config: initConfig, onConfigSaved, onClose }) => {
     setSaving(false);
   };
 
-  const toggleClosed = (dateKey) => {
-    setCfg(prev => {
-      const closed = [...(prev.closedDates || [])];
-      const idx = closed.indexOf(dateKey);
-      if (idx > -1) closed.splice(idx, 1);
-      else closed.push(dateKey);
-      return { ...prev, closedDates: closed };
-    });
-  };
-
   const addDefaultSlot = () => {
     if (!newSlot || cfg.defaultSlots.includes(newSlot)) return;
     const sorted = [...cfg.defaultSlots, newSlot].sort();
@@ -3571,12 +3563,55 @@ const BookingAdminPanel = ({ config: initConfig, onConfigSaved, onClose }) => {
 
   const formatDate = (key) => new Date(key + 'T00:00:00').toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short' });
 
-  // upcoming dates for closed toggle
   const futureDates = Array.from({ length: 30 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() + i);
     return d.toLocaleDateString('sv-SE');
   });
+
+  // per-date slot helpers
+  const getDateState = (key) => {
+    if ((cfg.closedDates || []).includes(key)) return 'closed';
+    if (cfg.customSlots?.[key]) return 'custom';
+    return 'default';
+  };
+
+  const getActiveSlotsForDate = (key) => {
+    if ((cfg.closedDates || []).includes(key)) return [];
+    return cfg.customSlots?.[key] || cfg.defaultSlots;
+  };
+
+  const applyDateSlots = (key, slots) => {
+    setCfg(prev => {
+      const closedDates = (prev.closedDates || []).filter(d => d !== key);
+      const customSlots = { ...(prev.customSlots || {}) };
+      delete customSlots[key];
+      if (slots.length === 0) {
+        closedDates.push(key);
+      } else {
+        const allSame = slots.length === prev.defaultSlots.length && slots.every(s => prev.defaultSlots.includes(s));
+        if (!allSame) customSlots[key] = [...slots].sort();
+      }
+      return { ...prev, closedDates, customSlots };
+    });
+  };
+
+  const toggleSlotForDate = (key, slot) => {
+    const current = getActiveSlotsForDate(key);
+    const next = current.includes(slot) ? current.filter(s => s !== slot) : [...current, slot];
+    applyDateSlots(key, next);
+  };
+
+  const resetDateToDefault = (key) => {
+    setCfg(prev => {
+      const closedDates = (prev.closedDates || []).filter(d => d !== key);
+      const customSlots = { ...(prev.customSlots || {}) };
+      delete customSlots[key];
+      return { ...prev, closedDates, customSlots };
+    });
+  };
+
+  const closeEntireDay = (key) => applyDateSlots(key, []);
 
   return (
     <div className="text-left mt-4">
@@ -3592,15 +3627,13 @@ const BookingAdminPanel = ({ config: initConfig, onConfigSaved, onClose }) => {
 
       {tab === 'slots' && (
         <div className="space-y-5">
-          {/* Advance days */}
           <div>
             <label className="text-sm text-neutral-400 block mb-1">จองล่วงหน้าได้ (วัน)</label>
             <input type="number" min={1} max={90} value={cfg.advanceDays} onChange={e => setCfg(p => ({ ...p, advanceDays: +e.target.value }))} className="w-24 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500" />
           </div>
 
-          {/* Default slots */}
           <div>
-            <label className="text-sm text-neutral-400 block mb-2">Slot เวลาเริ่มต้น (HH:MM)</label>
+            <label className="text-sm text-neutral-400 block mb-2">Slot เวลาเริ่มต้น (ใช้กับทุกวันที่ไม่ได้กำหนดพิเศษ)</label>
             <div className="flex flex-wrap gap-2 mb-2">
               {cfg.defaultSlots.map(t => (
                 <span key={t} className="flex items-center gap-1 bg-neutral-800 rounded-lg px-3 py-1 text-sm text-white">
@@ -3615,20 +3648,69 @@ const BookingAdminPanel = ({ config: initConfig, onConfigSaved, onClose }) => {
             </div>
           </div>
 
-          {/* Closed dates */}
+          {/* Per-date slot config */}
           <div>
-            <label className="text-sm text-neutral-400 block mb-2">วันที่ปิดรับจอง (30 วันข้างหน้า)</label>
-            <div className="grid grid-cols-4 gap-1 max-h-44 overflow-y-auto pr-1">
+            <label className="text-sm text-neutral-400 block mb-1">ปรับ Slot รายวัน (30 วันข้างหน้า)</label>
+            <div className="flex gap-3 text-xs text-neutral-500 mb-2">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-neutral-600 inline-block" /> ปกติ</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /> กำหนดพิเศษ</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-600 inline-block" /> ปิดทั้งวัน</span>
+            </div>
+            <div className="grid grid-cols-4 gap-1 mb-2">
               {futureDates.map(key => {
-                const closed = (cfg.closedDates || []).includes(key);
+                const state = getDateState(key);
+                const isEditing = editingDate === key;
                 return (
-                  <button key={key} onClick={() => toggleClosed(key)}
-                    className={`text-xs py-2 rounded-lg font-bold transition-colors ${closed ? 'bg-red-600/20 border border-red-600/50 text-red-400' : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}`}>
+                  <button key={key}
+                    onClick={() => setEditingDate(isEditing ? null : key)}
+                    className={`text-xs py-2 px-1 rounded-lg font-bold transition-colors leading-tight ${
+                      state === 'closed' ? 'bg-red-600/20 border border-red-600/50 text-red-400' :
+                      state === 'custom' ? 'bg-amber-500/20 border border-amber-500/50 text-amber-400' :
+                      'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
+                    } ${isEditing ? 'ring-1 ring-white/30' : ''}`}>
                     {formatDate(key)}
                   </button>
                 );
               })}
             </div>
+
+            {/* Slot editor for selected date */}
+            {editingDate && (
+              <div className="bg-neutral-900 border border-neutral-700 rounded-xl p-4 mt-1">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-white text-sm font-bold">{formatDate(editingDate)}</p>
+                  <div className="flex gap-2">
+                    <button onClick={() => resetDateToDefault(editingDate)} className="text-xs text-neutral-400 hover:text-white border border-neutral-700 rounded-lg px-2 py-1 transition-colors">ใช้ค่าเริ่มต้น</button>
+                    <button onClick={() => { closeEntireDay(editingDate); }} className="text-xs text-red-400 hover:text-red-300 border border-red-900/50 rounded-lg px-2 py-1 transition-colors">ปิดทั้งวัน</button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {cfg.defaultSlots.map(slot => {
+                    const active = getActiveSlotsForDate(editingDate).includes(slot);
+                    const isClosed = getDateState(editingDate) === 'closed';
+                    return (
+                      <button key={slot}
+                        onClick={() => { if (isClosed) { applyDateSlots(editingDate, [slot]); } else { toggleSlotForDate(editingDate, slot); } }}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold transition-colors ${
+                          active && !isClosed ? 'bg-green-600/20 border border-green-600/50 text-green-400' : 'bg-neutral-800 border border-neutral-700 text-neutral-500'
+                        }`}>
+                        <span className={`w-3 h-3 rounded-full border flex-shrink-0 ${active && !isClosed ? 'bg-green-500 border-green-400' : 'border-neutral-600'}`} />
+                        {slot}
+                      </button>
+                    );
+                  })}
+                </div>
+                {getDateState(editingDate) === 'closed' && (
+                  <p className="text-red-400 text-xs mt-3 text-center">ปิดรับจองทั้งวัน — กดที่ slot เพื่อเปิดบางช่วงเวลา</p>
+                )}
+                {getDateState(editingDate) === 'custom' && (
+                  <p className="text-amber-400 text-xs mt-3 text-center">เปิด {getActiveSlotsForDate(editingDate).length} จาก {cfg.defaultSlots.length} slot</p>
+                )}
+                {getDateState(editingDate) === 'default' && (
+                  <p className="text-neutral-500 text-xs mt-3 text-center">ใช้ค่าเริ่มต้น — เปิดทุก slot</p>
+                )}
+              </div>
+            )}
           </div>
 
           {msg && <p className={`text-sm ${msg.includes('สำเร็จ') ? 'text-green-400' : 'text-red-400'}`}>{msg}</p>}
