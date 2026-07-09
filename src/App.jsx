@@ -971,8 +971,8 @@ const RemapPage = ({ navigateTo }) => {
 
       {/* ── Hero ── */}
       <div className="relative border-b border-neutral-800 py-20 px-6 overflow-hidden">
-        <img src="https://drive.google.com/thumbnail?id=14phTvXtXXaoh0thcbO3NEoiU5Ch1dPK8&sz=w1200" alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-20" />
-        <div className="absolute inset-0 bg-neutral-950/60" />
+        <img src="https://drive.google.com/thumbnail?id=14phTvXtXXaoh0thcbO3NEoiU5Ch1dPK8&sz=w1200" alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-50" />
+        <div className="absolute inset-0 bg-neutral-950/30" />
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <Zap className="text-red-500 w-16 h-16 mx-auto mb-6" />
           <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">ECU Remap</h1>
@@ -984,8 +984,8 @@ const RemapPage = ({ navigateTo }) => {
 
         {/* ── Pricing ── */}
         <section className="relative p-8 rounded-3xl border border-neutral-800 overflow-hidden">
-          <img src="https://drive.google.com/thumbnail?id=1aqfxgrPBf88tILTPoq0j44wPhm9XHnX5&sz=w1200" alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-15" />
-          <div className="absolute inset-0 bg-gradient-to-br from-neutral-900/85 to-neutral-950/90 rounded-3xl" />
+          <img src="https://drive.google.com/thumbnail?id=1aqfxgrPBf88tILTPoq0j44wPhm9XHnX5&sz=w1200" alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-40" />
+          <div className="absolute inset-0 bg-gradient-to-br from-neutral-900/60 to-neutral-950/70 rounded-3xl" />
           <div className="relative z-10">
           <h2 className="text-3xl font-bold text-white mb-2">อัตราค่าบริการ (Pricing)</h2>
           <p className="text-neutral-400 mb-5">ราคามาตรฐาน พร้อมบริการเช็คความพร้อมก่อนและหลังจูน</p>
