@@ -3425,10 +3425,13 @@ const BookingPage = ({ navigateTo }) => {
                 <button
                   type="button"
                   onClick={() => {
-                    if (!navigator.geolocation) return alert('browser ไม่รองรับ GPS');
+                    if (mapCoords) { setShowMapPicker(true); return; }
+                    const fallback = () => { setMapCoords({ lat: 13.7563, lng: 100.5018 }); setShowMapPicker(true); };
+                    if (!navigator.geolocation) { fallback(); return; }
+                    const timer = setTimeout(fallback, 5000);
                     navigator.geolocation.getCurrentPosition(
-                      pos => { setMapCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setShowMapPicker(true); },
-                      () => { setMapCoords({ lat: 13.7563, lng: 100.5018 }); setShowMapPicker(true); }
+                      pos => { clearTimeout(timer); setMapCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setShowMapPicker(true); },
+                      () => { clearTimeout(timer); fallback(); }
                     );
                   }}
                   className="w-full flex items-center justify-center gap-2 border border-dashed border-neutral-700 hover:border-red-500/50 rounded-lg py-3 text-sm text-neutral-400 hover:text-red-400 transition-colors"
