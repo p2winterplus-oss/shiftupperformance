@@ -522,13 +522,14 @@ app.post('/api/book', async (req, res) => {
       return res.status(400).json({ success: false, error: 'กรุณากรอกข้อมูลให้ครบ' });
     }
 
-    // ตรวจว่า slot ซ้ำไหม
-    const already = bookings.find(b => b.date === date && b.time === time);
+    // ตรวจว่า slot ซ้ำไหม (ข้าม cancelled)
+    const already = bookings.find(b => b.date === date && b.time === time && b.status !== 'cancelled');
     if (already) return res.status(409).json({ success: false, error: 'เวลานี้มีคนจองแล้ว' });
 
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const cancelCode = String(Math.floor(1000 + Math.random() * 9000)); // 4-digit code
     const booking = {
-      id, date, time, name, phone,
+      id, cancelCode, date, time, name, phone,
       lineId: lineId || '',
       carModel: carModel || '',
       carYear: carYear || '',
@@ -583,7 +584,7 @@ app.post('/api/book', async (req, res) => {
       await saveBookings();
     });
 
-    res.json({ success: true, id });
+    res.json({ success: true, id, cancelCode });
   } catch (err) {
     res.status(500).json({ success: false, error: err.toString() });
   }
@@ -638,6 +639,42 @@ app.post('/api/save-booking-config', async (req, res) => {
 // ── GET /api/bookings → admin views all bookings ─────────────────
 app.get('/api/bookings', (_req, res) => {
   res.json({ bookings });
+});
+
+// ── POST /api/cancel-by-code → customer self-cancel ──────────────
+app.post('/api/cancel-by-code', async (req, res) => {
+  const { cancelCode } = req.body || {};
+  if (!cancelCode) return res.status(400).json({ success: false, error: 'กรุณากรอกรหัสยกเลิก' });
+
+  const idx = bookings.findIndex(b => b.cancelCode === String(cancelCode) && b.status !== 'cancelled');
+  if (idx === -1) return res.status(404).json({ success: false, error: 'ไม่พบรหัสนี้ หรือการจองถูกยกเลิกไปแล้ว' });
+
+  const b = bookings[idx];
+  // Check 12-hour deadline: appointmentDateTime - now > 12h
+  const [y, m, d] = b.date.split('-').map(Number);
+  const [hh, mm] = b.time.split(':').map(Number);
+  const apptTime = new Date(y, m - 1, d, hh, mm, 0);
+  const hoursUntil = (apptTime - Date.now()) / 3600000;
+  if (hoursUntil < 12) {
+    return res.status(400).json({ success: false, error: `ไม่สามารถยกเลิกได้ — เหลือเวลาก่อนนัดไม่ถึง 12 ชั่วโมง (เหลือ ${hoursUntil > 0 ? hoursUntil.toFixed(1) + ' ชม.' : 'เลยเวลานัดแล้ว'})` });
+  }
+
+  bookings[idx].status = 'cancelled';
+  bookingsDirty = true;
+
+  const msg = `❌ <b>ลูกค้ายกเลิกการจอง</b>\nวันที่: ${b.date} เวลา: ${b.time}\nชื่อ: ${b.name}\nโทร: ${b.phone}\nรถ: ${b.carModel} ${b.carYear}`;
+  setImmediate(async () => {
+    await sendTelegram(msg);
+    try {
+      await fetch(SHEET_DOPOST_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source: 'cancel-booking', id: b.id, date: b.date, time: b.time }),
+      });
+    } catch (e) { console.error('[cancel-by-code sheet]', e.message); }
+  });
+
+  res.json({ success: true, date: b.date, time: b.time, name: b.name });
 });
 
 // ── POST /api/cancel-booking → admin cancels a booking ───────────

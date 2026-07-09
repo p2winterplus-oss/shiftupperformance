@@ -62,7 +62,7 @@ function notifyServer(payload) {
 
 // --- MAIN APP COMPONENT (Handles Routing) ---
 // แปลง pathname → page key และกลับกัน
-const PATH_MAP = { '/': 'home', '/remap': 'remap', '/hks': 'hks', '/panthera': 'panthera', '/partner': 'partner', '/about': 'about', '/booking': 'booking' };
+const PATH_MAP = { '/': 'home', '/remap': 'remap', '/hks': 'hks', '/panthera': 'panthera', '/partner': 'partner', '/about': 'about', '/booking': 'booking', '/cancel': 'cancel' };
 const PAGE_PATH = Object.fromEntries(Object.entries(PATH_MAP).map(([k, v]) => [v, k]));
 const pathToPage = (p) => PATH_MAP[p] || 'home';
 
@@ -227,6 +227,7 @@ const ShiftupApp = () => {
         {activePage === 'home'     && <HomePage navigateTo={navigateTo} lineUrl={lineUrl} />}
         {activePage === 'remap'    && <RemapPage navigateTo={navigateTo} />}
         {activePage === 'booking'  && <BookingPage navigateTo={navigateTo} />}
+        {activePage === 'cancel'   && <CancelPage navigateTo={navigateTo} />}
         {activePage === 'hks'      && <HKSPage />}
         {activePage === 'panthera' && <PantheraPage />}
         {activePage === 'partner'  && <PartnerPage />}
@@ -3269,6 +3270,102 @@ const MapPicker = ({ initialLat, initialLng, onConfirm, onClose }) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════
+//  CANCEL PAGE
+// ═══════════════════════════════════════════════════════════════════
+const CancelPage = ({ navigateTo }) => {
+  const [code, setCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null); // { success, date, time, name, error }
+
+  const handleCancel = async (e) => {
+    e.preventDefault();
+    if (code.length !== 4) return;
+    setLoading(true);
+    setResult(null);
+    try {
+      const data = await fetch('/api/cancel-by-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cancelCode: code }),
+      }).then(r => r.json());
+      setResult(data);
+    } catch {
+      setResult({ success: false, error: 'ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่' });
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-6 py-16">
+      <div className="w-full max-w-sm">
+        <button onClick={() => navigateTo('booking')} className="flex items-center gap-2 text-neutral-400 hover:text-white text-sm mb-8 transition-colors">
+          <ChevronLeft size={16} /> กลับหน้าจองคิว
+        </button>
+
+        {result?.success ? (
+          <div className="text-center">
+            <CheckCircle size={56} className="text-green-500 mx-auto mb-5" />
+            <h2 className="text-2xl font-black text-white mb-2">ยกเลิกสำเร็จ</h2>
+            <p className="text-neutral-400 mb-1">วันที่: <span className="text-white font-bold">{result.date}</span></p>
+            <p className="text-neutral-400 mb-1">เวลา: <span className="text-white font-bold">{result.time} น.</span></p>
+            <p className="text-neutral-400 mb-8">ชื่อ: <span className="text-white font-bold">{result.name}</span></p>
+            <p className="text-neutral-500 text-sm mb-8">การจองของคุณถูกยกเลิกเรียบร้อยแล้ว<br/>สามารถจองคิวใหม่ได้ทุกเมื่อ</p>
+            <div className="flex flex-col gap-3">
+              <button onClick={() => navigateTo('booking')} className="w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold transition-colors">จองคิวใหม่</button>
+              <button onClick={() => navigateTo('home')} className="w-full px-6 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-full font-bold transition-colors">กลับหน้าแรก</button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="mb-8">
+              <h1 className="text-3xl font-black text-white mb-2">ยกเลิกการจอง</h1>
+              <p className="text-neutral-400 text-sm">กรอกรหัส 4 หลักที่ได้รับหลังจองคิว</p>
+            </div>
+
+            <form onSubmit={handleCancel} className="space-y-5">
+              <div>
+                <label className="text-neutral-300 text-sm font-medium block mb-2">รหัสยกเลิก (4 หลัก)</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={4}
+                  value={code}
+                  onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  placeholder="0000"
+                  className="w-full bg-neutral-900 border border-neutral-700 focus:border-amber-500 rounded-xl px-4 py-4 text-white text-3xl font-black tracking-[0.5em] text-center outline-none transition-colors"
+                />
+              </div>
+
+              {result?.error && (
+                <div className="bg-red-950/60 border border-red-800/50 rounded-xl px-4 py-3 flex items-start gap-2">
+                  <AlertCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
+                  <p className="text-red-300 text-sm">{result.error}</p>
+                </div>
+              )}
+
+              <div className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3">
+                <p className="text-neutral-500 text-xs leading-relaxed">
+                  ⚠️ ยกเลิกได้ก่อนเวลานัด <span className="text-white font-bold">12 ชั่วโมง</span> เท่านั้น<br/>
+                  หากเลยกำหนดแล้ว กรุณาติดต่อทีมงานโดยตรง
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={code.length !== 4 || loading}
+                className="w-full py-4 bg-red-600 hover:bg-red-700 disabled:bg-neutral-800 disabled:text-neutral-600 text-white rounded-full font-black text-lg transition-colors"
+              >
+                {loading ? 'กำลังตรวจสอบ...' : 'ยืนยันยกเลิก'}
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════
 //  BOOKING PAGE
 // ═══════════════════════════════════════════════════════════════════
 const BookingPage = ({ navigateTo }) => {
@@ -3281,6 +3378,7 @@ const BookingPage = ({ navigateTo }) => {
   const [submitting, setSubmitting] = useState(false);
   const [sending, setSending] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [cancelCode, setCancelCode] = useState('');
   const [error, setError] = useState('');
   const [showMapPicker, setShowMapPicker] = useState(false);
   const [mapCoords, setMapCoords] = useState(null);
@@ -3339,6 +3437,7 @@ const BookingPage = ({ navigateTo }) => {
       ]);
       if (data.success) {
         setBookedSlots(prev => ({ ...prev, [selectedDate]: [...(prev[selectedDate] || []), selectedTime] }));
+        setCancelCode(data.cancelCode || '');
         setSuccess(true);
       } else {
         setError(data.error || 'เกิดข้อผิดพลาด');
@@ -3488,15 +3587,29 @@ const BookingPage = ({ navigateTo }) => {
   );
 
   if (success) return (
-    <div className="min-h-screen flex items-center justify-center px-6">
-      <div className="text-center max-w-md">
+    <div className="min-h-screen flex items-center justify-center px-6 py-12">
+      <div className="text-center max-w-md w-full">
         <CheckCircle size={64} className="text-green-500 mx-auto mb-6" />
         <h2 className="text-3xl font-black text-white mb-4">จองคิวสำเร็จ!</h2>
         <p className="text-neutral-400 mb-2">วันที่: <span className="text-white font-bold">{thDateFull(selectedDate)}</span></p>
         <p className="text-neutral-400 mb-6">เวลา: <span className="text-white font-bold">{selectedTime} น.</span></p>
+
+        {cancelCode && (
+          <div className="bg-neutral-900 border border-amber-500/40 rounded-2xl p-5 mb-6 text-left">
+            <p className="text-amber-400 text-xs font-bold uppercase tracking-widest mb-2">รหัสยกเลิกการจอง</p>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-4xl font-black text-white tracking-[0.3em]">{cancelCode}</span>
+            </div>
+            <p className="text-neutral-400 text-xs leading-relaxed">
+              📸 ถ่ายรูปรหัสนี้เก็บไว้ — ใช้ยกเลิกการจองได้ที่หน้า <span className="text-amber-400">"ยกเลิกการจอง"</span><br/>
+              ⚠️ ยกเลิกได้ก่อนเวลานัด <span className="text-white font-bold">12 ชั่วโมง</span> เท่านั้น
+            </p>
+          </div>
+        )}
+
         <p className="text-sm text-neutral-500 mb-8">ทีมงานจะติดต่อกลับเพื่อยืนยันการนัดหมายผ่านเบอร์โทรหรือ LINE ของคุณ</p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <button onClick={() => { setSuccess(false); setSelectedDate(null); setSelectedTime(null); setForm({ name:'',phone:'',lineId:'',carModel:'',carYear:'',carColor:'',note:'',locationName:'',locationUrl:'' }); }} className="px-6 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-full font-bold transition-colors">จองคิวใหม่</button>
+          <button onClick={() => { setSuccess(false); setCancelCode(''); setSelectedDate(null); setSelectedTime(null); setForm({ name:'',phone:'',lineId:'',carModel:'',carYear:'',carColor:'',note:'',locationName:'',locationUrl:'' }); }} className="px-6 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-full font-bold transition-colors">จองคิวใหม่</button>
           <button onClick={() => navigateTo('home')} className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold transition-colors">กลับหน้าแรก</button>
         </div>
       </div>
