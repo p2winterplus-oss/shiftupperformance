@@ -3355,17 +3355,19 @@ const BookingPage = ({ navigateTo }) => {
             <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
               <h3 className="text-white font-bold mb-4 flex items-center gap-2"><Clock size={18} className="text-red-500" /> เลือกเวลา — {thDateFull(selectedDate)}</h3>
               <div className="grid grid-cols-3 gap-2">
-                {getSlots(selectedDate).map(t => {
-                  const booked = isBooked(selectedDate, t);
+                {(config?.defaultSlots || []).map(t => {
+                  const adminClosed = !getSlots(selectedDate).includes(t);
+                  const customerBooked = isBooked(selectedDate, t);
+                  const unavailable = adminClosed || customerBooked;
                   const active = selectedTime === t;
                   return (
                     <button key={t}
-                      onClick={() => !booked && setSelectedTime(t)}
-                      disabled={booked}
+                      onClick={() => !unavailable && setSelectedTime(t)}
+                      disabled={unavailable}
                       className={`py-3 rounded-xl text-sm font-bold transition-all
-                        ${booked ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed' : active ? 'bg-red-600 text-white' : 'bg-neutral-800 hover:bg-neutral-700 text-white'}`}
+                        ${unavailable ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed' : active ? 'bg-red-600 text-white' : 'bg-neutral-800 hover:bg-neutral-700 text-white'}`}
                     >
-                      {booked ? <span className="text-xs">เต็มแล้ว</span> : t}
+                      {unavailable ? <><span className="block">{t}</span><span className="text-xs font-normal text-neutral-500">จองแล้ว</span></> : t}
                     </button>
                   );
                 })}
