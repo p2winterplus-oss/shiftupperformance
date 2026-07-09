@@ -61,15 +61,32 @@ function notifyServer(payload) {
 }
 
 // --- MAIN APP COMPONENT (Handles Routing) ---
+// แปลง pathname → page key และกลับกัน
+const PATH_MAP = { '/': 'home', '/remap': 'remap', '/hks': 'hks', '/panthera': 'panthera', '/partner': 'partner', '/about': 'about', '/booking': 'booking' };
+const PAGE_PATH = Object.fromEntries(Object.entries(PATH_MAP).map(([k, v]) => [v, k]));
+const pathToPage = (p) => PATH_MAP[p] || 'home';
+
 const ShiftupApp = () => {
-  const [activePage, setActivePage] = useState('home');
+  const [activePage, setActivePage] = useState(() => pathToPage(window.location.pathname));
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showDashPw, setShowDashPw] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    // อัปเดต URL ให้ตรงกับหน้าที่เปิด
+    const path = PAGE_PATH[activePage] || '/';
+    if (window.location.pathname !== path) {
+      window.history.pushState({ page: activePage }, '', path);
+    }
   }, [activePage]);
+
+  // รองรับปุ่ม back/forward ของ browser
+  useEffect(() => {
+    const onPop = (e) => setActivePage(e.state?.page || pathToPage(window.location.pathname));
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
