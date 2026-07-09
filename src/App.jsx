@@ -183,11 +183,11 @@ const ShiftupApp = () => {
             </div>
 
             <div className="hidden md:flex items-center gap-2">
-              <button onClick={() => navigateTo('booking')} className="bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-1.5 rounded-full text-xs font-bold tracking-wide transition-all border border-neutral-700 hover:border-red-500/50 flex items-center gap-1.5">
+              <button onClick={() => navigateTo('booking')} className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-full text-xs font-bold tracking-wide transition-all shadow-[0_0_12px_rgba(220,38,38,0.35)] hover:shadow-[0_0_20px_rgba(220,38,38,0.55)] flex items-center gap-1.5">
                 <CalendarCheck size={14} />
                 จองคิวรีแมป
               </button>
-              <a href={lineUrl} target="_blank" rel="noreferrer" className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-full text-xs font-bold tracking-wide transition-all shadow-[0_0_12px_rgba(220,38,38,0.35)] hover:shadow-[0_0_20px_rgba(220,38,38,0.55)] flex items-center gap-1.5">
+              <a href={lineUrl} target="_blank" rel="noreferrer" className="bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-1.5 rounded-full text-xs font-bold tracking-wide transition-all border border-neutral-700 flex items-center gap-1.5">
                 <MessageCircle size={14} />
                 ติดต่อเรา
               </a>
@@ -211,10 +211,10 @@ const ShiftupApp = () => {
               <button onClick={() => navigateTo('panthera')} className="block px-3 py-2 text-base font-medium text-white text-left">Panthera Active Exhaust Sound</button>
               <button onClick={() => navigateTo('partner')} className="block px-3 py-2 text-base font-medium text-orange-400 text-left">สมัคร Partner / ทีมงาน</button>
               <button onClick={() => navigateTo('about')} className="block px-3 py-2 text-base font-medium text-neutral-300 text-left">About Us</button>
-              <button onClick={() => { navigateTo('booking'); setMobileMenuOpen(false); }} className="mt-2 bg-neutral-800 border border-neutral-700 text-white px-4 py-2.5 rounded-md text-center font-bold flex justify-center items-center gap-2 text-sm">
+              <button onClick={() => { navigateTo('booking'); setMobileMenuOpen(false); }} className="mt-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-md text-center font-bold flex justify-center items-center gap-2 text-sm shadow-[0_0_12px_rgba(220,38,38,0.3)]">
                 <CalendarCheck size={16} /> จองคิวรีแมปรถยนต์
               </button>
-              <a href={lineUrl} target="_blank" rel="noreferrer" className="mt-2 bg-red-600 text-white px-4 py-3 rounded-md text-center font-bold flex justify-center items-center gap-2">
+              <a href={lineUrl} target="_blank" rel="noreferrer" className="mt-2 bg-neutral-800 border border-neutral-700 text-white px-4 py-3 rounded-md text-center font-bold flex justify-center items-center gap-2">
                 <MessageCircle size={18} /> ติดต่อเรา
               </a>
             </div>
@@ -3600,10 +3600,14 @@ const BookingPage = ({ navigateTo }) => {
             <div className="flex items-center gap-3 mb-3">
               <span className="text-4xl font-black text-white tracking-[0.3em]">{cancelCode}</span>
             </div>
-            <p className="text-neutral-400 text-xs leading-relaxed">
-              📸 ถ่ายรูปรหัสนี้เก็บไว้ — ใช้ยกเลิกการจองได้ที่หน้า <span className="text-amber-400">"ยกเลิกการจอง"</span><br/>
+            <p className="text-neutral-400 text-xs leading-relaxed mb-3">
+              📸 ถ่ายรูปรหัสนี้เก็บไว้<br/>
               ⚠️ ยกเลิกได้ก่อนเวลานัด <span className="text-white font-bold">12 ชั่วโมง</span> เท่านั้น
             </p>
+            <button onClick={() => navigateTo('cancel')}
+              className="w-full py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-amber-400 text-sm font-bold transition-colors border border-amber-500/30">
+              ไปหน้ายกเลิกการจอง →
+            </button>
           </div>
         )}
 
@@ -3627,7 +3631,12 @@ const BookingPage = ({ navigateTo }) => {
           <ChevronLeft size={16} /> กลับหน้า ECU Remap
         </button>
         <h1 className="text-4xl font-black text-white mb-3">จองคิวรีแมปรถยนต์</h1>
-        <p className="text-neutral-400">เลือกวันและเวลาที่สะดวก ทีมงานจะยืนยันผ่าน LINE</p>
+        <div className="flex items-center gap-4">
+          <p className="text-neutral-400">เลือกวันและเวลาที่สะดวก ทีมงานจะยืนยันผ่าน LINE</p>
+          <button onClick={() => navigateTo('cancel')} className="shrink-0 text-xs text-neutral-500 hover:text-red-400 underline underline-offset-2 transition-colors">
+            ยกเลิกการจอง
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
