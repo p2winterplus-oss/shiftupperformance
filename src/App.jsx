@@ -3351,11 +3351,23 @@ const BookingPage = ({ navigateTo }) => {
           </div>
 
           {/* Time slots */}
-          {selectedDate && (
+          {selectedDate && (() => {
+            const allSlots = config?.defaultSlots || [];
+            const availableCount = allSlots.filter(t => getSlots(selectedDate).includes(t) && !isBooked(selectedDate, t)).length;
+            return (
             <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
-              <h3 className="text-white font-bold mb-4 flex items-center gap-2"><Clock size={18} className="text-red-500" /> เลือกเวลา — {thDateFull(selectedDate)}</h3>
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-white font-bold flex items-center gap-2"><Clock size={18} className="text-red-500" /> เลือกเวลา</h3>
+                {availableCount <= 3 && availableCount > 0 && (
+                  <span className="text-xs font-bold text-amber-400 animate-pulse">⚡ เหลือ {availableCount} ช่อง!</span>
+                )}
+                {availableCount === 0 && (
+                  <span className="text-xs font-bold text-red-400">เต็มทุกช่อง</span>
+                )}
+              </div>
+              <p className="text-neutral-500 text-xs mb-4">{thDateFull(selectedDate)}</p>
               <div className="grid grid-cols-3 gap-2">
-                {(config?.defaultSlots || []).map(t => {
+                {allSlots.map(t => {
                   const adminClosed = !getSlots(selectedDate).includes(t);
                   const customerBooked = isBooked(selectedDate, t);
                   const unavailable = adminClosed || customerBooked;
@@ -3364,16 +3376,26 @@ const BookingPage = ({ navigateTo }) => {
                     <button key={t}
                       onClick={() => !unavailable && setSelectedTime(t)}
                       disabled={unavailable}
-                      className={`py-3 rounded-xl text-sm font-bold transition-all
-                        ${unavailable ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed' : active ? 'bg-red-600 text-white' : 'bg-neutral-800 hover:bg-neutral-700 text-white'}`}
+                      className={`py-3 rounded-xl text-sm font-bold transition-all relative overflow-hidden
+                        ${unavailable
+                          ? 'bg-red-950/60 border border-red-900/40 text-red-900 cursor-not-allowed'
+                          : active
+                            ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-105'
+                            : 'bg-neutral-800 border border-neutral-600 hover:border-green-500/60 hover:bg-neutral-700 text-white hover:shadow-md hover:shadow-green-900/20'}`}
                     >
-                      {unavailable ? <><span className="block">{t}</span><span className="text-xs font-normal text-neutral-500">จองแล้ว</span></> : t}
+                      {unavailable ? (
+                        <span className="flex flex-col items-center gap-0.5">
+                          <span className="line-through text-red-900/80 text-xs">{t}</span>
+                          <span className="text-[10px] font-bold text-red-700 tracking-wide">จองแล้ว</span>
+                        </span>
+                      ) : t}
                     </button>
                   );
                 })}
               </div>
             </div>
-          )}
+            );
+          })()}
 
           {/* Customer location input — 2 ช่องแยกกัน */}
           <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 mt-6 space-y-4">
