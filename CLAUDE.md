@@ -5,7 +5,7 @@
 - **URL**: deploy บน Railway (auto-deploy จาก GitHub main)
 - **Domain**: `www.shiftupperformance.com` — live แล้ว (18 มิ.ย. 2569)
 - **Stack**: React 18 + Vite 5 + Tailwind CSS v3 + Express server
-- **วันที่อัปเดต**: 9 ก.ค. 2569 (session 2)
+- **วันที่อัปเดต**: 9 ก.ค. 2569 (session 4)
 
 ---
 
@@ -135,6 +135,7 @@ browser useEffect → POST /api/track-visit → server.js
 | `AboutPage` | หน้า About Us (6 sections) |
 | `AboutAdminPanel` | About admin |
 | `MapPicker` | Leaflet map modal สำหรับเลือกพิกัด GPS (booking form) |
+| `CancelPage` | หน้ายกเลิกการจองสำหรับลูกค้า (/cancel URL) — กรอกรหัส 4 หลัก |
 | `BookingPage` | หน้าจองคิว ECU Remap (/booking URL) |
 | `BookingAdminPanel` | Booking admin (slot config + per-date slot + list จอง) |
 | `AnalyticsSection` | กราฟ analytics ใน dashboard (bar chart + trend line + visitor table) |
@@ -313,6 +314,8 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 | POST | `{source:'remap'}` | ✅ doPost | บันทึก Remap Lead + (ไม่ส่ง email แล้ว) |
 | POST | `{source:'partner'}` | ✅ doPost | บันทึก Partner Application + (ไม่ส่ง email แล้ว) |
 | POST | `{source:'visit'}` | ✅ doPost | บันทึก Visit ลง Visits sheet |
+| POST | `{source:'booking'}` | ✅ doPost | บันทึก Booking ลง Bookings sheet |
+| POST | `{source:'cancel-booking', id, date, time}` | ⚠️ doPost | อัปเดตสถานะ cancelled — **ต้อง deploy Code.gs** ก่อนจึงจะ work |
 
 ---
 
@@ -425,6 +428,13 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - [x] **Remap page layout ใหม่** (9 ก.ค. 2569 session 3): Pricing full-width + packages grid 3 คอลัมน์, form "ประเมินรถฟรี" ย้ายไปล่างสุด (หลัง Reviews)
 - [x] **Dashboard Bookings** (9 ก.ค. 2569 session 3): เพิ่มตาราง "การจองคิวรีแมป" + card นับจอง (4 cards) พร้อมลิงก์ 📍 แผนที่
 - [x] **Bug fix: Booking Sheet** (9 ก.ค. 2569 session 3): แก้ `SHEET_DOPOST_URL` ใน server.js ชี้ผิด deployment → บันทึก Sheet ได้แล้ว
+- [x] **Loading animation** (9 ก.ค. 2569 session 4): หลังกดจองคิว — racing car SVG วิ่งข้ามจอ, progress bar 7 วิ, ชิปรายละเอียดการจอง fade-in
+- [x] **Navbar: ปุ่มจองคิว** (9 ก.ค. 2569 session 4): เพิ่มปุ่ม "จองคิวรีแมป" ใน navbar desktop + mobile (ขนาดเล็กกว่าปุ่มติดต่อเรา)
+- [x] **Navbar: ปุ่มติดต่อเราเล็กลง** (9 ก.ค. 2569 session 4): ลด padding + icon size ให้เหมาะกับ navbar
+- [x] **Admin cancel → slot ว่างทันที** (9 ก.ค. 2569 session 4): `bookedSlots` filter ข้าม `status === 'cancelled'` แล้ว ลูกค้าเห็น slot ว่างทันที ประวัติยังอยู่ใน bookings.json
+- [x] **Duplicate booking check ข้าม cancelled** (9 ก.ค. 2569 session 4): slot ที่ถูกยกเลิกสามารถจองใหม่ได้
+- [x] **ระบบลูกค้ายกเลิกเอง** (9 ก.ค. 2569 session 4): รหัส 4 หลักสุ่มเมื่อจองสำเร็จ, หน้า `/cancel`, deadline 12 ชม.ก่อนนัด, Telegram แจ้ง admin, POST Sheet `{source:'cancel-booking'}`
+- [x] **URL route `/cancel`** (9 ก.ค. 2569 session 4): เพิ่มใน PATH_MAP + router
 
 ---
 
@@ -433,7 +443,8 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - [ ] Watermark สำหรับ Panthera (user บอกยังไม่ทำ)
 - [ ] Google Business Profile — เพิ่มรูปภาพ, เวลาทำการ, คำอธิบายบริการให้ครบ
 - [ ] เนื้อหาบนเว็บ — เพิ่มบทความ/เนื้อหาภาษาไทยให้ Google index ได้ดีขึ้น (สำคัญสำหรับ SEO)
-- [ ] **Apps Script deploy** — user ต้อง deploy Code.gs ด้วยมือ (เพิ่ม Bookings tab) ยังไม่ได้ confirm ว่าทำแล้ว
+- [ ] **Apps Script deploy** — user ต้อง deploy Code.gs ด้วยมือ (เพิ่ม Bookings tab + cancel-booking handler) ยังไม่ได้ confirm ว่าทำแล้ว
+- [ ] **Code.gs: cancel-booking handler** — เพิ่ม `else if (source === 'cancel-booking')` หา row ตาม id แล้วเปลี่ยน column สถานะเป็น "ยกเลิก" (ยังไม่ได้ทำ — Sheet จะไม่ update สถานะแต่ระบบหลักทำงานปกติ)
 
 ---
 
@@ -505,6 +516,8 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 11. **SEO files** — `index.html`, `sitemap.xml`, `robots.txt`, `llms.txt` ใช้ `shiftupperformance.com` เป็น canonical → อย่า overwrite ด้วย Railway URL
 12. **Leaflet CDN** อยู่ใน `index.html` — อย่าลบ ไม่งั้น MapPicker ใน BookingPage พัง
 13. **URL routing** — server.js มี `app.get('*', ...)` fallback อยู่แล้ว ทุก URL จะ serve index.html ถูกต้อง
+14. **cancelCode** — เก็บเฉพาะใน `bookings[]` RAM + bookings.json เท่านั้น ไม่ได้ส่ง email/Telegram ให้ลูกค้า → ลูกค้าต้องถ่ายรูปจาก success screen เก็บเอง
+15. **cancel-booking POST → Sheet** — server.js ส่งไปแล้ว แต่ Code.gs ยังไม่มี handler → Sheet จะยังไม่ update สถานะจนกว่า user จะ deploy Code.gs ใหม่
 
 ---
 
@@ -598,3 +611,13 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 2. Dashboard: เพิ่มตาราง "การจองคิวรีแมป" + 4 summary cards (เพิ่ม Bookings + รวม Leads+จอง)
 3. Bug fix: `SHEET_DOPOST_URL` ชี้ผิด deployment → แก้ให้ใช้ URL เดียวกับ DOGET_URL → บันทึก Sheet ได้แล้ว
 4. อัปเดต memory + CLAUDE.md ครบชุด
+
+**9 ก.ค. 2569 — Session 4:**
+1. Loading animation: racing car SVG วิ่งข้ามจอ + progress bar 7 วิ + ชิปรายละเอียดการจอง fade-in ก่อนหน้า success
+2. Navbar: เพิ่มปุ่ม "จองคิวรีแมป" (เล็ก) + ลดขนาดปุ่ม "ติดต่อเรา" ทั้ง desktop และ mobile
+3. Admin cancel → slot คืนว่าง: bookedSlots กรอง cancelled ออก + duplicate check ข้าม cancelled
+4. ระบบลูกค้ายกเลิกเอง: `/cancel` page + CancelPage component + `/api/cancel-by-code` endpoint
+   - cancelCode 4 หลักสุ่มตอนสร้าง booking → แสดงบน success screen (กล่องสีทอง)
+   - deadline: ยกเลิกได้ก่อนเวลานัด 12 ชม. เท่านั้น
+   - ยกเลิกสำเร็จ → slot ว่างทันที + Telegram แจ้ง admin
+5. อัปเดต memory + CLAUDE.md ครบชุด
