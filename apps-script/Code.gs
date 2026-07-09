@@ -142,6 +142,24 @@ function doPost(e) {
       ]);
 
       // ── Email: server.js ส่งผ่าน Resend API แล้ว → ไม่ต้องส่งซ้ำจาก Apps Script ──
+
+    } else if (data.source === 'booking') {
+      appendRow(ss, 'Bookings', [
+        data.timestamp    || new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }),
+        data.date         || '',
+        data.time         || '',
+        data.name         || '',
+        data.phone        || '',
+        data.lineId       || '',
+        data.carModel     || '',
+        data.carYear      || '',
+        data.carColor     || '',
+        data.locationName || '',
+        data.locationUrl  || '',
+        data.note         || '',
+        data.status       || 'confirmed',
+        data.id           || '',
+      ]);
     }
 
     return jsonResponse({ success: true });
@@ -212,7 +230,7 @@ function setupSheets() {
     buildDashboard(dash);
   }
 
-  // ── Visits (10 columns) ───────────────────────────────────────────────────────
+  // ── Visits (12 columns) ───────────────────────────────────────────────────────
   let visitsSheet = ss.getSheetByName('Visits');
   if (!visitsSheet) {
     visitsSheet = ss.insertSheet('Visits');
@@ -221,6 +239,17 @@ function setupSheets() {
     styleHeader(visitsSheet, h.length, '#1a73e8');
     [180,160,100,80,200,150,130,90,90,200,200,80].forEach((w, i) => visitsSheet.setColumnWidth(i + 1, w));
     visitsSheet.setFrozenRows(1);
+  }
+
+  // ── Bookings (14 columns) ─────────────────────────────────────────────────────
+  let bookingsSheet = ss.getSheetByName('Bookings');
+  if (!bookingsSheet) {
+    bookingsSheet = ss.insertSheet('Bookings');
+    const h = ['วันที่จอง','วันนัด','เวลานัด','ชื่อ-นามสกุล','เบอร์โทร','LINE ID','รุ่นรถ','ปีรถ','สีรถ','สถานที่นัดหมาย','พิกัด GPS','หมายเหตุ','สถานะ','Booking ID'];
+    bookingsSheet.appendRow(h);
+    styleHeader(bookingsSheet, h.length, '#2d7d32');
+    [150,100,80,140,110,110,110,70,80,200,280,180,90,160].forEach((w, i) => bookingsSheet.setColumnWidth(i + 1, w));
+    bookingsSheet.setFrozenRows(1);
   }
 
   return '✅ Setup complete!';
