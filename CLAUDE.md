@@ -5,7 +5,7 @@
 - **URL**: deploy บน Railway (auto-deploy จาก GitHub main)
 - **Domain**: `www.shiftupperformance.com` — live แล้ว (18 มิ.ย. 2569)
 - **Stack**: React 18 + Vite 5 + Tailwind CSS v3 + Express server
-- **วันที่อัปเดต**: 19 มิ.ย. 2569 (session 2)
+- **วันที่อัปเดต**: 9 ก.ค. 2569
 
 ---
 
@@ -399,6 +399,9 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - [x] **Remap page restructure** (19 มิ.ย. 2569): ย้าย Pricing+Form ขึ้นมาก่อน + บทความเปลี่ยนเป็น Accordion (พับ/กาง)
 - [x] **Bot filtering** (19 มิ.ย. 2569): กรอง bot ISP (Amazon/Google/OVH/Microsoft ฯลฯ) ออกจาก visits — ไม่บันทึกลง Sheet/visits.json
 - [x] **Bot counter Dashboard** (19 มิ.ย. 2569): card 🤖 แสดงจำนวน bot วันนี้ + ช่วงที่เลือก แยกจากคนจริง follow date filter
+- [x] **หน้า About Us** (28 มิ.ย. 2569): เพิ่ม tab navbar + 6 sections (Hero, Who We Are, Services, Why Us, Policy, Contact) + AboutAdminPanel
+- [x] **Footer Quick Links**: เพิ่ม About Us
+- [x] **CTA navbar**: เปลี่ยนจาก "ปรึกษาช่างเทคนิค" → "ติดต่อเรา"
 
 ---
 
@@ -531,3 +534,8 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 2. Bot filtering: กรอง ISP datacenter (Amazon/Google/OVH/Microsoft ฯลฯ) ออกจาก visits — ไม่บันทึกลง Sheet
 3. Bot counter: Dashboard แสดง 🤖 จำนวน bot ที่กรองออก (วันนี้ + ช่วงที่เลือก) แยกจากคนจริง
 4. บันทึก memory ลง .claude ครบชุด (user_profile, feedback, project, reference)
+
+**28 มิ.ย. 2569 (เครื่องอื่น):**
+1. เพิ่มหน้า About Us — tab navbar (desktop + mobile) + 6 sections + AboutAdminPanel
+2. เพิ่ม About Us ใน footer Quick Links
+3. เปลี่ยนปุ่ม CTA navbar: "ปรึกษาช่างเทคนิค" → "ติดต่อเรา"
