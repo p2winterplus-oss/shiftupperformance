@@ -435,6 +435,8 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - [x] **Duplicate booking check ข้าม cancelled** (9 ก.ค. 2569 session 4): slot ที่ถูกยกเลิกสามารถจองใหม่ได้
 - [x] **ระบบลูกค้ายกเลิกเอง** (9 ก.ค. 2569 session 4): รหัส 4 หลักสุ่มเมื่อจองสำเร็จ, หน้า `/cancel`, deadline 12 ชม.ก่อนนัด, Telegram แจ้ง admin, POST Sheet `{source:'cancel-booking'}`
 - [x] **URL route `/cancel`** (9 ก.ค. 2569 session 4): เพิ่มใน PATH_MAP + router
+- [x] **Code.gs cancel-booking handler** (10 ก.ค. 2569 session 6): หา row ตาม Booking ID → update สถานะ "ยกเลิก" + เวลาใน หมายเหตุ ✅ deploy แล้ว
+- [x] **OG Cover Image** (10 ก.ค. 2569 session 6): `public/images/og-cover.png` 1200×630px — og:image + twitter:image ✅
 - [x] **Footer phone fix** (9 ก.ค. 2569 session 5): ลบเบอร์ 088-788-8364 ออก, เบอร์ 083-009-2554 เป็น `href="tel:0830092554"` กด = โทรออกได้บนมือถือ
 - [x] **Navbar button prominence swap** (9 ก.ค. 2569 session 5): "จองคิวรีแมป" เป็นสีแดง (`bg-red-600`) เด่นกว่า — "ติดต่อเรา" เป็น `bg-neutral-800 border border-neutral-700` เล็กกว่า (ทั้ง desktop + mobile)
 - [x] **BookingPage cancel links** (9 ก.ค. 2569 session 5): เพิ่มลิงก์ยกเลิกการจองสองจุด — (1) ข้อความลิงก์ในส่วน header ของ BookingPage (2) ปุ่มบน success screen หลังจองสำเร็จ
@@ -547,7 +549,7 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 ---
 
 ## Last Session
-**วันที่**: 9 ก.ค. 2569 (session 2)
+**วันที่**: 10 ก.ค. 2569 (session 6)
 
 **6 มิ.ย. 2569 — Session 1:**
 1. เพิ่ม column filter dropdowns ในตาราง visitor details (Dashboard)
@@ -631,11 +633,9 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 5. อัปเดต memory + CLAUDE.md ครบชุด
 
 **10 ก.ค. 2569 — Session 6:**
-1. Navbar: เพิ่มปุ่ม "จองคิวรีแมป" (เล็ก สีเทา) ข้างปุ่ม "ติดต่อเรา" ทั้ง desktop + mobile
-2. Admin cancel → slot คืนว่างทันที (bookedSlots filter cancelled ออก) + duplicate check ข้าม cancelled
-3. ระบบลูกค้ายกเลิกเอง: CancelPage, /cancel route, /api/cancel-by-code (deadline 12 ชม., Telegram แจ้ง admin)
-4. Code.gs: เพิ่ม cancel-booking handler — หา row ตาม Booking ID → update สถานะ "ยกเลิก" + บันทึกเวลาใน หมายเหตุ ✅ **deploy แล้ว**
-5. อัปเดต CLAUDE.md + memory ครบชุด
+1. Code.gs: เพิ่ม cancel-booking handler — หา row ตาม Booking ID (column N) → update สถานะ "ยกเลิก" (column M) + ต่อท้ายหมายเหตุ (column L) เวลายกเลิก ✅ **deploy แล้ว**
+2. OG Cover Image: `public/images/og-cover.png` (1200×630px) — index.html og:image + twitter:image ชี้ไฟล์นี้แล้ว ✅ deploy แล้ว
+3. อัปเดต CLAUDE.md + memory ครบชุด
 
 **9 ก.ค. 2569 — Session 5:**
 1. Footer: ลบเบอร์ 088-788-8364 ออก — เหลือแค่ 083-009-2554 เป็น `href="tel:0830092554"` (กดโทรออกได้)
