@@ -449,7 +449,7 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 ---
 
 ## ค้างอยู่ / ต้องทำ
-- [ ] **OG Cover Image** — เพิ่ม `/images/og-cover.jpg` (1200×630px) เพื่อ LINE/FB preview สวยขึ้น
+- [x] **OG Cover Image** — `public/images/og-cover.png` (1200×630px) ✅ deploy แล้ว 10 ก.ค. 2569
 - [ ] Watermark สำหรับ Panthera (user บอกยังไม่ทำ)
 - [ ] Google Business Profile — เพิ่มรูปภาพ, เวลาทำการ, คำอธิบายบริการให้ครบ
 - [ ] เนื้อหาบนเว็บ — เพิ่มบทความ/เนื้อหาภาษาไทยให้ Google index ได้ดีขึ้น (สำคัญสำหรับ SEO)
