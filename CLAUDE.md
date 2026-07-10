@@ -453,8 +453,6 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - [ ] Watermark สำหรับ Panthera (user บอกยังไม่ทำ)
 - [ ] Google Business Profile — เพิ่มรูปภาพ, เวลาทำการ, คำอธิบายบริการให้ครบ
 - [ ] เนื้อหาบนเว็บ — เพิ่มบทความ/เนื้อหาภาษาไทยให้ Google index ได้ดีขึ้น (สำคัญสำหรับ SEO)
-- [ ] **Apps Script deploy** — user ต้อง deploy Code.gs ด้วยมือ (เพิ่ม Bookings tab + cancel-booking handler) ยังไม่ได้ confirm ว่าทำแล้ว
-- [ ] **Code.gs: cancel-booking handler** — เพิ่ม `else if (source === 'cancel-booking')` หา row ตาม id แล้วเปลี่ยน column สถานะเป็น "ยกเลิก" (ยังไม่ได้ทำ — Sheet จะไม่ update สถานะแต่ระบบหลักทำงานปกติ)
 
 ---
 
@@ -631,6 +629,13 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
    - deadline: ยกเลิกได้ก่อนเวลานัด 12 ชม. เท่านั้น
    - ยกเลิกสำเร็จ → slot ว่างทันที + Telegram แจ้ง admin
 5. อัปเดต memory + CLAUDE.md ครบชุด
+
+**10 ก.ค. 2569 — Session 6:**
+1. Navbar: เพิ่มปุ่ม "จองคิวรีแมป" (เล็ก สีเทา) ข้างปุ่ม "ติดต่อเรา" ทั้ง desktop + mobile
+2. Admin cancel → slot คืนว่างทันที (bookedSlots filter cancelled ออก) + duplicate check ข้าม cancelled
+3. ระบบลูกค้ายกเลิกเอง: CancelPage, /cancel route, /api/cancel-by-code (deadline 12 ชม., Telegram แจ้ง admin)
+4. Code.gs: เพิ่ม cancel-booking handler — หา row ตาม Booking ID → update สถานะ "ยกเลิก" + บันทึกเวลาใน หมายเหตุ ✅ **deploy แล้ว**
+5. อัปเดต CLAUDE.md + memory ครบชุด
 
 **9 ก.ค. 2569 — Session 5:**
 1. Footer: ลบเบอร์ 088-788-8364 ออก — เหลือแค่ 083-009-2554 เป็น `href="tel:0830092554"` (กดโทรออกได้)
