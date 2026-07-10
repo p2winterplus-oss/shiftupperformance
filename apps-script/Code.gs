@@ -160,6 +160,27 @@ function doPost(e) {
         data.status       || 'confirmed',
         data.id           || '',
       ]);
+
+    } else if (data.source === 'cancel-booking') {
+      // หา row ที่ Booking ID (column 14) ตรงกับ data.id แล้วเปลี่ยน status (column 13) เป็น "ยกเลิก"
+      const sheet = ss.getSheetByName('Bookings');
+      if (sheet && data.id) {
+        const lastRow = sheet.getLastRow();
+        if (lastRow > 1) {
+          const ids = sheet.getRange(2, 14, lastRow - 1, 1).getValues(); // column N = Booking ID
+          for (let i = 0; i < ids.length; i++) {
+            if (String(ids[i][0]) === String(data.id)) {
+              sheet.getRange(i + 2, 13).setValue('ยกเลิก'); // column M = สถานะ
+              const cancelledAt = new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' });
+              // บันทึกเวลายกเลิกใน cell หมายเหตุเดิม (column 12) ต่อท้าย
+              const noteCell = sheet.getRange(i + 2, 12);
+              const oldNote = noteCell.getValue() || '';
+              noteCell.setValue((oldNote ? oldNote + ' | ' : '') + 'ยกเลิก: ' + cancelledAt);
+              break;
+            }
+          }
+        }
+      }
     }
 
     return jsonResponse({ success: true });
