@@ -2782,9 +2782,12 @@ const DashboardPage = ({ onBack }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-900">
-                    {bookings.length === 0
-                      ? <tr><td colSpan={8} className="px-4 py-12 text-center text-neutral-600">ยังไม่มีการจอง</td></tr>
-                      : [...bookings].sort((a,b) => a.date > b.date ? 1 : -1).map((b, i) => (
+                    {(() => {
+                      const todayKey = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+                      const upcomingBookings = [...bookings].filter(b => b.date >= todayKey).sort((a,b) => a.date > b.date ? 1 : -1);
+                      return upcomingBookings.length === 0
+                        ? <tr><td colSpan={8} className="px-4 py-12 text-center text-neutral-600">ไม่มีการจองในอนาคต</td></tr>
+                        : upcomingBookings.map((b, i) => (
                         <tr key={i} className={`transition-colors ${b.status === 'cancelled' ? 'opacity-40 bg-neutral-950' : 'bg-neutral-950 hover:bg-neutral-900'}`}>
                           <td className={`${tdCls} text-neutral-500 whitespace-nowrap text-xs`}>{b.timestamp}</td>
                           <td className={`${tdCls} text-white font-bold whitespace-nowrap`}>{b.date}</td>
@@ -2800,7 +2803,8 @@ const DashboardPage = ({ onBack }) => {
                             {b.status === 'cancelled' ? <span className="text-red-500 font-bold">ยกเลิก</span> : b.note || '-'}
                           </td>
                         </tr>
-                      ))}
+                      ))
+                    })()}
                   </tbody>
                 </table>
               </div>
@@ -4009,7 +4013,7 @@ const BookingAdminPanel = ({ config: initConfig, onConfigSaved, onClose }) => {
 
       <div className="flex gap-2 mb-4">
         <button onClick={() => setTab('slots')} className={`px-3 py-1 rounded-lg text-sm font-bold transition-colors ${tab === 'slots' ? 'bg-red-600 text-white' : 'bg-neutral-800 text-neutral-400 hover:text-white'}`}>ตั้งค่า Slot</button>
-        <button onClick={() => setTab('bookings')} className={`px-3 py-1 rounded-lg text-sm font-bold transition-colors ${tab === 'bookings' ? 'bg-red-600 text-white' : 'bg-neutral-800 text-neutral-400 hover:text-white'}`}>การจองทั้งหมด ({bookings.filter(b => b.status === 'confirmed').length})</button>
+        <button onClick={() => setTab('bookings')} className={`px-3 py-1 rounded-lg text-sm font-bold transition-colors ${tab === 'bookings' ? 'bg-red-600 text-white' : 'bg-neutral-800 text-neutral-400 hover:text-white'}`}>การจองทั้งหมด ({bookings.filter(b => b.status === 'confirmed' && b.date >= new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' })).length})</button>
       </div>
 
       {tab === 'slots' && (
@@ -4130,8 +4134,12 @@ const BookingAdminPanel = ({ config: initConfig, onConfigSaved, onClose }) => {
 
       {tab === 'bookings' && (
         <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
-          {bookings.length === 0 && <p className="text-neutral-500 text-sm text-center py-4">ยังไม่มีการจอง</p>}
-          {[...bookings].sort((a, b) => a.date > b.date ? 1 : -1).map(b => (
+          {(() => {
+            const todayKey = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+            const upcoming = [...bookings].filter(b => b.date >= todayKey).sort((a, b) => a.date > b.date ? 1 : -1);
+            return upcoming.length === 0
+              ? <p className="text-neutral-500 text-sm text-center py-4">ไม่มีการจองในอนาคต</p>
+              : upcoming.map(b => (
             <div key={b.id} className={`border rounded-xl p-4 text-sm ${b.status === 'cancelled' ? 'border-neutral-800 opacity-50' : 'border-neutral-700 bg-neutral-800/50'}`}>
               <div className="flex items-start justify-between gap-2">
                 <div>
@@ -4148,7 +4156,8 @@ const BookingAdminPanel = ({ config: initConfig, onConfigSaved, onClose }) => {
                 {b.status === 'cancelled' && <span className="shrink-0 text-xs text-red-500">ยกเลิก</span>}
               </div>
             </div>
-          ))}
+          ))
+          })()}
         </div>
       )}
     </div>
