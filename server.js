@@ -70,12 +70,30 @@ async function getGeo(ip) {
 // ── Helper: GitHub config ────────────────────────────────────────
 function ghConf() {
   return {
-    token:  process.env.GITHUB_TOKEN,
-    owner:  process.env.GITHUB_OWNER,
-    repo:   process.env.GITHUB_REPO,
-    branch: process.env.GITHUB_BRANCH || 'main',
+    token:  (process.env.GITHUB_TOKEN  || '').trim(),
+    owner:  (process.env.GITHUB_OWNER  || '').trim(),
+    repo:   (process.env.GITHUB_REPO   || '').trim(),
+    branch: (process.env.GITHUB_BRANCH || 'main').trim(),
   };
 }
+
+// ── Debug: ตรวจสอบ GitHub config ────────────────────────────────
+app.get('/api/debug-github', async (req, res) => {
+  const { token, owner, repo, branch } = ghConf();
+  const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/public/content.json`;
+  try {
+    const r    = await fetch(`${apiBase}?ref=${branch}`, { headers: ghHeaders() });
+    const data = await r.json();
+    res.json({
+      config: { owner, repo, branch, branchLen: branch.length, hasToken: !!token, tokenLen: token.length },
+      githubStatus: r.status,
+      sha: data.sha || null,
+      error: data.message || null,
+    });
+  } catch (e) {
+    res.json({ error: e.toString(), config: { owner, repo, branch, branchLen: branch.length } });
+  }
+});
 function ghHeaders() {
   return {
     Authorization: `token ${process.env.GITHUB_TOKEN}`,
