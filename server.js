@@ -154,7 +154,6 @@ async function saveVisits() {
 }
 
 loadVisits();
-setInterval(saveVisits, 30 * 60 * 1000);
 
 // ── Apps Script doGet URL (ใช้เขียน visit ไป Sheet ด้วย GET) ────
 const SHEET_DOGET_URL = 'https://script.google.com/macros/s/AKfycbxGc0JZJkZ0MtW73_MldOdcc-ILttkvcA5G_16-0MwhjrLtWLSFTlQrMdD3W-g-dmqIDg/exec';
@@ -464,7 +463,6 @@ async function saveBookings() {
 }
 
 loadBookings();
-setInterval(saveBookings, 30 * 60 * 1000);
 
 // ── Telegram notification ─────────────────────────────────────────
 async function sendTelegram(text) {
@@ -695,11 +693,29 @@ app.post('/api/cancel-booking', async (req, res) => {
   } catch (e) { console.error('[cancel-booking sheet]', e.message); }
 });
 
+// ── Cron sync — เรียกจาก cron-job.org ทุก 30 นาที ─────────────────
+// ตั้ง env var CRON_SECRET แล้วใส่ ?secret=xxx ใน URL ของ cron job
+app.get('/api/cron-sync', async (req, res) => {
+  const secret = process.env.CRON_SECRET;
+  if (secret && req.query.secret !== secret) {
+    return res.status(401).json({ error: 'unauthorized' });
+  }
+  visitsDirty = true;
+  bookingsDirty = true;
+  await Promise.all([saveVisits(), saveBookings()]);
+  res.json({ success: true, visits: visits.length, bookings: bookings.length });
+});
+
 // SPA fallback
 app.get('*', (_req, res) => {
   res.sendFile(join(__dirname, 'dist', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Shiftup Performance server running on port ${PORT}`);
-});
+// Railway: ฟัง port ปกติ — Vercel: export app แทน
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Shiftup Performance server running on port ${PORT}`);
+  });
+}
+
+export default app;
