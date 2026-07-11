@@ -309,10 +309,12 @@ app.post('/api/notify-lead', async (req, res) => {
     return res.status(400).json({ success: false, reason: 'unknown source' });
   }
 
-  // ส่งทั้ง Telegram + Email พร้อมกัน (fire-and-forget แยกกัน ไม่ให้พังพร้อมกัน)
-  res.json({ success: true }); // ตอบทันที ไม่รอ
-  try { await sendTelegram(text); } catch (e) { console.warn('[notify-lead] telegram error:', e.message); }
-  try { await sendEmail(subject, text); console.log(`[notify-lead] ✓ email sent: ${subject}`); } catch (e) { console.warn('[notify-lead] email error:', e.message); }
+  // await ก่อน res.json() — Vercel serverless ตัด process หลัง respond
+  await Promise.allSettled([
+    sendTelegram(text).catch(e => console.warn('[notify-lead] telegram error:', e.message)),
+    sendEmail(subject, text).then(() => console.log(`[notify-lead] ✓ email sent: ${subject}`)).catch(e => console.warn('[notify-lead] email error:', e.message)),
+  ]);
+  res.json({ success: true });
 });
 
 // ═══════════════════════════════════════════════════════════════════
@@ -542,45 +544,35 @@ app.post('/api/book', async (req, res) => {
     bookings.push(booking);
     bookingsDirty = true;
 
-    // Notification (fire-and-forget)
-    setImmediate(async () => {
-      const locLine = locationName || locationUrl
-        ? `\n📍 สถานที่    : ${locationName || ''}${locationName && locationUrl ? '\n🗺 พิกัด       : ' + locationUrl : locationUrl ? locationUrl : ''}`
-        : '';
-      const msg = `📅 <b>จองคิวใหม่!</b>\nวันที่: ${date} เวลา: ${time}\nชื่อ: ${name}\nโทร: ${phone}\nLine: ${lineId || '-'}\nรถ: ${carModel} ${carYear} ${carColor}${locLine}\nหมายเหตุ: ${note || '-'}`;
-      await sendTelegram(msg);
+    // await ก่อน res.json() — Vercel serverless ตัด process หลัง respond
+    const locLine = locationName || locationUrl
+      ? `\n📍 สถานที่    : ${locationName || ''}${locationName && locationUrl ? '\n🗺 พิกัด       : ' + locationUrl : locationUrl ? locationUrl : ''}`
+      : '';
+    const msg = `📅 <b>จองคิวใหม่!</b>\nวันที่: ${date} เวลา: ${time}\nชื่อ: ${name}\nโทร: ${phone}\nLine: ${lineId || '-'}\nรถ: ${carModel} ${carYear} ${carColor}${locLine}\nหมายเหตุ: ${note || '-'}`;
 
-      // Email via Resend
+    const emailPromise = (async () => {
       const resendKey = process.env.RESEND_API_KEY;
-      if (resendKey) {
-        try {
-          const resend = new Resend(resendKey);
-          const mapLink = locationUrl ? `<a href="${locationUrl}">${locationUrl}</a>` : '-';
-          await resend.emails.send({
-            from: process.env.NOTIFY_FROM || 'Shiftup Performance <onboarding@resend.dev>',
-            to: [process.env.NOTIFY_EMAIL || 'p2w.interplus@gmail.com'],
-            subject: `📅 จองคิว: ${name} — ${date} ${time}`,
-            html: `<h2>จองคิวรีแมปใหม่</h2><table style="border-collapse:collapse;width:100%"><tr><td style="padding:6px 12px;color:#666"><b>วันที่</b></td><td style="padding:6px 12px">${date}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>เวลา</b></td><td style="padding:6px 12px">${time}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>ชื่อ</b></td><td style="padding:6px 12px">${name}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>โทร</b></td><td style="padding:6px 12px">${phone}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>Line ID</b></td><td style="padding:6px 12px">${lineId || '-'}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>รถ</b></td><td style="padding:6px 12px">${carModel} ${carYear} ${carColor}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>สถานที่</b></td><td style="padding:6px 12px">${locationName || '-'}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>พิกัด</b></td><td style="padding:6px 12px">${mapLink}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>หมายเหตุ</b></td><td style="padding:6px 12px">${note || '-'}</td></tr></table>`,
-          });
-        } catch (e) {
-          console.warn('[booking] email error:', e.message);
-        }
-      }
+      if (!resendKey) return;
+      const resend = new Resend(resendKey);
+      const mapLink = locationUrl ? `<a href="${locationUrl}">${locationUrl}</a>` : '-';
+      await resend.emails.send({
+        from: process.env.NOTIFY_FROM || 'Shiftup Performance <onboarding@resend.dev>',
+        to: [process.env.NOTIFY_EMAIL || 'p2w.interplus@gmail.com'],
+        subject: `📅 จองคิว: ${name} — ${date} ${time}`,
+        html: `<h2>จองคิวรีแมปใหม่</h2><table style="border-collapse:collapse;width:100%"><tr><td style="padding:6px 12px;color:#666"><b>วันที่</b></td><td style="padding:6px 12px">${date}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>เวลา</b></td><td style="padding:6px 12px">${time}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>ชื่อ</b></td><td style="padding:6px 12px">${name}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>โทร</b></td><td style="padding:6px 12px">${phone}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>Line ID</b></td><td style="padding:6px 12px">${lineId || '-'}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>รถ</b></td><td style="padding:6px 12px">${carModel} ${carYear} ${carColor}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>สถานที่</b></td><td style="padding:6px 12px">${locationName || '-'}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>พิกัด</b></td><td style="padding:6px 12px">${mapLink}</td></tr><tr><td style="padding:6px 12px;color:#666"><b>หมายเหตุ</b></td><td style="padding:6px 12px">${note || '-'}</td></tr></table>`,
+      });
+    })();
 
-      // Save to Google Sheet
-      try {
-        await fetch(SHEET_DOPOST_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ source: 'booking', ...booking }),
-        });
-      } catch (e) {
-        console.warn('[booking] sheet error:', e.message);
-      }
-
-      // Persist to GitHub now
-      await saveBookings();
-    });
+    await Promise.allSettled([
+      sendTelegram(msg).catch(e => console.warn('[booking] telegram error:', e.message)),
+      emailPromise.catch(e => console.warn('[booking] email error:', e.message)),
+      fetch(SHEET_DOPOST_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source: 'booking', ...booking }),
+      }).catch(e => console.warn('[booking] sheet error:', e.message)),
+      saveBookings(),
+    ]);
 
     res.json({ success: true, id, cancelCode });
   } catch (err) {
@@ -661,16 +653,17 @@ app.post('/api/cancel-by-code', async (req, res) => {
   bookingsDirty = true;
 
   const msg = `❌ <b>ลูกค้ายกเลิกการจอง</b>\nวันที่: ${b.date} เวลา: ${b.time}\nชื่อ: ${b.name}\nโทร: ${b.phone}\nรถ: ${b.carModel} ${b.carYear}`;
-  setImmediate(async () => {
-    await sendTelegram(msg);
-    try {
-      await fetch(SHEET_DOPOST_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source: 'cancel-booking', id: b.id, date: b.date, time: b.time }),
-      });
-    } catch (e) { console.error('[cancel-by-code sheet]', e.message); }
-  });
+
+  // await ก่อน res.json() — Vercel serverless ตัด process หลัง respond
+  await Promise.allSettled([
+    sendTelegram(msg).catch(e => console.warn('[cancel] telegram error:', e.message)),
+    fetch(SHEET_DOPOST_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source: 'cancel-booking', id: b.id, date: b.date, time: b.time }),
+    }).catch(e => console.error('[cancel-by-code sheet]', e.message)),
+    saveBookings(),
+  ]);
 
   res.json({ success: true, date: b.date, time: b.time, name: b.name });
 });
