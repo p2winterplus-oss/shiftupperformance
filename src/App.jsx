@@ -3993,6 +3993,48 @@ const BookingAdminPanel = ({ config: initConfig, onConfigSaved, onClose }) => {
     applyDateSlots(key, next);
   };
 
+  // Cycle slot: open → adminBooked → closed → open
+  const cycleSlot = (dateKey, slot) => {
+    const active = getActiveSlotsForDate(dateKey).includes(slot);
+    const isClosed = getDateState(dateKey) === 'closed';
+    const isAdminBooked = (cfg.adminBooked?.[dateKey] || []).includes(slot);
+    const currentState = (!active || isClosed) ? 'closed' : isAdminBooked ? 'adminBooked' : 'open';
+
+    setCfg(prev => {
+      let closedDates = [...(prev.closedDates || [])];
+      let customSlots = { ...(prev.customSlots || {}) };
+      let adminBooked = Object.fromEntries(Object.entries(prev.adminBooked || {}).map(([k, v]) => [k, [...v]]));
+
+      const getActive = (k) => closedDates.includes(k) ? [] : (customSlots[k] || prev.defaultSlots);
+      const applySlots = (k, slots) => {
+        closedDates = closedDates.filter(d => d !== k);
+        delete customSlots[k];
+        if (slots.length === 0) { closedDates.push(k); }
+        else {
+          const allSame = slots.length === prev.defaultSlots.length && slots.every(s => prev.defaultSlots.includes(s));
+          if (!allSame) customSlots[k] = [...slots].sort();
+        }
+      };
+
+      if (currentState === 'open') {
+        // → adminBooked: add to adminBooked (keep slot active)
+        if (!adminBooked[dateKey]) adminBooked[dateKey] = [];
+        if (!adminBooked[dateKey].includes(slot)) adminBooked[dateKey].push(slot);
+      } else if (currentState === 'adminBooked') {
+        // → closed: remove from adminBooked AND from active slots
+        adminBooked[dateKey] = (adminBooked[dateKey] || []).filter(s => s !== slot);
+        applySlots(dateKey, getActive(dateKey).filter(s => s !== slot));
+      } else {
+        // → open: add to active slots, ensure not in adminBooked
+        adminBooked[dateKey] = (adminBooked[dateKey] || []).filter(s => s !== slot);
+        const newSlots = [...new Set([...getActive(dateKey), slot])];
+        applySlots(dateKey, newSlots);
+      }
+
+      return { ...prev, closedDates, customSlots, adminBooked };
+    });
+  };
+
   const resetDateToDefault = (key) => {
     setCfg(prev => {
       const closedDates = (prev.closedDates || []).filter(d => d !== key);
@@ -4051,6 +4093,7 @@ const BookingAdminPanel = ({ config: initConfig, onConfigSaved, onClose }) => {
               <span className="text-neutral-600">Slot:</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500 inline-block" /> เปิด</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /> จองแล้ว</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-500 inline-block" /> บิ้ว</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-neutral-600 inline-block" /> ปิด</span>
             </div>
             <div className="grid grid-cols-4 gap-1 mb-2">
@@ -4086,28 +4129,28 @@ const BookingAdminPanel = ({ config: initConfig, onConfigSaved, onClose }) => {
                     const active = getActiveSlotsForDate(editingDate).includes(slot);
                     const isClosed = getDateState(editingDate) === 'closed';
                     const isSlotBooked = bookings.some(b => b.date === editingDate && b.time === slot && b.status !== 'cancelled');
-                    const slotState = isSlotBooked ? 'booked' : (active && !isClosed) ? 'open' : 'closed';
+                    const isAdminBooked = (cfg.adminBooked?.[editingDate] || []).includes(slot);
+                    const slotState = isSlotBooked ? 'booked' : isAdminBooked ? 'adminBooked' : (active && !isClosed) ? 'open' : 'closed';
                     return (
                       <button key={slot}
-                        onClick={() => {
-                          if (isSlotBooked) return;
-                          if (isClosed) { applyDateSlots(editingDate, [slot]); }
-                          else { toggleSlotForDate(editingDate, slot); }
-                        }}
+                        onClick={() => { if (!isSlotBooked) cycleSlot(editingDate, slot); }}
                         disabled={isSlotBooked}
                         className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold transition-colors ${
-                          slotState === 'booked'  ? 'bg-amber-500/20 border border-amber-500/50 text-amber-400 cursor-not-allowed' :
-                          slotState === 'open'    ? 'bg-green-600/20 border border-green-600/50 text-green-400' :
-                                                    'bg-neutral-800 border border-neutral-700 text-neutral-500'
+                          slotState === 'booked'      ? 'bg-amber-500/20 border border-amber-500/50 text-amber-400 cursor-not-allowed' :
+                          slotState === 'adminBooked' ? 'bg-orange-600/20 border border-orange-500/50 text-orange-400' :
+                          slotState === 'open'        ? 'bg-green-600/20 border border-green-600/50 text-green-400' :
+                                                        'bg-neutral-800 border border-neutral-700 text-neutral-500'
                         }`}>
                         <span className={`w-3 h-3 rounded-full border flex-shrink-0 ${
-                          slotState === 'booked' ? 'bg-amber-500 border-amber-400' :
-                          slotState === 'open'   ? 'bg-green-500 border-green-400' :
-                                                   'border-neutral-600'
+                          slotState === 'booked'      ? 'bg-amber-500 border-amber-400' :
+                          slotState === 'adminBooked' ? 'bg-orange-500 border-orange-400' :
+                          slotState === 'open'        ? 'bg-green-500 border-green-400' :
+                                                        'border-neutral-600'
                         }`} />
                         <span className="flex-1 text-left">{slot}</span>
-                        {slotState === 'booked' && <span className="text-[9px] text-amber-500">จองแล้ว</span>}
-                        {slotState === 'closed' && !isClosed && <span className="text-[9px] text-neutral-600">ปิด</span>}
+                        {slotState === 'booked'      && <span className="text-[9px] text-amber-500">จองแล้ว</span>}
+                        {slotState === 'adminBooked' && <span className="text-[9px] text-orange-400">บิ้ว</span>}
+                        {slotState === 'closed'      && !isClosed && <span className="text-[9px] text-neutral-600">ปิด</span>}
                       </button>
                     );
                   })}

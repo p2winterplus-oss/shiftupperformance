@@ -534,6 +534,14 @@ app.get('/api/booking-config', async (req, res) => {
       bookedSlots[b.date].push(b.time);
     }
 
+    // Merge adminBooked (fake-booked by admin) into bookedSlots → ลูกค้าเห็นว่า "จองแล้ว"
+    for (const [date, slots] of Object.entries(config.adminBooked || {})) {
+      if (!bookedSlots[date]) bookedSlots[date] = [];
+      for (const slot of slots) {
+        if (!bookedSlots[date].includes(slot)) bookedSlots[date].push(slot);
+      }
+    }
+
     res.json({ config, bookedSlots });
   } catch (err) {
     res.status(500).json({ error: err.toString() });
