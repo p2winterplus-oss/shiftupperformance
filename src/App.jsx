@@ -3415,7 +3415,7 @@ const BookingPage = ({ navigateTo }) => {
     if (!config) return [];
     const days = [];
     const now = new Date();
-    for (let i = 0; i < config.advanceDays; i++) {
+    for (let i = 1; i <= config.advanceDays; i++) {
       const d = new Date(now);
       d.setDate(now.getDate() + i);
       const key = d.toLocaleDateString('sv-SE'); // YYYY-MM-DD
@@ -3719,16 +3719,23 @@ const BookingPage = ({ navigateTo }) => {
                       onClick={() => !unavailable && setSelectedTime(t)}
                       disabled={unavailable}
                       className={`py-3 rounded-xl text-sm font-bold transition-all relative overflow-hidden
-                        ${unavailable
+                        ${customerBooked
                           ? 'bg-red-950/60 border border-red-900/40 text-red-900 cursor-not-allowed'
-                          : active
-                            ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-105'
-                            : 'bg-neutral-800 border border-neutral-600 hover:border-green-500/60 hover:bg-neutral-700 text-white hover:shadow-md hover:shadow-green-900/20'}`}
+                          : adminClosed
+                            ? 'bg-neutral-800/40 border border-neutral-700/40 text-neutral-700 cursor-not-allowed'
+                            : active
+                              ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-105'
+                              : 'bg-neutral-800 border border-neutral-600 hover:border-green-500/60 hover:bg-neutral-700 text-white hover:shadow-md hover:shadow-green-900/20'}`}
                     >
-                      {unavailable ? (
+                      {customerBooked ? (
                         <span className="flex flex-col items-center gap-0.5">
                           <span className="line-through text-red-900/80 text-xs">{t}</span>
                           <span className="text-[10px] font-bold text-red-700 tracking-wide">จองแล้ว</span>
+                        </span>
+                      ) : adminClosed ? (
+                        <span className="flex flex-col items-center gap-0.5">
+                          <span className="text-neutral-700 text-xs">{t}</span>
+                          <span className="text-[10px] font-bold text-neutral-600 tracking-wide">ปิด</span>
                         </span>
                       ) : t}
                     </button>
@@ -4031,10 +4038,16 @@ const BookingAdminPanel = ({ config: initConfig, onConfigSaved, onClose }) => {
           {/* Per-date slot config */}
           <div>
             <label className="text-sm text-neutral-400 block mb-1">ปรับ Slot รายวัน (30 วันข้างหน้า)</label>
-            <div className="flex gap-3 text-xs text-neutral-500 mb-2">
+            <div className="flex gap-3 text-xs text-neutral-500 mb-2 flex-wrap">
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-neutral-600 inline-block" /> ปกติ</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /> กำหนดพิเศษ</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-600 inline-block" /> ปิดทั้งวัน</span>
+            </div>
+            <div className="flex gap-3 text-xs text-neutral-500 mb-2 flex-wrap">
+              <span className="text-neutral-600">Slot:</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500 inline-block" /> เปิด</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /> จองแล้ว</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-neutral-600 inline-block" /> ปิด</span>
             </div>
             <div className="grid grid-cols-4 gap-1 mb-2">
               {futureDates.map(key => {
@@ -4068,14 +4081,29 @@ const BookingAdminPanel = ({ config: initConfig, onConfigSaved, onClose }) => {
                   {cfg.defaultSlots.map(slot => {
                     const active = getActiveSlotsForDate(editingDate).includes(slot);
                     const isClosed = getDateState(editingDate) === 'closed';
+                    const isSlotBooked = bookings.some(b => b.date === editingDate && b.time === slot && b.status !== 'cancelled');
+                    const slotState = isSlotBooked ? 'booked' : (active && !isClosed) ? 'open' : 'closed';
                     return (
                       <button key={slot}
-                        onClick={() => { if (isClosed) { applyDateSlots(editingDate, [slot]); } else { toggleSlotForDate(editingDate, slot); } }}
+                        onClick={() => {
+                          if (isSlotBooked) return;
+                          if (isClosed) { applyDateSlots(editingDate, [slot]); }
+                          else { toggleSlotForDate(editingDate, slot); }
+                        }}
+                        disabled={isSlotBooked}
                         className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold transition-colors ${
-                          active && !isClosed ? 'bg-green-600/20 border border-green-600/50 text-green-400' : 'bg-neutral-800 border border-neutral-700 text-neutral-500'
+                          slotState === 'booked'  ? 'bg-amber-500/20 border border-amber-500/50 text-amber-400 cursor-not-allowed' :
+                          slotState === 'open'    ? 'bg-green-600/20 border border-green-600/50 text-green-400' :
+                                                    'bg-neutral-800 border border-neutral-700 text-neutral-500'
                         }`}>
-                        <span className={`w-3 h-3 rounded-full border flex-shrink-0 ${active && !isClosed ? 'bg-green-500 border-green-400' : 'border-neutral-600'}`} />
-                        {slot}
+                        <span className={`w-3 h-3 rounded-full border flex-shrink-0 ${
+                          slotState === 'booked' ? 'bg-amber-500 border-amber-400' :
+                          slotState === 'open'   ? 'bg-green-500 border-green-400' :
+                                                   'border-neutral-600'
+                        }`} />
+                        <span className="flex-1 text-left">{slot}</span>
+                        {slotState === 'booked' && <span className="text-[9px] text-amber-500">จองแล้ว</span>}
+                        {slotState === 'closed' && !isClosed && <span className="text-[9px] text-neutral-600">ปิด</span>}
                       </button>
                     );
                   })}
