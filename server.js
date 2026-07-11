@@ -96,7 +96,7 @@ app.get('/api/debug-github', async (req, res) => {
 });
 function ghHeaders() {
   return {
-    Authorization: `token ${process.env.GITHUB_TOKEN}`,
+    Authorization: `token ${(process.env.GITHUB_TOKEN || '').trim()}`,
     Accept: 'application/vnd.github.v3+json',
     'Content-Type': 'application/json',
   };
@@ -663,7 +663,8 @@ app.post('/api/save-booking-config', async (req, res) => {
     const putRes = await fetch(apiBase, { method: 'PUT', headers, body: JSON.stringify(body) });
     if (!putRes.ok) {
       const err = await putRes.json();
-      return res.status(500).json({ success: false, error: err.message });
+      console.error('[save-booking-config] PUT failed:', putRes.status, JSON.stringify(err), 'branch:', branch, 'sha:', sha);
+      return res.status(500).json({ success: false, error: err.message, detail: { status: putRes.status, branch, hasSha: !!sha } });
     }
 
     // Instant local update
