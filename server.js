@@ -252,6 +252,26 @@ async function sendEmail(subject, text) {
   return result;
 }
 
+// ── API: ทดสอบ Telegram ─────────────────────────────────────────
+app.get('/api/test-telegram', async (req, res) => {
+  const token  = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!token || !chatId) {
+    return res.json({ success: false, error: 'TELEGRAM_BOT_TOKEN หรือ TELEGRAM_CHAT_ID ยังไม่ได้ตั้ง' });
+  }
+  try {
+    const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: '✅ Shiftup Telegram ทดสอบ — ระบบทำงานปกติ', parse_mode: 'HTML' }),
+    });
+    const d = await r.json();
+    res.json({ success: d.ok, telegram: d, token: token.slice(0,10) + '...', chatId });
+  } catch (err) {
+    res.json({ success: false, error: err.toString() });
+  }
+});
+
 // ── API: ทดสอบ Email — เปิด URL นี้ใน browser เพื่อเช็ค config ───
 app.get('/api/test-email', async (req, res) => {
   if (!process.env.RESEND_API_KEY) {
