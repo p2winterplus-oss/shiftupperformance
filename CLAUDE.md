@@ -2,10 +2,10 @@
 
 ## Overview
 เว็บไซต์ P2W Interplus — บริการ ECU Remap, HKS Exhaust, Panthera Active Sound
-- **URL**: deploy บน Railway (auto-deploy จาก GitHub main)
+- **URL**: deploy บน **Vercel** (auto-deploy จาก GitHub main)
 - **Domain**: `www.shiftupperformance.com` — live แล้ว (18 มิ.ย. 2569)
 - **Stack**: React 18 + Vite 5 + Tailwind CSS v3 + Express server
-- **วันที่อัปเดต**: 9 ก.ค. 2569 (session 5)
+- **วันที่อัปเดต**: 11 ก.ค. 2569 (session 7)
 
 ---
 
@@ -15,7 +15,7 @@
 - **ห้าม** สร้าง branch ใหม่, ห้าม merge, ห้ามใช้ `--theirs` / `--ours`
 - ถ้า pull แล้วมี conflict → แจ้ง user ก่อน อย่าแก้เอง
 - Admin panel บันทึกเนื้อหาผ่าน `/api/save-content` → commit ตรงไป GitHub main อัตโนมัติ
-- Railway บางที auto-commit `analytics: sync visits` → ถ้า push ไม่ได้ให้ `git pull --rebase origin main` ก่อน
+- cron-job.org sync visits/bookings ทุก 30 นาที → ถ้า push conflict ให้ `git pull --rebase origin main` ก่อน
 
 ---
 
@@ -45,21 +45,27 @@
 
 ---
 
-## Railway Environment Variables (สำคัญ — ต้องตั้งทุกตัว)
+## Vercel Environment Variables (สำคัญ — ต้องตั้งทุกตัว)
 | ชื่อตัวแปร | ใช้ทำอะไร |
 |---|---|
-| `RESEND_API_KEY` | Email notification ผ่าน Resend API (re...xxxx) |
+| `RESEND_API_KEY` | Email notification ผ่าน Resend API |
 | `GITHUB_TOKEN` | บันทึก visits.json + content.json + bookings.json ไป GitHub |
-| `GITHUB_OWNER` | GitHub username (เจ้าของ repo) |
-| `GITHUB_REPO` | ชื่อ repo |
+| `GITHUB_OWNER` | `p2winterplus-oss` |
+| `GITHUB_REPO` | `shiftupperformance` |
 | `GITHUB_BRANCH` | `main` |
 | `NOTIFY_EMAIL` | อีเมลรับแจ้งเตือน (default: p2w.interplus@gmail.com) |
 | `NOTIFY_FROM` | ชื่อผู้ส่ง email (default: Shiftup Performance <onboarding@resend.dev>) |
 | `TELEGRAM_BOT_TOKEN` | Telegram Bot token สำหรับ notification |
-| `TELEGRAM_CHAT_ID` | Telegram Chat ID ของผู้รับ (6476070617) |
+| `TELEGRAM_CHAT_ID` | Telegram Chat ID ของผู้รับ (`6476070617` — **ห้ามมี tab/space นำหน้า**) |
+| `CRON_SECRET` | ป้องกัน `/api/cron-sync` endpoint (ใช้กับ cron-job.org) |
 
-> ⚠️ **Gmail SMTP ใช้ไม่ได้บน Railway** — Railway block SMTP port 465/587 ทำให้ nodemailer timeout
-> ✅ **ใช้ Resend API แทน** (HTTPS port 443) — สมัครฟรีที่ resend.com
+> ⚠️ **Gmail SMTP ใช้ไม่ได้** — ใช้ Resend API แทน (HTTPS port 443)
+> ⚠️ **ระวัง hidden characters** ใน env var — เคยเกิดกับ TELEGRAM_CHAT_ID (tab นำหน้า) และอาจเกิดกับตัวอื่นได้ → server.js ใช้ `.trim()` กับทุกค่าแล้ว
+> ✅ ทดสอบ Telegram ได้ที่ `/api/test-telegram` | ทดสอบ GitHub ได้ที่ `/api/debug-github`
+
+### cron-job.org (แทน setInterval ที่ใช้ไม่ได้บน Vercel serverless)
+- URL: `https://www.shiftupperformance.com/api/cron-sync?secret=<CRON_SECRET>`
+- ทุก 30 นาที → sync visits.json + bookings.json ไป GitHub
 
 ---
 
@@ -67,10 +73,12 @@
 
 ```
 src/App.jsx          — React SPA (3500+ บรรทัด)
-server.js            — Express server (Railway)
-public/content.json  — CMS data (บทความ/portfolio/ราคา/booking config)
-public/visits.json   — Visit history สำรอง (GitHub persist ทุก 30 นาที)
-public/bookings.json — Booking history (GitHub persist ทุก 30 นาที)
+server.js            — Express server (Vercel serverless via api/index.js)
+api/index.js         — Vercel entry point: export default app
+vercel.json          — Vercel config: buildCommand, outputDirectory, rewrites
+public/content.json  — CMS data (บทความ/portfolio/ราคา/booking config + adminBooked)
+public/visits.json   — Visit history สำรอง (GitHub persist ทุก 30 นาที via cron)
+public/bookings.json — Booking history (GitHub persist ทุก 30 นาที via cron)
 public/sitemap.xml   — Sitemap สำหรับ Google/Bing
 public/robots.txt    — บอก crawler ว่า crawl อะไรได้
 public/llms.txt      — บอก AI (Perplexity/ChatGPT/Claude) ว่าเว็บทำอะไร
@@ -78,11 +86,17 @@ index.html           — SEO meta/OG/JSON-LD + Leaflet CDN
 apps-script/Code.gs  — Google Apps Script (อัปเดต manual โดย user)
 ```
 
+### Vercel vs Railway — ข้อแตกต่างสำคัญ
+- **Vercel serverless**: function terminate หลัง `res.json()` → ห้ามใช้ `setImmediate` หรือ fire-and-forget หลัง respond
+- ✅ **วิธีแก้**: ใช้ `await Promise.allSettled([...])` ก่อนทุก `res.json()`
+- **setInterval ไม่ work** บน Vercel → ใช้ cron-job.org เรียก `/api/cron-sync` แทน
+- **visit tracking setImmediate** ยังอยู่ใน `/api/track-visit` — ยังใช้ได้เพราะ res.json() ถูกเรียกก่อน geo lookup แล้ว geo ส่งต่อไป Sheet (อาจไม่ส่งถ้า function ถูก kill เร็วเกิน แต่ยังเก็บใน RAM)
+
 ### Content Flow
 - เนื้อหา (articles/portfolio/reviews/pricing) โหลดจาก `/content.json`
-- แก้ไขผ่าน Admin Panel → POST `/api/save-content` → commit ไป GitHub → Railway redeploy
+- แก้ไขผ่าน Admin Panel → POST `/api/save-content` → commit ไป GitHub → Vercel redeploy
 - **ไม่ใช้ localStorage** อีกต่อไป
-- **Instant refresh** (แก้ 9 มิ.ย. 2569): server เขียน `dist/content.json` ทันทีหลัง commit → F5 ก่อน Railway rebuild เสร็จก็ได้ข้อมูลใหม่เลย ไม่ต้องรอ 2-3 นาที
+- **Instant refresh**: server เขียน `dist/content.json` ทันทีหลัง commit → F5 ได้ข้อมูลใหม่เลย
 
 ### Dashboard Flow
 ```
@@ -142,7 +156,7 @@ browser useEffect → POST /api/track-visit → server.js
 | `PieChart` | Pie chart ใน dashboard |
 | `DashboardPage` | หน้าหลังบ้านเต็ม |
 
-> ⚠️ ถ้า component ใดหายไป → Railway build พัง
+> ⚠️ ถ้า component ใดหายไป → Vercel build พัง
 
 ---
 
@@ -154,7 +168,6 @@ const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxGc0JZJkZ0Mt
 const ADMIN_PASS = 'Chev9872'
 const HKS_BRANDS = ['Ford','BMW','Honda','Isuzu','Mazda','Mitsubishi','Toyota','Nissan']
 // ⚠️ HKS_BRANDS นี้เป็นแค่ fallback — brands จริงอ่านจาก content.json → data.brands
-// แก้ไขผ่าน HKSAdminPanel (เพิ่ม/ลบ brand tab ได้)
 const HKS_PER_PAGE = 12
 ```
 
@@ -173,7 +186,6 @@ getFirstImage(pipe)           // หารูปแรก (image) จาก pipe
 
 ### Data Structure
 ```js
-// pipe.media = array ของ media items (ใหม่)
 pipe.media = [
   { type: 'image', url: 'https://...' },
   { type: 'youtube', url: 'https://youtube.com/...' },
@@ -183,13 +195,11 @@ pipe.media = [
 ```
 
 ### Modal Features
-- เปิดจากปุ่ม **"รายละเอียดสินค้า"** (เปลี่ยนจาก "เช็คสต๊อกและราคา")
 - Gallery: ลูกศร ‹ › เลื่อนซ้าย/ขวา + keyboard ArrowLeft/ArrowRight/Esc
 - Auto-start ที่ video/YouTube แรก (ถ้ามี) + autoplay
 - YouTube: `key={yt-${idx}}` บน iframe → React re-mount → autoplay ทำงาน
 - รูปภาพ: ใช้ `WatermarkedImage` (ลายน้ำอัตโนมัติ)
 - Thumbnail strip ด้านล่าง + counter "x / total"
-- ปุ่ม LINE CTA ใน modal
 
 ### Admin (HKSAdminPanel)
 - เพิ่ม media URL → auto-detect ประเภท (YouTube/video/image)
@@ -218,29 +228,43 @@ pipe.media = [
 | isp (ค่ายมือถือ) | ip-api.com (server) | ✅ | ✅ |
 
 ### Bot Filtering (เพิ่ม 19 มิ.ย. 2569)
-```
-มี visit เข้ามา → getGeo(ip) → เช็ค ISP
-  ├─ ISP เป็น bot → ลบออกจาก visits[], เพิ่ม botVisits[] ({ isoTimestamp })
-  │                  ไม่ส่งไป Sheet
-  │                  visitsDirty = true → บันทึกลง visits.json ทุก 30 นาที ✅
-  └─ ISP คนจริง → บันทึกปกติ → Sheet + visits.json
-```
-
 **BOT_ISP_KEYWORDS** (server.js):
 `Amazon.com`, `Amazon Web Services`, `Google LLC`, `Microsoft Corporation`, `OVH SAS`, `Hetzner`, `DigitalOcean`, `Linode`, `Vultr`, `Facebook, Inc.`
 
-**botVisits** — เก็บใน RAM เท่านั้น (reset เมื่อ Railway restart) เก็บแค่ `{ isoTimestamp }` สูงสุด 5,000 entries ไม่ได้บันทึกลง visits.json
-
 ### sessionId Logic
 - เก็บใน `sessionStorage` key `shiftup_sid`
-- ถ้าปิด browser tab แล้วเปิดใหม่ = session ใหม่
-- นับ referrer เฉพาะ `isFirst` (session ใหม่เท่านั้น)
+- ปิด browser tab แล้วเปิดใหม่ = session ใหม่
 
-### Google Sheet Visits Tab — 12 Columns
-```
-A: ISO Timestamp | B: วันที่-เวลา | C: หน้า | D: อุปกรณ์ | E: Session ID
-F: จังหวัด | G: เมือง | H: Browser | I: OS | J: Referrer | K: ISP | L: ภาษา
-```
+---
+
+## Booking System — รายละเอียด
+
+### Slot States (admin)
+| State | สี | admin เห็น | ลูกค้าเห็น | กดได้ไหม |
+|---|---|---|---|---|
+| เปิด | 🟢 เขียว | "เปิด" | เลือกได้ | ✅ |
+| **adminBooked (บิ้ว)** | 🟠 ส้ม | "บิ้ว" | "จองแล้ว" | ✅ admin เท่านั้น |
+| จองแล้ว (จริง) | 🟡 เหลือง | "จองแล้ว" | "จองแล้ว" | ❌ |
+| ปิด | ⚫ เทา | "ปิด" | "ปิด" | ✅ admin เท่านั้น |
+
+**วน 3 states**: เปิด → บิ้ว → ปิด → เปิด (กด slot วนไป)
+**adminBooked** เก็บใน `config.adminBooked = { "2026-07-12": ["09:00","11:00"] }` ใน content.json
+**server.js**: merge `config.adminBooked` เข้า `bookedSlots` ก่อนส่งให้ลูกค้า → ลูกค้าเห็น "จองแล้ว"
+
+### Booking Slot ฝั่งลูกค้า
+- **จองแล้ว** (red) = คนจองจริง หรือ admin mark "บิ้ว"
+- **ปิด** (grey) = admin ปิด
+- ⚡ **Urgency**: เหลือ ≤ 3 slot กระพริบเหลือง
+- **ขั้นต่ำ 1 วัน**: ลูกค้าจองได้เร็วสุดคือพรุ่งนี้ (วันนี้เลือกไม่ได้)
+
+### Admin Booking List
+- **ซ่อนการจองที่เลยวันแล้ว** — แสดงเฉพาะ `b.date >= today`
+- Dashboard booking table: เหมือนกัน
+
+### cancelCode
+- สุ่ม 4 หลักตอนจอง → แสดงบน success screen (กล่องสีทอง)
+- ลูกค้าถ่ายรูปเก็บเอง — **ไม่ส่ง email/Telegram** ให้ลูกค้า
+- ยกเลิกได้ก่อนนัด 12 ชม. เท่านั้น
 
 ---
 
@@ -249,27 +273,17 @@ F: จังหวัด | G: เมือง | H: Browser | I: OS | J: Referrer
 **กฎ**: ทุก timestamp ที่แสดงให้ user ต้องเป็น **GMT+7 (Asia/Bangkok)** เสมอ
 
 ```javascript
-// ✅ วิธีที่ถูก — ใช้ทุกที่ใน server.js, App.jsx, Code.gs
+// ✅ วิธีที่ถูก
 new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })
-
-// ❌ วิธีที่ผิด — ได้ UTC (เร็วกว่าไทย -7 ชม.) บน Railway/Google servers
+// ❌ วิธีที่ผิด — ได้ UTC (เร็วกว่าไทย -7 ชม.)
 new Date().toLocaleString('th-TH')
 ```
-
-**isoTimestamp** ยังคงใช้ UTC (`new Date().toISOString()`) — มาตรฐาน ISO8601 ใช้สำหรับ sort/compare
-**timestamp** (แสดงผล) ต้องระบุ `{ timeZone: 'Asia/Bangkok' }` เสมอ
 
 ---
 
 ## Email Notification — Resend API
 
-### วิธีทำงาน
-- **รูปแบบเก่า**: nodemailer + Gmail SMTP → **ไม่ work** (Railway block SMTP)
-- **รูปแบบใหม่**: Resend API → ส่งผ่าน HTTPS port 443 → **work** ✅
-- ส่งอีเมลจาก server.js `/api/notify-lead` POST
-- App.jsx เรียก `notifyServer(payload)` หลัง form submit (fire-and-forget)
-
-### Email Flow (แก้จบ — ส่งแค่ 1 ฉบับต่อ submit ✅)
+### Email Flow
 ```
 App.jsx form submit
   ↓
@@ -279,29 +293,23 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 
 > ❌ **อย่าเพิ่ม sendEmail() กลับไปใน Code.gs doPost** — จะทำให้ email ซ้ำ 2 ฉบับ
 
-### ทดสอบ Email
-เปิด URL: `https://[railway-domain]/api/test-email` — จะส่ง test email ไป NOTIFY_TO
+### ทดสอบ
+- Email: `/api/test-email`
+- Telegram: `/api/test-telegram`
+- GitHub config: `/api/debug-github`
 
 ---
 
 ## Visit Persistence
 
 ### Server Memory
-- `let visits = []` — เก็บใน RAM ของ Railway server
-- โหลดข้อมูลเก่าจาก `public/visits.json` ตอน startup
-- บันทึกกลับไป GitHub ทุก 30 นาที (ถ้า visitsDirty = true)
-- เก็บสูงสุด 10,000 entries (ตัดแต่เก็บใหม่สุด)
+- `let visits = []` — เก็บใน RAM ของ Vercel serverless (reset เมื่อ function cold start)
+- โหลดข้อมูลเก่าจาก GitHub `public/visits.json` ตอน startup
+- บันทึกกลับ GitHub ผ่าน `/api/cron-sync` (cron-job.org ทุก 30 นาที)
 
 ### GitHub `public/visits.json`
-- format ใหม่ (19 มิ.ย. 2569): `{ visits: [...], botVisits: [...] }` (เดิมเป็น array visits อย่างเดียว)
-- loadVisits() handle ทั้ง format เก่า (array) และ format ใหม่ (object) — backward compatible
-- Railway auto-commit ทุก 30 นาที: message `analytics: sync visits (N total, M bots)`
-- ถ้า push ไม่ได้หลัง Railway commit → `git pull --rebase origin main`
-
-### Google Sheet `Visits` Tab
-- **Server.js** ส่งผ่าน POST JSON `{source:'visit'}` → Apps Script doPost (แก้จบ 6 มิ.ย. 2569)
-- ข้อมูลถาวร ไม่หายเมื่อ Railway restart
-- มีครบ 12 columns รวม province/city/isp
+- format: `{ visits: [...], botVisits: [...] }`
+- cron commit: `analytics: sync visits (N total, M bots)`
 
 ---
 
@@ -311,57 +319,51 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 |---|---|---|---|
 | GET | ไม่มี params | ✅ 302 → doGet | อ่านข้อมูล dashboard (leads + visits) |
 | GET | **มี params** | ❌ **400** | **ห้ามใช้** — Google block ทุกกรณี |
-| POST | `{source:'remap'}` | ✅ doPost | บันทึก Remap Lead + (ไม่ส่ง email แล้ว) |
-| POST | `{source:'partner'}` | ✅ doPost | บันทึก Partner Application + (ไม่ส่ง email แล้ว) |
+| POST | `{source:'remap'}` | ✅ doPost | บันทึก Remap Lead |
+| POST | `{source:'partner'}` | ✅ doPost | บันทึก Partner Application |
 | POST | `{source:'visit'}` | ✅ doPost | บันทึก Visit ลง Visits sheet |
 | POST | `{source:'booking'}` | ✅ doPost | บันทึก Booking ลง Bookings sheet |
-| POST | `{source:'cancel-booking', id, date, time}` | ⚠️ doPost | อัปเดตสถานะ cancelled — **ต้อง deploy Code.gs** ก่อนจึงจะ work |
+| POST | `{source:'cancel-booking', id, date, time}` | ✅ doPost | อัปเดตสถานะ cancelled ✅ deploy แล้ว |
 
 ---
 
-## SEO — สรุป (เพิ่ม 13 มิ.ย. 2569)
+## SEO — สรุป
 
-### ไฟล์ที่เกี่ยวข้อง
 | ไฟล์ | สำหรับใคร | สถานะ |
 |---|---|---|
-| `index.html` | Google + LINE/FB preview | ✅ ทำงานได้เลยบน Railway |
-| `public/sitemap.xml` | Google, Bing | ✅ เข้าถึงได้ที่ `/sitemap.xml` |
-| `public/robots.txt` | ทุก crawler | ✅ เข้าถึงได้ที่ `/robots.txt` |
-| `public/llms.txt` | AI (Perplexity, ChatGPT, Claude) | ✅ เข้าถึงได้ที่ `/llms.txt` |
+| `index.html` | Google + LINE/FB preview | ✅ |
+| `public/sitemap.xml` | Google, Bing | ✅ |
+| `public/robots.txt` | ทุก crawler | ✅ |
+| `public/llms.txt` | AI (Perplexity, ChatGPT, Claude) | ✅ |
+| `public/images/og-cover.png` | OG image 1200×630px | ✅ |
 
-### Canonical URL
-- ✅ ชี้ไป `https://www.shiftupperformance.com` ครบทุกไฟล์แล้ว (18 มิ.ย. 2569)
-- ✅ Domain live แล้ว — GoDaddy CNAME → Railway
-- ✅ Google Search Console: verify + submit sitemap แล้ว
-- ✅ Google Business Profile: สร้างแล้ว
-
-### OG Image
-- ตอนนี้ใช้ `/images/logo.png` เป็น OG image
-- แนะนำ: เพิ่ม `/images/og-cover.jpg` ขนาด **1200×630px** ทีหลัง → preview สวยขึ้นบน LINE/Facebook
+- Canonical URL: `https://www.shiftupperformance.com`
+- Google Search Console: verify + submit sitemap แล้ว
+- Google Business Profile: สร้างแล้ว
 
 ---
 
 ## Dashboard Features
 
 ### AnalyticsSection
-- Bar chart แสดง visits รายวัน (7/14/30 วัน)
-- **Trend line** — orange dashed line คำนวณด้วย linear regression
-- **Visitor Details Table** — แสดงทุก visit พร้อม pagination 10/25/50 rows
-  - Columns: วันที่-เวลา, หน้า, อุปกรณ์, Browser, OS, จังหวัด, ISP, ภาษา, ที่มา
-- Column filter dropdowns + click-to-filter จากสถิติหน้าที่เข้าชม
+- Bar chart visits รายวัน (7/14/30 วัน) + Trend line (linear regression)
+- Visitor Details Table — pagination 10/25/50 rows
+- Column filter dropdowns + click-to-filter จากสถิติ
+- Bot counter card แยกจากคนจริง
 
-### PieChart
-- สัดส่วน mobile vs desktop
+### DashboardPage — Booking section
+- 4 summary cards: ทั้งหมด / วันนี้ / ยืนยัน / ยกเลิก
+- ตาราง "การจองคิวรีแมป" — **แสดงเฉพาะการจองที่ยังไม่เลยวัน**
+- ลิงก์ 📍 แผนที่ในตาราง
 
 ---
 
 ## Watermark — ข้อมูลสำคัญ
 
-- **Component**: `WatermarkedImage` — อยู่ต้น App.jsx (หลัง submitToSheets)
+- **Component**: `WatermarkedImage` — อยู่ต้น App.jsx
 - **ค่าที่ใช้**: opacity 22%, เฉียง -30°, ระยะห่าง 1.5x, ขนาดโลโก้ 28%
-- **ใช้กับ**: Portfolio (3D Slideshow) + HKS product grid + HKS product modal (รูปเท่านั้น ไม่ใส่ video)
-- **Panthera**: ยังไม่ได้ทำ (ตั้งใจไว้)
-- **วิธีทำงาน**: CSS overlay — ไม่มีปัญหา CORS, รูปใหม่ที่เพิ่มทีหลังได้ลายน้ำอัตโนมัติ
+- **ใช้กับ**: Portfolio (3D Slideshow) + HKS product grid + HKS product modal (รูปเท่านั้น)
+- **Panthera**: ยังไม่ได้ทำ (user บอกทำทีหลัง)
 - **โลโก้ที่ใช้**: `/images/logo.png`
 
 ---
@@ -369,10 +371,8 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 ## Logo Sizes (App.jsx)
 | ตำแหน่ง | Class | px |
 |---|---|---|
-| Navbar | `h-20` | 80px (เต็มความสูง navbar) |
+| Navbar | `h-20` | 80px |
 | Footer | `h-24` | 96px |
-
-> Navbar container สูง `h-20` (80px) — ถ้าขยายโลโก้เกินนี้ต้องขยาย navbar ด้วย
 
 ---
 
@@ -381,153 +381,124 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - [x] Infinite auto-scroll Reviews Carousel (pause on hover, 9s/card)
 - [x] Brand tab pricing (Mazda/Honda/Toyota ฯลฯ) — editable
 - [x] Google Sheets integration (Remap + Partner forms)
-- [x] Email notification via **Resend API** → `p2w.interplus@gmail.com` ✅ (1 ฉบับต่อ submit)
-- [x] Visit analytics tracking — track เฉพาะหน้าแรกเท่านั้น (18 มิ.ย. 2569)
+- [x] Email notification via **Resend API** → `p2w.interplus@gmail.com` ✅
+- [x] Telegram notification → Bot API ✅
+- [x] Visit analytics tracking — track เฉพาะหน้าแรกเท่านั้น
 - [x] Admin Dashboard (Analytics bar chart + trend line + visitor table + pie chart)
 - [x] Hidden dashboard gear button (หน้าแรก มุมล่างขวา)
 - [x] Password-protected admin panels ทุกหน้า
 - [x] Watermark อัตโนมัติ (Portfolio + HKS) — `WatermarkedImage` component
 - [x] โลโก้ใหม่ `public/images/logo.png` + ขนาด navbar h-20, footer h-24
 - [x] Visit tracking: browser→server→Apps Script doPost→Sheet ✅
-- [x] Visit persistence: GitHub `public/visits.json` (save ทุก 30 นาที)
+- [x] Visit persistence: GitHub `public/visits.json` (save ทุก 30 นาที via cron)
 - [x] IP Geolocation: จังหวัด/เมือง/ISP via ip-api.com
 - [x] ISP field + Language field ใน Visits (12 columns)
 - [x] Column filter dropdowns ในตาราง visitor details (Dashboard)
 - [x] Click-to-filter จากสถิติ "หน้าที่เข้าชมมากสุด"
 - [x] Dashboard Sheet: Remap + Partner สองตารางเรียงซ้าย-ขวา
 - [x] Timezone GMT+7 ทุก timestamp (server.js + Code.gs + App.jsx)
-- [x] HKS admin: จัดการ brand tabs แบบ dynamic (เพิ่ม/ลบ brand ได้ ไม่ hardcode)
-- [x] Admin save: เขียน dist/content.json ทันที → F5 ได้ข้อมูลใหม่เลย (ไม่รอ Railway rebuild)
+- [x] HKS admin: จัดการ brand tabs แบบ dynamic (เพิ่ม/ลบ brand ได้)
+- [x] Admin save: เขียน dist/content.json ทันที → F5 ได้ข้อมูลใหม่เลย
 - [x] HKS: ปุ่ม "รายละเอียดสินค้า" + Product Modal (gallery รูป+วิดีโอ, autoplay, keyboard nav)
-- [x] HKS: grid แสดงรูปแรกของ gallery อัตโนมัติ (getFirstImage)
 - [x] HKS Admin: drag-and-drop เรียงลำดับ gallery media (HTML5 DnD)
 - [x] SEO: meta tags, Open Graph, JSON-LD (AutoRepair schema), canonical URL
-- [x] SEO: sitemap.xml, robots.txt, llms.txt
-- [x] **Domain live**: `www.shiftupperformance.com` (18 มิ.ย. 2569) — GoDaddy → Railway CNAME
+- [x] SEO: sitemap.xml, robots.txt, llms.txt, og-cover.png (1200×630)
+- [x] **Domain live**: `www.shiftupperformance.com` — GoDaddy CNAME → Vercel
 - [x] **Google Search Console**: verify + submit sitemap แล้ว
-- [x] **Google Business Profile**: สร้างแล้ว (18 มิ.ย. 2569)
-- [x] SEO files อัปเดต URL → `www.shiftupperformance.com` ครบทุกไฟล์
-- [x] **Remap page restructure** (19 มิ.ย. 2569): ย้าย Pricing+Form ขึ้นมาก่อน + บทความเปลี่ยนเป็น Accordion (พับ/กาง)
-- [x] **Bot filtering** (19 มิ.ย. 2569): กรอง bot ISP (Amazon/Google/OVH/Microsoft ฯลฯ) ออกจาก visits — ไม่บันทึกลง Sheet/visits.json
-- [x] **Bot counter Dashboard** (19 มิ.ย. 2569): card 🤖 แสดงจำนวน bot วันนี้ + ช่วงที่เลือก แยกจากคนจริง follow date filter
-- [x] **หน้า About Us** (28 มิ.ย. 2569): เพิ่ม tab navbar + 6 sections (Hero, Who We Are, Services, Why Us, Policy, Contact) + AboutAdminPanel
-- [x] **Footer Quick Links**: เพิ่ม About Us
-- [x] **CTA navbar**: เปลี่ยนจาก "ปรึกษาช่างเทคนิค" → "ติดต่อเรา"
-- [x] **ระบบจองคิว ECU Remap** (9 ก.ค. 2569): หน้า `/booking` + ปฏิทิน + slot เวลา + form + แผนที่ Leaflet
-- [x] **URL Routing**: pushState routing — แต่ละหน้ามี URL จริง (/, /remap, /hks, /panthera, /partner, /about, /booking)
-- [x] **MapPicker**: Leaflet.js + OpenStreetMap + Nominatim search + draggable pin + reverse geocode
-- [x] **สถานที่จอง**: 2 ช่องแยก — `locationName` (พิมพ์เอง) + `locationUrl` (GPS จาก MapPicker)
-- [x] **Telegram notification**: Bot API ส่ง alert ทุก booking / remap form / partner form
-- [x] **Booking persistence**: `public/bookings.json` → GitHub (save ทุก 30 นาที)
-- [x] **Booking Sheet**: Apps Script `doPost({source:'booking'})` → tab "Bookings" (14 columns)
-- [x] **BookingAdminPanel**: 2 tabs — ตั้งค่า Slot + รายการจองทั้งหมด
-- [x] **Per-date slot config** (9 ก.ค. 2569): กดวันไหนก็เลือก slot ได้อิสระ — 3 states: default/custom(amber)/closed(red)
-- [x] **Slot display ฝั่งลูกค้า**: slot ที่ปิด/จองแล้วแสดง "จองแล้ว" พร้อม strikethrough สีแดง ไม่ซ่อน
-- [x] **Urgency UI**: ⚡ เหลือ X ช่อง! กระพริบสีเหลืองเมื่อ slot ว่าง ≤ 3 ช่อง
-- [x] **MapPicker mobile fix**: กดครั้งที่ 2+ เปิดทันทีโดยไม่รอ GPS ใหม่ + 5s timeout fallback
-- [x] **Remap page layout ใหม่** (9 ก.ค. 2569 session 3): Pricing full-width + packages grid 3 คอลัมน์, form "ประเมินรถฟรี" ย้ายไปล่างสุด (หลัง Reviews)
-- [x] **Dashboard Bookings** (9 ก.ค. 2569 session 3): เพิ่มตาราง "การจองคิวรีแมป" + card นับจอง (4 cards) พร้อมลิงก์ 📍 แผนที่
-- [x] **Bug fix: Booking Sheet** (9 ก.ค. 2569 session 3): แก้ `SHEET_DOPOST_URL` ใน server.js ชี้ผิด deployment → บันทึก Sheet ได้แล้ว
-- [x] **Loading animation** (9 ก.ค. 2569 session 4): หลังกดจองคิว — racing car SVG วิ่งข้ามจอ, progress bar 7 วิ, ชิปรายละเอียดการจอง fade-in
-- [x] **Navbar: ปุ่มจองคิว** (9 ก.ค. 2569 session 4): เพิ่มปุ่ม "จองคิวรีแมป" ใน navbar desktop + mobile (ขนาดเล็กกว่าปุ่มติดต่อเรา)
-- [x] **Navbar: ปุ่มติดต่อเราเล็กลง** (9 ก.ค. 2569 session 4): ลด padding + icon size ให้เหมาะกับ navbar
-- [x] **Admin cancel → slot ว่างทันที** (9 ก.ค. 2569 session 4): `bookedSlots` filter ข้าม `status === 'cancelled'` แล้ว ลูกค้าเห็น slot ว่างทันที ประวัติยังอยู่ใน bookings.json
-- [x] **Duplicate booking check ข้าม cancelled** (9 ก.ค. 2569 session 4): slot ที่ถูกยกเลิกสามารถจองใหม่ได้
-- [x] **ระบบลูกค้ายกเลิกเอง** (9 ก.ค. 2569 session 4): รหัส 4 หลักสุ่มเมื่อจองสำเร็จ, หน้า `/cancel`, deadline 12 ชม.ก่อนนัด, Telegram แจ้ง admin, POST Sheet `{source:'cancel-booking'}`
-- [x] **URL route `/cancel`** (9 ก.ค. 2569 session 4): เพิ่มใน PATH_MAP + router
-- [x] **Code.gs cancel-booking handler** (10 ก.ค. 2569 session 6): หา row ตาม Booking ID → update สถานะ "ยกเลิก" + เวลาใน หมายเหตุ ✅ deploy แล้ว
-- [x] **OG Cover Image** (10 ก.ค. 2569 session 6): `public/images/og-cover.png` 1200×630px — og:image + twitter:image ✅
-- [x] **Footer phone fix** (9 ก.ค. 2569 session 5): ลบเบอร์ 088-788-8364 ออก, เบอร์ 083-009-2554 เป็น `href="tel:0830092554"` กด = โทรออกได้บนมือถือ
-- [x] **Navbar button prominence swap** (9 ก.ค. 2569 session 5): "จองคิวรีแมป" เป็นสีแดง (`bg-red-600`) เด่นกว่า — "ติดต่อเรา" เป็น `bg-neutral-800 border border-neutral-700` เล็กกว่า (ทั้ง desktop + mobile)
-- [x] **BookingPage cancel links** (9 ก.ค. 2569 session 5): เพิ่มลิงก์ยกเลิกการจองสองจุด — (1) ข้อความลิงก์ในส่วน header ของ BookingPage (2) ปุ่มบน success screen หลังจองสำเร็จ
-- [x] **RemapPage CTA swap** (9 ก.ค. 2569 session 5): "จองคิวรีแมปรถยนต์" = สีแดง animated border เด่นสุด — "ติดต่อเรา" = `bg-neutral-800` สีเทา
-- [x] **Booking form: LINE ID + รุ่นรถ required** (9 ก.ค. 2569 session 5): validate ก่อน submit — error หาก field ว่าง
-- [x] **Math captcha** (9 ก.ค. 2569 session 5): `genCaptcha()` สุ่ม a+b=? ใน BookingPage — reset เมื่อตอบผิด
-- [x] **RemapPage hero bg image** (9 ก.ค. 2569 session 5): Google Drive thumbnail id=`14phTvXtXXaoh0thcbO3NEoiU5Ch1dPK8`, opacity-65, overlay bg-neutral-950/20
-- [x] **RemapPage pricing bg image** (9 ก.ค. 2569 session 5): Google Drive thumbnail id=`1aqfxgrPBf88tILTPoq0j44wPhm9XHnX5`, opacity-55, gradient overlay
-- [x] **RemapPage portfolio section bg image** (9 ก.ค. 2569 session 5): full-width (`-mx-6 lg:-mx-8 px-6 lg:px-8`), id=`1uhFl-6GMWMp7xbOBVYUgXnOtLuitbTwo`, opacity-80, overlay bg-neutral-950/15 — รูปรีแมป (carousel) อยู่ตรงกลาง object-center ทุก device
-- [x] **RemapPage consult form section bg image** (9 ก.ค. 2569 session 5): full-width, id=`1L0aX2BWxl5VPwP59LaAVUixvFFlaAuGr`, opacity-25, overlay bg-neutral-950/65 — สว่างน้อยให้ form เด่น
+- [x] **Google Business Profile**: สร้างแล้ว
+- [x] **Remap page restructure**: ย้าย Pricing+Form ขึ้นมาก่อน + บทความเป็น Accordion
+- [x] **Bot filtering**: กรอง ISP datacenter ออกจาก visits
+- [x] **Bot counter Dashboard**: card 🤖 แยกจากคนจริง follow date filter
+- [x] **หน้า About Us**: tab navbar + 6 sections + AboutAdminPanel
+- [x] **ระบบจองคิว ECU Remap**: BookingPage + MapPicker + BookingAdminPanel
+- [x] **URL Routing**: pushState — /, /remap, /hks, /panthera, /partner, /about, /booking, /cancel
+- [x] **MapPicker**: Leaflet + OSM tiles + Nominatim search + draggable pin
+- [x] **Per-date slot config**: 3 states (default/custom/closed) + วันที่ปิดบางช่วง
+- [x] **Slot display ฝั่งลูกค้า**: จองแล้ว (แดง) vs ปิด (เทา) — คนละสี
+- [x] **Admin slot "บิ้ว"**: fake-booked โดย admin — ส้ม, ลูกค้าเห็น "จองแล้ว" เหมือนจองจริง (11 ก.ค. 2569)
+- [x] **Slot cycle**: เปิด → บิ้ว → ปิด → เปิด (กดวน 3 states)
+- [x] **ขั้นต่ำ 1 วัน**: จองได้เร็วสุดคือพรุ่งนี้
+- [x] **ซ่อนการจองเลยวัน**: Admin panel + Dashboard แสดงเฉพาะการจองในอนาคต
+- [x] **Urgency UI**: ⚡ เหลือ X ช่อง! กระพริบเมื่อว่าง ≤ 3
+- [x] **MapPicker mobile fix**: กดครั้งที่ 2+ เปิดทันที + 5s timeout fallback
+- [x] **Loading animation**: racing car SVG + progress bar 7 วิ + ชิปรายละเอียด
+- [x] **Navbar**: ปุ่ม "จองคิวรีแมป" แดง เด่น | "ติดต่อเรา" เทา เล็ก
+- [x] **Admin cancel → slot ว่างทันที** + duplicate check ข้าม cancelled
+- [x] **ระบบลูกค้ายกเลิกเอง**: cancelCode 4 หลัก + `/cancel` page + deadline 12 ชม.
+- [x] **Code.gs cancel-booking handler**: update Sheet สถานะ "ยกเลิก" ✅ deploy แล้ว
+- [x] **Dashboard Bookings**: 4 summary cards + ตารางจอง + ลิงก์แผนที่
+- [x] **Booking form**: LINE ID + รุ่นรถ required + math captcha
+- [x] **RemapPage background images**: 4 sections มี bg image (Google Drive thumbnails)
+- [x] **Footer**: เบอร์โทร 083-009-2554 เป็น `href="tel:..."` กดโทรได้
+- [x] **BookingPage cancel links**: 2 จุด (header text link + success screen button)
+- [x] **Migration to Vercel**: Railway หมด trial → ย้าย Vercel ฟรี (11 ก.ค. 2569)
+- [x] **Vercel serverless fix**: `Promise.allSettled()` ก่อน `res.json()` ทุก endpoint
+- [x] **cron-job.org**: แทน setInterval สำหรับ sync visits/bookings ทุก 30 นาที
+- [x] **Debug endpoints**: `/api/test-telegram`, `/api/debug-github`
+- [x] **GitHub env var trim**: `.trim()` ทุกค่าใน `ghConf()` + `ghHeaders()` ป้องกัน hidden chars
 
 ---
 
 ## ค้างอยู่ / ต้องทำ
-- [x] **OG Cover Image** — `public/images/og-cover.png` (1200×630px) ✅ deploy แล้ว 10 ก.ค. 2569
-- [ ] Watermark สำหรับ Panthera (user บอกยังไม่ทำ)
-- [ ] Google Business Profile — เพิ่มรูปภาพ, เวลาทำการ, คำอธิบายบริการให้ครบ
-- [ ] เนื้อหาบนเว็บ — เพิ่มบทความ/เนื้อหาภาษาไทยให้ Google index ได้ดีขึ้น (สำคัญสำหรับ SEO)
+- [ ] **Watermark สำหรับ Panthera** — user บอกทำทีหลัง
+- [ ] **Google Business Profile** — เพิ่มรูปภาพ, เวลาทำการ, คำอธิบายบริการให้ครบ
+- [ ] **เนื้อหาบนเว็บ** — เพิ่มบทความ/เนื้อหาภาษาไทยให้ Google index ได้ดีขึ้น (สำคัญสำหรับ SEO)
+- [ ] **หน้า About Us** — เนื้อหายังเป็น placeholder
 
 ---
 
 ## ประวัติปัญหาและวิธีแก้ (Bug History)
 
-### 🐛 #1 — Gmail SMTP ใช้ไม่ได้บน Railway
-- **อาการ**: nodemailer timeout ส่ง email ไม่ได้
-- **สาเหตุ**: Railway block outbound SMTP port 465/587
+### 🐛 #1 — Gmail SMTP ใช้ไม่ได้บน Railway/Vercel
 - **แก้**: เปลี่ยนเป็น Resend API (HTTPS port 443)
 
----
+### 🐛 #2 — Visit Tracking ไม่ขึ้น Google Sheet
+- **Root cause**: Google block ทุก browser request + GET+params → 400
+- **แก้**: Server POST JSON `{source:'visit'}` → doPost ✅
 
-### 🐛 #2 — Visit Tracking ไม่ขึ้น Google Sheet (ใช้เวลาทั้งวัน)
-**Timeline การ debug:**
+### 🐛 #3 — Email แจ้งเตือนซ้ำ 2 ฉบับ
+- **สาเหตุ**: ส่งอีเมล 2 ทาง (server.js + Code.gs)
+- **แก้**: ลบ sendEmail() ออกจาก Code.gs doPost — **อย่าเพิ่มกลับ**
 
-| วิธีที่ลอง | ผล | สาเหตุ |
-|---|---|---|
-| Browser no-cors POST → Apps Script | ❌ | 302 redirect → body หาย → doPost รับข้อมูลไม่ได้ |
-| Browser GET no-cors | ❌ 400 | Sec-Fetch-Mode: no-cors → Google block |
-| Browser Image.src (pixel tracking) | ❌ 400 | Sec-Fetch-Dest: image → Google block |
-| Browser regular CORS fetch | ❌ 400 | มี Origin header → Google block |
-| Server GET + query params | ❌ 400 | Google block GET+params ที่ routing layer |
-| Server GET + params (URL อื่น) | ❌ 400 | เหมือนกัน ทุก deployment |
-| **Server POST JSON {source:'visit'}** | ✅ **200** | doPost รับ JSON body ได้ปกติ |
+### 🐛 #4 — Timestamp ผิด timezone
+- **แก้**: เติม `{ timeZone: 'Asia/Bangkok' }` ทุกที่
 
-**Root cause สรุป:**
-- Google block **ทุก browser request** ที่มี Origin/Sec-Fetch headers → 400
-- Google block **GET พร้อม query params** จากทุกที่ (browser + server) ที่ routing layer → 400
-- GET **ไม่มี params** → 302 ผ่านได้ (ใช้สำหรับ dashboard read)
-- POST JSON → doPost ทำงานได้ปกติ ✅
+### 🐛 #5 — Booking ไม่บันทึกลง Google Sheet
+- **สาเหตุ**: SHEET_DOPOST_URL ชี้ผิด deployment
+- **แก้**: ใช้ URL เดียวกับ SHEET_DOGET_URL
 
----
+### 🐛 #6 — Email/Telegram ไม่ทำงานบน Vercel
+- **สาเหตุ**: Vercel serverless terminate process หลัง `res.json()` → setImmediate/fire-and-forget ไม่ทำงาน
+- **แก้**: `await Promise.allSettled([...])` ก่อนทุก `res.json()`
 
-### 🐛 #3 — Email แจ้งเตือนซ้ำ 2 ฉบับต่อ 1 submit
-- **อาการ**: กด submit 1 ครั้ง → ได้ email 2 ฉบับ (คนละ sender)
-- **สาเหตุ**: ส่งอีเมล 2 ทาง: server.js → Resend + Code.gs → MailApp
-- **แก้**: ลบ `sendEmail()` ออกจาก `doPost` ใน Code.gs ทั้งหมด
-- **หมายเหตุ**: อย่าเพิ่มกลับเด็ดขาด — server.js จัดการให้แล้ว
+### 🐛 #7 — Telegram ไม่ส่ง notification (11 ก.ค. 2569)
+- **สาเหตุ**: TELEGRAM_CHAT_ID มี tab character นำหน้า (`\t6476070617`)
+- **แก้**: ลบ tab ใน Vercel env var | เพิ่ม `.trim()` ใน code ป้องกันอนาคต
+- **ทดสอบ**: `/api/test-telegram`
 
----
-
-### 🐛 #4 — Timestamp ผิด timezone (ช้ากว่าไทย 7 ชั่วโมง)
-- **อาการ**: เวลาใน Sheet / อีเมล ช้ากว่าความเป็นจริง 7 ชั่วโมง
-- **สาเหตุ**: Railway/Google servers อยู่ใน UTC → `new Date().toLocaleString('th-TH')` ได้ UTC
-- **แก้**: เติม `{ timeZone: 'Asia/Bangkok' }` ทุกที่ใน server.js, Code.gs, App.jsx
-
----
-
-### 🐛 #5 — Booking ไม่บันทึกลง Google Sheet (9 ก.ค. 2569)
-- **อาการ**: จองคิวแล้วมีอีเมล+Telegram แต่ไม่มีแถวใหม่ใน Sheet tab "Bookings"
-- **สาเหตุ**: `SHEET_DOPOST_URL` (line 30 ใน server.js) ชี้ไปยัง deployment ID คนละตัวกับที่มี Bookings tab handler ใน Code.gs
-- **แก้**: เปลี่ยน `SHEET_DOPOST_URL` ให้ใช้ URL เดียวกับ `SHEET_DOGET_URL` (deployment ที่ user deploy ล่าสุด)
-- **หมายเหตุ**: ทั้งสอง URL ต้องเป็น deployment เดียวกันเสมอ อย่าให้ต่างกัน
+### 🐛 #8 — "Branch main not found" ตอน admin บันทึก (11 ก.ค. 2569)
+- **สาเหตุ**: GitHub env vars อาจมี hidden chars | `ghHeaders()` ไม่ trim token
+- **แก้**: เพิ่ม `.trim()` ทั้ง `ghConf()` และ `ghHeaders()` + เพิ่ม detailed error log
+- **ทดสอบ**: `/api/debug-github`
 
 ---
 
 ## สิ่งที่ต้องระวัง
 
-1. **อย่าแตะ server.js SHEET_DOGET_URL** — ใช้ทั้ง dashboard GET + visit tracking POST ถ้าเปลี่ยนพังทั้งคู่
+1. **อย่าแตะ server.js SHEET_DOGET_URL** — ใช้ทั้ง dashboard GET + visit tracking POST
 2. **อย่าสร้าง branch** — push main ตรงๆ เท่านั้น
 3. **Apps Script — user deploy เองด้วยมือ** ไม่ได้ auto-deploy จาก GitHub
-4. **content.json** — มีข้อมูลจริงของ user อยู่ ระวังอย่า overwrite ด้วย default data (มี booking config ด้วยแล้ว)
-5. **visits.json / bookings.json** — Railway commit ทุก 30 นาที → ถ้า push conflict ให้ rebase
+4. **content.json** — มีข้อมูลจริงของ user อยู่ ระวังอย่า overwrite ด้วย default data
+5. **visits.json / bookings.json** — cron-job.org commit ทุก 30 นาที → ถ้า push conflict ให้ rebase
 6. **Browser → Apps Script ทำไม่ได้เลย** — Google block Origin header → 400
-7. **Server GET + params → Apps Script ทำไม่ได้** — Google block ที่ routing layer → 400
-8. **ใช้ POST JSON เท่านั้น** สำหรับ write ข้อมูลไป Apps Script
-9. **Gmail SMTP ใช้ไม่ได้** — Railway block SMTP → ใช้ Resend API เท่านั้น
-10. **Timestamp ทุกตัว** ต้องระบุ `{ timeZone: 'Asia/Bangkok' }` ใน server.js และ Code.gs
-11. **SEO files** — `index.html`, `sitemap.xml`, `robots.txt`, `llms.txt` ใช้ `shiftupperformance.com` เป็น canonical → อย่า overwrite ด้วย Railway URL
-12. **Leaflet CDN** อยู่ใน `index.html` — อย่าลบ ไม่งั้น MapPicker ใน BookingPage พัง
-13. **URL routing** — server.js มี `app.get('*', ...)` fallback อยู่แล้ว ทุก URL จะ serve index.html ถูกต้อง
-14. **cancelCode** — เก็บเฉพาะใน `bookings[]` RAM + bookings.json เท่านั้น ไม่ได้ส่ง email/Telegram ให้ลูกค้า → ลูกค้าต้องถ่ายรูปจาก success screen เก็บเอง
-15. **cancel-booking POST → Sheet** — server.js ส่งไปแล้ว แต่ Code.gs ยังไม่มี handler → Sheet จะยังไม่ update สถานะจนกว่า user จะ deploy Code.gs ใหม่
+7. **ใช้ POST JSON เท่านั้น** สำหรับ write ข้อมูลไป Apps Script
+8. **Vercel serverless**: ทุก async operation ต้อง `await` ก่อน `res.json()` — ห้ามใช้ setImmediate หลัง respond
+9. **Timestamp ทุกตัว** ต้องระบุ `{ timeZone: 'Asia/Bangkok' }`
+10. **SEO files** ใช้ `shiftupperformance.com` เป็น canonical — อย่า overwrite
+11. **Leaflet CDN** อยู่ใน `index.html` — อย่าลบ ไม่งั้น MapPicker พัง
+12. **cancelCode** — ลูกค้าต้องถ่ายรูปจาก success screen เก็บเอง ไม่ส่ง email
+13. **adminBooked (บิ้ว)** — เก็บใน `config.adminBooked` ใน content.json, server merge เข้า bookedSlots ก่อนส่งลูกค้า
+14. **Env vars hidden chars** — เคยเกิดกับ TELEGRAM_CHAT_ID (tab) → ถ้า error แปลกๆ ให้เช็ค `/api/debug-github` และ `/api/test-telegram`
 
 ---
 
@@ -540,112 +511,44 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 4. Deploy → Manage deployments → ✏️ Edit → New version → Deploy
    (ห้ามสร้าง deployment ใหม่ URL จะเปลี่ยน)
 5. ทดสอบ:
-   - เปิดเว็บ → เข้าหน้าต่างๆ → ดู Sheet Visits tab ควรมีแถวใหม่
-   - ดู Railway logs: [sheet] status=200 body={"success":true}
-   - ส่ง form → ได้อีเมล 1 ฉบับ (ไม่ซ้ำ)
-   - เวลาใน Sheet / อีเมล ตรงกับเวลาไทย GMT+7
+   - Visits tab มีแถวใหม่
+   - Vercel logs: [sheet] status=200 body={"success":true}
+   - เวลาใน Sheet ตรงกับเวลาไทย GMT+7
 ```
 
 ---
 
 ## Last Session
-**วันที่**: 10 ก.ค. 2569 (session 6)
+**วันที่**: 11 ก.ค. 2569 (session 7)
 
-**6 มิ.ย. 2569 — Session 1:**
-1. เพิ่ม column filter dropdowns ในตาราง visitor details (Dashboard)
-2. เพิ่ม click-to-filter บน "หน้าที่เข้าชมมากสุด"
-3. แก้ Dashboard Sheet: Remap + Partner สองตารางเรียงซ้าย-ขวา
-4. ย้าย visit tracking จาก browser มา server-side (แก้ Origin header issue)
-5. รวม GOOGLE_SCRIPT_URL เป็น deployment เดียว
+**Session ก่อนหน้า (สรุปย่อ):**
+- Session 1-2 (6 มิ.ย.): Visit tracking, email, timezone, Dashboard
+- Session 8 มิ.ย. / 9 มิ.ย. (เครื่องอื่น): HKS brand management, instant save
+- Session 13 มิ.ย.: HKS Product Modal, SEO
+- Session 18 มิ.ย.: Watermark, โลโก้, Domain live, Search Console
+- Session 19 มิ.ย.: Remap restructure, Bot filtering
+- Session 28 มิ.ย. (เครื่องอื่น): About Us page
+- Session 9 ก.ค. S1: ระบบจองคิว, MapPicker, Telegram, cron
+- Session 9 ก.ค. S2: Per-date slot, Urgency UI, MapPicker mobile fix
+- Session 9 ก.ค. S3: Remap layout, Dashboard Bookings, Sheet bug fix
+- Session 9 ก.ค. S4: Loading animation, Navbar buttons, Cancel system
+- Session 9 ก.ค. S5: Footer, CTA swap, Captcha, BG images
+- Session 10 ก.ค. S6: Code.gs cancel handler, OG Cover Image
 
-**6 มิ.ย. 2569 — Session 2:**
-1. แก้ visit tracking ลง Sheet ถาวร: เปลี่ยนจาก GET+params → POST JSON {source:'visit'}
-2. แก้ email ซ้ำ: ลบ sendEmail() ออกจาก Code.gs doPost
-3. แก้ timezone: เติม `{ timeZone: 'Asia/Bangkok' }` ทุกที่
-
-**8 มิ.ย. 2569 (เครื่องอื่น):**
-1. HKS admin: เพิ่ม brand management — เพิ่ม/ลบ brand tab ได้ (ไม่ hardcode แล้ว)
-
-**9 มิ.ย. 2569 (เครื่องอื่น):**
-1. Admin save: server เขียน `dist/content.json` ทันทีหลัง GitHub commit → F5 เห็นผลทันที
-
-**13 มิ.ย. 2569:**
-1. HKS Product Modal: gallery รูป+วิดีโอ, ลูกศรนำทาง, keyboard nav, YouTube autoplay, thumbnail strip
-2. HKS grid: แสดงรูปแรก (image) อัตโนมัติ, ปุ่มเปลี่ยนเป็น "รายละเอียดสินค้า"
-3. HKS Admin: drag-and-drop เรียงลำดับ gallery media
-4. SEO ครบชุด: index.html (meta/OG/JSON-LD), sitemap.xml, robots.txt, llms.txt
-
-**18 มิ.ย. 2569:**
-1. Watermark อัตโนมัติ (Portfolio + HKS) — CSS overlay, opacity 22%, -30°, 1.5x gap
-2. โลโก้ใหม่ `public/images/logo.png` + ขยายขนาด navbar h-20 / footer h-24
-3. HKS Admin: เพิ่ม/ลบ brand tabs ได้จาก admin panel
-4. แก้ F5 หลัง save — server เขียน dist/content.json ทันที ไม่รอ Railway rebuild
-5. **Domain live**: `www.shiftupperformance.com` — GoDaddy CNAME → Railway
-6. **Google Search Console**: verify + submit sitemap เรียบร้อย
-7. **Google Business Profile**: สร้างแล้ว
-8. อัปเดต SEO files ทุกไฟล์ → `www.shiftupperformance.com`
-9. Visit tracking: เปลี่ยนเป็น track หน้าแรกเท่านั้น (ลด noise)
-
-**19 มิ.ย. 2569:**
-1. Remap page: ย้าย Pricing+Form ขึ้นมาก่อน + บทความเปลี่ยนเป็น Accordion (แก้ปัญหามือถือไถเยอะ)
-2. Bot filtering: กรอง ISP datacenter (Amazon/Google/OVH/Microsoft ฯลฯ) ออกจาก visits — ไม่บันทึกลง Sheet
-3. Bot counter: Dashboard แสดง 🤖 จำนวน bot ที่กรองออก (วันนี้ + ช่วงที่เลือก) แยกจากคนจริง
-4. บันทึก memory ลง .claude ครบชุด (user_profile, feedback, project, reference)
-
-**28 มิ.ย. 2569 (เครื่องอื่น):**
-1. เพิ่มหน้า About Us — tab navbar (desktop + mobile) + 6 sections + AboutAdminPanel
-2. เพิ่ม About Us ใน footer Quick Links
-3. เปลี่ยนปุ่ม CTA navbar: "ปรึกษาช่างเทคนิค" → "ติดต่อเรา"
-
-**9 ก.ค. 2569 — Session 1 (context จาก summary):**
-1. ระบบจองคิว ECU Remap: BookingPage, MapPicker, BookingAdminPanel
-2. URL routing: pushState — /booking, /remap, /about ฯลฯ
-3. MapPicker: Leaflet + OSM tiles + Nominatim search + draggable pin
-4. สถานที่: 2 ช่อง (locationName + locationUrl แยกกัน)
-5. Telegram Bot notification (TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID)
-6. Booking persistence: bookings.json → GitHub
-7. Apps Script: เพิ่ม Bookings tab (14 columns) — user ต้อง deploy เอง
-8. Slot เวลา 2 ชั่วโมง: 09:00–21:00 (7 slots)
-9. ปุ่ม animated border บน RemapPage
-10. แก้ปฏิทิน grid + admin gear button ซ่อน
-
-**9 ก.ค. 2569 — Session 2:**
-1. Per-date slot config: กดวันไหนก็ตั้ง slot อิสระได้ — 3 states (default/custom/closed)
-2. Slot display ลูกค้า: แสดง "จองแล้ว" + strikethrough แดง แทนการซ่อน
-3. Urgency UI: ⚡ เหลือ X ช่อง! กระพริบเมื่อว่าง ≤ 3
-4. MapPicker mobile fix: กดครั้งที่ 2+ เปิดทันทีไม่รอ GPS + 5s timeout fallback
-5. อัปเดต memory + CLAUDE.md ครบชุด
-
-**9 ก.ค. 2569 — Session 3:**
-1. Remap page: Pricing full-width grid 3 คอลัมน์, Form "ประเมินรถฟรี" ย้ายล่างสุด (หลัง Reviews)
-2. Dashboard: เพิ่มตาราง "การจองคิวรีแมป" + 4 summary cards (เพิ่ม Bookings + รวม Leads+จอง)
-3. Bug fix: `SHEET_DOPOST_URL` ชี้ผิด deployment → แก้ให้ใช้ URL เดียวกับ DOGET_URL → บันทึก Sheet ได้แล้ว
-4. อัปเดต memory + CLAUDE.md ครบชุด
-
-**9 ก.ค. 2569 — Session 4:**
-1. Loading animation: racing car SVG วิ่งข้ามจอ + progress bar 7 วิ + ชิปรายละเอียดการจอง fade-in ก่อนหน้า success
-2. Navbar: เพิ่มปุ่ม "จองคิวรีแมป" (เล็ก) + ลดขนาดปุ่ม "ติดต่อเรา" ทั้ง desktop และ mobile
-3. Admin cancel → slot คืนว่าง: bookedSlots กรอง cancelled ออก + duplicate check ข้าม cancelled
-4. ระบบลูกค้ายกเลิกเอง: `/cancel` page + CancelPage component + `/api/cancel-by-code` endpoint
-   - cancelCode 4 หลักสุ่มตอนสร้าง booking → แสดงบน success screen (กล่องสีทอง)
-   - deadline: ยกเลิกได้ก่อนเวลานัด 12 ชม. เท่านั้น
-   - ยกเลิกสำเร็จ → slot ว่างทันที + Telegram แจ้ง admin
-5. อัปเดต memory + CLAUDE.md ครบชุด
-
-**10 ก.ค. 2569 — Session 6:**
-1. Code.gs: เพิ่ม cancel-booking handler — หา row ตาม Booking ID (column N) → update สถานะ "ยกเลิก" (column M) + ต่อท้ายหมายเหตุ (column L) เวลายกเลิก ✅ **deploy แล้ว**
-2. OG Cover Image: `public/images/og-cover.png` (1200×630px) — index.html og:image + twitter:image ชี้ไฟล์นี้แล้ว ✅ deploy แล้ว
-3. อัปเดต CLAUDE.md + memory ครบชุด
-
-**9 ก.ค. 2569 — Session 5:**
-1. Footer: ลบเบอร์ 088-788-8364 ออก — เหลือแค่ 083-009-2554 เป็น `href="tel:0830092554"` (กดโทรออกได้)
-2. Navbar prominence swap: "จองคิวรีแมป" = bg-red-600 เด่นกว่า | "ติดต่อเรา" = bg-neutral-800 เล็กกว่า (desktop + mobile)
-3. BookingPage: เพิ่มลิงก์ยกเลิกการจอง 2 จุด (header text link + success screen button)
-4. RemapPage CTA: "จองคิวรีแมปรถยนต์" = แดง animated border | "ติดต่อเรา" = เทา
-5. Booking form: LINE ID + รุ่นรถ required + math captcha (a+b=? สุ่มทุก attempt)
-6. RemapPage background images:
-   - Hero: id=`14phTvXtXXaoh0thcbO3NEoiU5Ch1dPK8` opacity-65
-   - Pricing: id=`1aqfxgrPBf88tILTPoq0j44wPhm9XHnX5` opacity-55
-   - Portfolio section (full-width): id=`1uhFl-6GMWMp7xbOBVYUgXnOtLuitbTwo` opacity-80 object-center
-   - Consult form section (full-width): id=`1L0aX2BWxl5VPwP59LaAVUixvFFlaAuGr` opacity-25
-7. อัปเดต CLAUDE.md ครบชุด
+**11 ก.ค. 2569 — Session 7 (session นี้):**
+1. **ย้าย Railway → Vercel** ✅ (Railway trial expired, service offline — ลบแล้ว)
+   - สร้าง `vercel.json` + `api/index.js` (Vercel entry point)
+   - แก้ `server.js`: conditional `app.listen()` + `export default app`
+   - ลบ `setInterval` → ใช้ cron-job.org + `/api/cron-sync` แทน
+   - แก้ทุก endpoint: `await Promise.allSettled()` ก่อน `res.json()`
+   - DNS: GoDaddy CNAME `www` → `b7f41b836513b2d8.vercel-dns-017.com.`
+2. **Slot display 3 states** (ลูกค้า): จองแล้ว (แดง) vs ปิด (เทา) — คนละสี
+3. **ขั้นต่ำ 1 วัน**: `getDates()` เริ่มจาก i=1 (พรุ่งนี้)
+4. **แก้ Telegram ไม่ส่ง**: TELEGRAM_CHAT_ID มี tab นำหน้า → ลบ + เพิ่ม `.trim()`
+5. **ซ่อนการจองเลยวัน**: filter `b.date >= today` ทั้ง admin panel + Dashboard
+6. **Admin slot "บิ้ว"**: fake-booked state — ส้ม, ลูกค้าเห็น "จองแล้ว"
+   - `cycleSlot()`: เปิด → adminBooked → ปิด → เปิด
+   - `config.adminBooked` เก็บใน content.json
+   - server merge adminBooked เข้า bookedSlots ก่อนส่งลูกค้า
+7. **แก้ "Branch main not found"**: `.trim()` ทั้ง `ghConf()` + `ghHeaders()`
+8. **Debug endpoints**: `/api/test-telegram`, `/api/debug-github`
