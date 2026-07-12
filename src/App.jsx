@@ -931,6 +931,8 @@ const RemapPage = ({ navigateTo }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState('');
   const [openArticles, setOpenArticles] = useState(new Set());
+  const [articlePage, setArticlePage] = useState(0);
+  const ARTICLES_PER_PAGE = 8;
   const toggleArticle = (id) => setOpenArticles(prev => {
     const next = new Set(prev);
     next.has(id) ? next.delete(id) : next.add(id);
@@ -1046,11 +1048,27 @@ const RemapPage = ({ navigateTo }) => {
           </a>
         </div>
 
-        {/* ── Articles Accordion ── */}
+        {/* ── Reviews Carousel ── */}
+        <section>
+          <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">รีวิวจากผู้ใช้จริง</h2>
+          <ReviewsCarousel reviews={data.reviews} />
+        </section>
+
+        {/* ── Portfolio 3D Slideshow ── */}
+        <section className="relative -mx-6 lg:-mx-8 px-6 lg:px-8 py-16 overflow-hidden">
+          <img src="https://drive.google.com/thumbnail?id=1uhFl-6GMWMp7xbOBVYUgXnOtLuitbTwo&sz=w1200" alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-80" />
+          <div className="absolute inset-0 bg-neutral-950/15" />
+          <div className="relative z-10">
+            <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">ผลงานรีแมป (Portfolio)</h2>
+            <Portfolio3DSlideshow items={data.portfolio} />
+          </div>
+        </section>
+
+        {/* ── Articles Accordion with Pagination ── */}
         <section>
           <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">บทความ & ความรู้ก่อนรีแมป</h2>
           <div className="space-y-3">
-            {data.articles.map((art) => {
+            {(data.articles || []).slice(articlePage * ARTICLES_PER_PAGE, (articlePage + 1) * ARTICLES_PER_PAGE).map((art) => {
               const isOpen = openArticles.has(art.id);
               return (
                 <div key={art.id} className="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden transition-colors hover:border-neutral-600">
@@ -1071,29 +1089,43 @@ const RemapPage = ({ navigateTo }) => {
                           <img src={art.imgUrl} alt={art.title} className="w-full h-full object-cover" />
                         </div>
                       )}
-                      <p className="text-neutral-400 text-sm leading-relaxed mt-4">{art.excerpt}</p>
+                      <p className="text-neutral-400 text-sm leading-relaxed mt-4 whitespace-pre-line">{art.excerpt}</p>
                     </div>
                   )}
                 </div>
               );
             })}
           </div>
-        </section>
-
-        {/* ── Portfolio 3D Slideshow ── */}
-        <section className="relative -mx-6 lg:-mx-8 px-6 lg:px-8 py-16 overflow-hidden">
-          <img src="https://drive.google.com/thumbnail?id=1uhFl-6GMWMp7xbOBVYUgXnOtLuitbTwo&sz=w1200" alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-80" />
-          <div className="absolute inset-0 bg-neutral-950/15" />
-          <div className="relative z-10">
-            <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">ผลงานรีแมป (Portfolio)</h2>
-            <Portfolio3DSlideshow items={data.portfolio} />
-          </div>
-        </section>
-
-        {/* ── Reviews Carousel ── */}
-        <section>
-          <h2 className="text-3xl font-bold text-white mb-8 border-l-4 border-red-500 pl-4">รีวิวจากผู้ใช้จริง</h2>
-          <ReviewsCarousel reviews={data.reviews} />
+          {/* Pagination */}
+          {(data.articles || []).length > ARTICLES_PER_PAGE && (
+            <div className="flex items-center justify-between mt-8 gap-4">
+              <button
+                onClick={() => { setArticlePage(p => Math.max(0, p - 1)); setOpenArticles(new Set()); }}
+                disabled={articlePage === 0}
+                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-neutral-800 text-neutral-300 font-semibold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-neutral-700 transition-colors text-sm"
+              >
+                ‹ ก่อนหน้า
+              </button>
+              <div className="flex items-center gap-2">
+                {Array.from({ length: Math.ceil((data.articles || []).length / ARTICLES_PER_PAGE) }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => { setArticlePage(i); setOpenArticles(new Set()); }}
+                    className={`w-9 h-9 rounded-lg text-sm font-bold transition-colors ${i === articlePage ? 'bg-red-600 text-white' : 'bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700'}`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => { setArticlePage(p => Math.min(Math.ceil((data.articles || []).length / ARTICLES_PER_PAGE) - 1, p + 1)); setOpenArticles(new Set()); }}
+                disabled={articlePage >= Math.ceil((data.articles || []).length / ARTICLES_PER_PAGE) - 1}
+                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-neutral-800 text-neutral-300 font-semibold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-neutral-700 transition-colors text-sm"
+              >
+                ถัดไป ›
+              </button>
+            </div>
+          )}
         </section>
 
         {/* ── Consult Form (bottom) ── */}
@@ -3119,6 +3151,131 @@ const AboutPage = ({ lineUrl }) => {
                 )}
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* ── SEO Content Section ── */}
+        <section className="space-y-10">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-1 h-8 bg-red-500 rounded-full" />
+            <h2 className="text-3xl font-black text-white">ข้อมูลบริการโดยละเอียด</h2>
+          </div>
+
+          {/* ECU Remap Deep Dive */}
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 space-y-4">
+            <h3 className="text-xl font-bold text-red-400">ECU Remap คืออะไร และทำงานอย่างไร</h3>
+            <p className="text-neutral-400 leading-relaxed text-sm">ECU (Engine Control Unit) คือสมองกลของรถยนต์ที่ควบคุมการทำงานของเครื่องยนต์ทุกด้าน ไม่ว่าจะเป็นการฉีดน้ำมันเชื้อเพลิง (Fuel Injection Timing), องศาจุดระเบิด (Ignition Timing), แรงดันเทอร์โบ (Boost Pressure), การเปิด-ปิดวาล์ว (VVT/VVTI), และอัตราส่วนอากาศต่อน้ำมัน (Air-Fuel Ratio) โรงงานผู้ผลิตรถยนต์จะตั้งค่าเหล่านี้แบบ "กลางๆ" เพื่อให้รถทำงานได้กับน้ำมันทุกเกรดทั่วโลก ผ่านมาตรฐานมลพิษของทุกประเทศ และประกันว่ารถจะไม่เสียหายในสภาพการใช้งานที่แย่ที่สุด การรีแมปคือการปรับค่าเหล่านี้ใหม่ให้เหมาะกับสภาพอากาศ คุณภาพน้ำมัน และรูปแบบการขับขี่ในประเทศไทยโดยเฉพาะ ผ่านซอฟต์แวร์เฉพาะทางผ่านพอร์ต OBD2 โดยไม่ต้องถอดหรือตัดต่อชิ้นส่วนใดๆ</p>
+            <div className="grid md:grid-cols-2 gap-4 mt-4">
+              <div className="bg-neutral-800 rounded-xl p-4">
+                <p className="text-white text-sm font-semibold mb-2">สิ่งที่ปรับในการรีแมป</p>
+                <ul className="text-neutral-400 text-xs space-y-1 leading-relaxed">
+                  <li>• Fuel Map — กราฟการฉีดน้ำมันเชื้อเพลิง</li>
+                  <li>• Ignition Map — องศาจุดระเบิดที่แม่นยำ</li>
+                  <li>• Boost Map — แรงดันเทอร์โบในแต่ละรอบเครื่อง</li>
+                  <li>• Torque Limiter — ปลดล็อคขีดจำกัดแรงบิดจากโรงงาน</li>
+                  <li>• Rev Limiter — ปรับรอบสูงสุดให้เหมาะสม</li>
+                  <li>• Throttle Map — การตอบสนองคันเร่ง</li>
+                  <li>• EGR / DPF — ปรับระบบควบคุมไอเสีย</li>
+                </ul>
+              </div>
+              <div className="bg-neutral-800 rounded-xl p-4">
+                <p className="text-white text-sm font-semibold mb-2">ผลลัพธ์ที่ได้</p>
+                <ul className="text-neutral-400 text-xs space-y-1 leading-relaxed">
+                  <li>• แรงม้า (Horsepower) เพิ่มขึ้น 15-30%</li>
+                  <li>• แรงบิด (Torque) เพิ่มขึ้น 20-40%</li>
+                  <li>• อาการ Turbo Lag ลดลงหรือหายไป</li>
+                  <li>• การตอบสนองคันเร่งดีขึ้นชัดเจน</li>
+                  <li>• ประหยัดน้ำมัน 5-15% ในการขับปกติ</li>
+                  <li>• เครื่องทำงานนิ่งและสม่ำเสมอขึ้น</li>
+                  <li>• ลดอาการควันดำในรถดีเซล</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Compatibility */}
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 space-y-4">
+            <h3 className="text-xl font-bold text-orange-400">รถยนต์ที่รองรับบริการ ECU Remap</h3>
+            <p className="text-neutral-400 text-sm leading-relaxed">P2W Interplus รองรับรถยนต์จากผู้ผลิตชั้นนำทั่วโลก ทั้งรถยนต์เบนซิน ดีเซล และ Hybrid ที่มีเครื่องยนต์สันดาป สามารถให้บริการได้กับรถยนต์รุ่นปี 2000 ขึ้นไปเป็นส่วนใหญ่</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {['Toyota','Honda','Mazda','Isuzu','Ford','Mitsubishi','Nissan','Subaru','BMW','Mercedes-Benz','Volkswagen','Audi'].map(brand => (
+                <div key={brand} className="bg-neutral-800 rounded-lg px-3 py-2 text-center">
+                  <span className="text-neutral-300 text-xs font-semibold">{brand}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-neutral-500 text-xs mt-2">* รุ่นรถที่รองรับขึ้นอยู่กับ ECU Type และ Interface ที่ใช้ กรุณาติดต่อสอบถามก่อนนัดหมาย</p>
+          </div>
+
+          {/* HKS Section */}
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 space-y-4">
+            <h3 className="text-xl font-bold text-yellow-400">HKS Exhaust System — ท่อไอเสียคุณภาพสูงจากญี่ปุ่น</h3>
+            <p className="text-neutral-400 text-sm leading-relaxed">HKS (Hasegawa Kinzoku Kogyo Seisakusho) ก่อตั้งขึ้นในปี 1973 ที่เมืองฟูจิ จังหวัดชิซูโอกะ ประเทศญี่ปุ่น เป็นผู้ผลิตอุปกรณ์เสริมสมรรถนะรถยนต์ระดับโลกที่ได้รับการยอมรับจากนักแข่งรถและผู้ที่ชื่นชอบรถสปอร์ตทั่วโลกมากว่า 50 ปี ท่อไอเสีย HKS ผลิตจากสแตนเลส SUS304 เกรดสูง ผ่านกระบวนการขึ้นรูปและเชื่อมด้วยเทคโนโลยีขั้นสูง ออกแบบเพื่อลดการต้านทานการไหลของไอเสีย ทำให้เครื่องยนต์ระบายความร้อนและก๊าซไอเสียได้คล่องขึ้น ส่งผลต่อประสิทธิภาพการเผาไหม้และกำลังเครื่องยนต์โดยตรง เสียงที่ได้จากท่อ HKS มีเอกลักษณ์เฉพาะตัว คือเสียงที่ลึก ทุ้ม มีชั้น บ่งบอกถึงสมรรถนะที่เหนือกว่า แต่ไม่ดังจนเป็นที่รำคาญหรือผิดกฎหมาย P2W Interplus เป็นตัวแทนจำหน่ายและติดตั้งท่อ HKS ของแท้ รับประกันสินค้าแท้จากแหล่งที่เชื่อถือได้</p>
+            <div className="grid md:grid-cols-3 gap-3 mt-2">
+              {[
+                { name: 'HKS Legamax Sports', desc: 'เสียงสปอร์ต เหมาะ Daily Use น้ำหนักเบา' },
+                { name: 'HKS Super Turbo Muffler', desc: 'เสียงลึกทุ้ม สำหรับรถเทอร์โบโดยเฉพาะ' },
+                { name: 'HKS Carbon Ti', desc: 'Carbon + Titanium น้ำหนักเบาสุด สำหรับ Track' },
+              ].map(p => (
+                <div key={p.name} className="bg-neutral-800 rounded-xl p-4">
+                  <p className="text-white text-xs font-bold mb-1">{p.name}</p>
+                  <p className="text-neutral-500 text-xs">{p.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Panthera Section */}
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 space-y-4">
+            <h3 className="text-xl font-bold text-blue-400">Panthera Active Sound System — เสียงสปอร์ตสำหรับทุกคัน</h3>
+            <p className="text-neutral-400 text-sm leading-relaxed">Panthera Active Sound System คือระบบสร้างเสียงเครื่องยนต์จำลองผ่านลำโพงของรถ โดยใช้เทคโนโลยีที่เรียกว่า Active Sound Design (ASD) ซึ่งรถสปอร์ตและ Performance Car ระดับพรีเมียมหลายรุ่นใช้เป็นมาตรฐาน เช่น Ford Mustang, BMW M Series, Volkswagen GTI/R และ Audi RS ระบบนี้อ่านสัญญาณ CAN Bus จาก ECU ของรถโดยตรงแบบ Real-Time ได้แก่ รอบเครื่องยนต์ (RPM), ตำแหน่งคันเร่ง (Throttle Position), โหลดเครื่องยนต์ (Engine Load), ความเร็วรถ (Vehicle Speed), และโหมดการขับ (Driving Mode) แล้วนำข้อมูลเหล่านี้มาสังเคราะห์เสียงที่สมจริงและสัมพันธ์กับพฤติกรรมการขับขี่ทุกขณะ ผลลัพธ์คือประสบการณ์การขับที่ Engaging มากขึ้น โดยเฉพาะสำหรับรถที่เดิมมีเสียงเครื่องเงียบหรือถูก Sound Deadening หนามาก รวมถึงรถไฟฟ้า (EV) ที่ต้องการ Feedback จากเสียงเพิ่มเติม</p>
+            <div className="grid md:grid-cols-2 gap-4 mt-2">
+              <div>
+                <p className="text-white text-sm font-semibold mb-2">เหมาะกับ</p>
+                <ul className="text-neutral-400 text-xs space-y-1">
+                  <li>• รถ Eco Car และรถประหยัดน้ำมันที่เสียงเงียบ</li>
+                  <li>• รถ Hybrid (Toyota, Honda, Mazda)</li>
+                  <li>• รถ EV (BYD, Tesla, MG, Neta)</li>
+                  <li>• SUV และ Crossover ที่ต้องการเสียงสปอร์ต</li>
+                  <li>• รถที่ติดตั้งใน Condominium ไม่ต้องการเสียงออกนอก</li>
+                </ul>
+              </div>
+              <div>
+                <p className="text-white text-sm font-semibold mb-2">คุณสมบัติ</p>
+                <ul className="text-neutral-400 text-xs space-y-1">
+                  <li>• ปรับระดับเสียงได้ 0-100%</li>
+                  <li>• เลือก Sound Profile ได้หลายแบบ</li>
+                  <li>• ปุ่ม On/Off ที่เข้าถึงได้ง่าย</li>
+                  <li>• ไม่ตัดต่อสายไฟเดิมของรถ</li>
+                  <li>• รองรับรถทุกยี่ห้อและรุ่น</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* FAQ */}
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 space-y-5">
+            <h3 className="text-xl font-bold text-green-400">คำถามที่พบบ่อย (FAQ)</h3>
+            {[
+              { q: 'ECU Remap ทำแล้วรถจะเสียหายไหม?', a: 'ไม่ครับ ถ้าทำโดยผู้เชี่ยวชาญที่มีประสบการณ์ การรีแมปที่ดีจะปรับค่าในขอบเขตที่เครื่องยนต์รับได้อย่างปลอดภัย ช่างจะตรวจสอบสภาพรถก่อนเสมอ และถ้าพบว่ารถไม่พร้อม จะแจ้งให้ทราบก่อนโดยไม่บังคับทำ' },
+              { q: 'ใช้เวลารีแมปนานแค่ไหน?', a: 'ประมาณ 1.5 - 3 ชั่วโมง ขึ้นอยู่กับรุ่นรถและความซับซ้อนของ ECU ระหว่างรอสามารถนั่งรอที่ร้านหรือไปทำธุระแล้วกลับมารับรถได้' },
+              { q: 'รีแมปแล้ว Restore กลับค่าเดิมได้ไหม?', a: 'ได้ครับ ก่อนรีแมปช่างจะ Backup ค่าเดิมไว้เสมอ สามารถ Restore กลับมาได้ตลอดเวลา เช่น ถ้าต้องนำรถเข้าศูนย์บริการ' },
+              { q: 'รีแมปกับรถที่ยังค้างผ่อนได้ไหม?', a: 'ได้ครับ การรีแมปไม่เกี่ยวข้องกับสัญญาเช่าซื้อหรือการผ่อนชำระ เป็นการปรับซอฟต์แวร์ที่ไม่เปลี่ยนแปลงโครงสร้างทางกายภาพของรถ' },
+              { q: 'บริการครอบคลุมพื้นที่ไหนบ้าง?', a: 'ให้บริการทั้งแบบนำรถมาที่ร้านและแบบ On-Site โดยทีมช่างเดินทางไปให้บริการถึงที่ ครอบคลุมกรุงเทพและปริมณฑล รวมถึงจังหวัดอื่นๆ (เงื่อนไขตามที่ตกลง) สอบถามรายละเอียดผ่าน LINE' },
+            ].map((item, i) => (
+              <div key={i} className="border-b border-neutral-800 pb-4 last:border-0 last:pb-0">
+                <p className="text-white text-sm font-semibold mb-1">Q: {item.q}</p>
+                <p className="text-neutral-400 text-sm leading-relaxed">A: {item.a}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Technical Keywords for SEO/AI */}
+          <div className="bg-neutral-900/50 border border-neutral-800/50 rounded-2xl p-8">
+            <h3 className="text-lg font-bold text-neutral-500 mb-4">ข้อมูลเชิงเทคนิค</h3>
+            <p className="text-neutral-600 text-xs leading-relaxed">
+              P2W Interplus ให้บริการ ECU Remap, ECU Tuning, ECU Flash, OBD2 Remap, Stage 1 Remap, Stage 2 Remap, Diesel Tuning, Petrol Tuning, Turbo Remap สำหรับรถยนต์ยี่ห้อ Toyota, Honda, Mazda, Isuzu, Ford, Mitsubishi, Nissan, Subaru, BMW, Mercedes-Benz, Volkswagen, Audi, Hyundai, Kia ในรุ่น Fortuner, Hilux Revo, CR-V, HR-V, Civic, CX-5, CX-3, Mazda 2, Mazda 3, D-Max, MU-X, Ranger, Raptor, Triton, Pajero Sport, Terra, Navara, Almera, WRX, Forester, C-HR, RAV4, Altis, Vios, Yaris, Jazz, City, BRV รองรับเครื่องยนต์ดีเซล CommonRail, VGT Turbo, Twin Turbo, Bi-Turbo, MIVEC, SKYACTIV-D, SKYACTIV-G, GD Series, DDTi, DDi, EcoBlue, EcoBoost และเครื่องยนต์เบนซิน Turbo, VTEC Turbo, 1.5T, 2.0T, EcoBoost ให้บริการทั้ง Cat-Back Exhaust, Axle-Back Exhaust, Full System Exhaust จากแบรนด์ HKS รองรับรถยนต์ไฮบริด Hybrid และรถยนต์ไฟฟ้า EV สำหรับ Panthera Active Sound System ติดต่อได้ที่ LINE OA @shiftup โทร 083-009-2554 เว็บไซต์ shiftupperformance.com
+            </p>
           </div>
         </section>
 
