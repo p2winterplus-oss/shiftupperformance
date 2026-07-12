@@ -5,7 +5,7 @@
 - **URL**: deploy บน **Vercel** (auto-deploy จาก GitHub main)
 - **Domain**: `www.shiftupperformance.com` — live แล้ว (18 มิ.ย. 2569)
 - **Stack**: React 18 + Vite 5 + Tailwind CSS v3 + Express server
-- **วันที่อัปเดต**: 11 ก.ค. 2569 (session 7)
+- **วันที่อัปเดต**: 12 ก.ค. 2569 (session 8)
 
 ---
 
@@ -436,14 +436,17 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - [x] **cron-job.org**: แทน setInterval สำหรับ sync visits/bookings ทุก 30 นาที
 - [x] **Debug endpoints**: `/api/test-telegram`, `/api/debug-github`
 - [x] **GitHub env var trim**: `.trim()` ทุกค่าใน `ghConf()` + `ghHeaders()` ป้องกัน hidden chars
+- [x] **SEO บทความ 40 บทความ**: เพิ่มบทความภาษาไทยครอบคลุมรถทุกรุ่น + HKS + Panthera + FAQ (12 ก.ค. 2569)
+- [x] **Article Pagination**: แสดง 8 บทความ/หน้า รวม 5 หน้า พร้อม prev/next + page dots (12 ก.ค. 2569)
+- [x] **Remap page reorder**: รีวิว → Portfolio → บทความ → ฟอร์มประเมิน (12 ก.ค. 2569)
+- [x] **About Us SEO content**: เพิ่ม section ข้อมูลหนาแน่น ECU deep-dive, brand grid, HKS, Panthera, FAQ, technical keywords (12 ก.ค. 2569)
 
 ---
 
 ## ค้างอยู่ / ต้องทำ
 - [ ] **Watermark สำหรับ Panthera** — user บอกทำทีหลัง
 - [ ] **Google Business Profile** — เพิ่มรูปภาพ, เวลาทำการ, คำอธิบายบริการให้ครบ
-- [ ] **เนื้อหาบนเว็บ** — เพิ่มบทความ/เนื้อหาภาษาไทยให้ Google index ได้ดีขึ้น (สำคัญสำหรับ SEO)
-- [ ] **หน้า About Us** — เนื้อหายังเป็น placeholder
+- [ ] **หน้า About Us** — section ใหม่เพิ่มแล้ว แต่อาจเพิ่มเนื้อหาได้อีก
 
 ---
 
@@ -519,7 +522,7 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 ---
 
 ## Last Session
-**วันที่**: 11 ก.ค. 2569 (session 7)
+**วันที่**: 12 ก.ค. 2569 (session 8)
 
 **Session ก่อนหน้า (สรุปย่อ):**
 - Session 1-2 (6 มิ.ย.): Visit tracking, email, timezone, Dashboard
@@ -534,21 +537,45 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - Session 9 ก.ค. S4: Loading animation, Navbar buttons, Cancel system
 - Session 9 ก.ค. S5: Footer, CTA swap, Captcha, BG images
 - Session 10 ก.ค. S6: Code.gs cancel handler, OG Cover Image
+- Session 11 ก.ค. S7: Railway→Vercel, บิ้ว slot, Telegram/GitHub fix, debug endpoints
 
-**11 ก.ค. 2569 — Session 7 (session นี้):**
-1. **ย้าย Railway → Vercel** ✅ (Railway trial expired, service offline — ลบแล้ว)
-   - สร้าง `vercel.json` + `api/index.js` (Vercel entry point)
-   - แก้ `server.js`: conditional `app.listen()` + `export default app`
-   - ลบ `setInterval` → ใช้ cron-job.org + `/api/cron-sync` แทน
-   - แก้ทุก endpoint: `await Promise.allSettled()` ก่อน `res.json()`
-   - DNS: GoDaddy CNAME `www` → `b7f41b836513b2d8.vercel-dns-017.com.`
-2. **Slot display 3 states** (ลูกค้า): จองแล้ว (แดง) vs ปิด (เทา) — คนละสี
-3. **ขั้นต่ำ 1 วัน**: `getDates()` เริ่มจาก i=1 (พรุ่งนี้)
-4. **แก้ Telegram ไม่ส่ง**: TELEGRAM_CHAT_ID มี tab นำหน้า → ลบ + เพิ่ม `.trim()`
-5. **ซ่อนการจองเลยวัน**: filter `b.date >= today` ทั้ง admin panel + Dashboard
-6. **Admin slot "บิ้ว"**: fake-booked state — ส้ม, ลูกค้าเห็น "จองแล้ว"
-   - `cycleSlot()`: เปิด → adminBooked → ปิด → เปิด
-   - `config.adminBooked` เก็บใน content.json
-   - server merge adminBooked เข้า bookedSlots ก่อนส่งลูกค้า
-7. **แก้ "Branch main not found"**: `.trim()` ทั้ง `ghConf()` + `ghHeaders()`
-8. **Debug endpoints**: `/api/test-telegram`, `/api/debug-github`
+**12 ก.ค. 2569 — Session 8 (session นี้):**
+1. **เพิ่มบทความ SEO ครบ 40 บทความ** ใน `remap.articles` (content.json)
+   - ก่อนหน้า: 9 บทความ → session นี้เพิ่มเป็น 40 บทความ
+   - ครอบคลุม: Mazda CX-5/CX-3/2, Isuzu D-Max/MU-X, Ford Ranger/Raptor, Honda CR-V/HR-V/Civic, Toyota Fortuner/Hilux Revo, Mitsubishi Triton/Pajero, Nissan Terra/Navara/Almera, BMW, Subaru WRX/Forester
+   - หัวข้อ FAQ: Stage 1 vs 2, OBD2 vs Chip Tuning, ประกันรถ, เตรียมรถก่อนรีแมป, ดูแลหลังรีแมป, ดีเซล vs เบนซิน, EV/Hybrid, เมื่อไหร่ไม่ควรรีแมป, รู้สึกไม่ต่าง
+   - HKS: ท่อดีกว่าท่อเดิมอย่างไร, เสียงกฎหมาย, ดูแลรักษา, ติดตั้ง
+   - Panthera: Active Sound คืออะไร, vs ท่อจริง, รองรับรถอะไร, ราคา/ติดตั้ง
+   - Tags: KNOWLEDGE / ECU REMAP / HKS / PANTHERA
+2. **Article Pagination** (App.jsx — RemapPage)
+   - `articlePage` state + `ARTICLES_PER_PAGE = 8`
+   - แสดง 8 บทความ/หน้า × 5 หน้า
+   - ปุ่ม "ก่อนหน้า ‹" + "ถัดไป ›" + page dots 1-5
+   - เปลี่ยนหน้า → accordion พับกลับอัตโนมัติ (reset openArticles)
+   - excerpt ใช้ `whitespace-pre-line` แสดง bullet points ถูกต้อง
+3. **Remap page reorder** (App.jsx — RemapPage)
+   - ลำดับเดิม: Articles → Portfolio → Reviews → Consult Form
+   - ลำดับใหม่: **Reviews → Portfolio → Articles (paged) → Consult Form**
+4. **About Us SEO content** (App.jsx — AboutPage)
+   - เพิ่ม section "ข้อมูลบริการโดยละเอียด" ก่อน section Contact
+   - ECU Remap deep-dive: อธิบายทุก Map ที่ปรับ + ผลลัพธ์เป็น %
+   - Brand grid: 12 ยี่ห้อที่รองรับ (Toyota Honda Mazda Isuzu Ford Mitsubishi Nissan Subaru BMW Mercedes VW Audi)
+   - HKS: ประวัติแบรนด์ + 3 รุ่น
+   - Panthera: วิธีทำงาน + เหมาะกับใคร + คุณสมบัติ
+   - FAQ 5 ข้อ (เสียหายไหม, เวลา, Restore, ผ่อนค้าง, Coverage)
+   - Technical keywords block สำหรับ bot/AI crawl
+
+---
+
+## Article Structure (content.json → remap.articles)
+```js
+{
+  id: number,          // unique ID
+  imgUrl: string,      // Google Drive thumbnail URL หรือ '' ถ้าไม่มีรูป
+  tag: string,         // 'KNOWLEDGE' | 'ECU REMAP' | 'HKS' | 'PANTHERA'
+  title: string,       // หัวข้อบทความ
+  excerpt: string,     // เนื้อหา (รองรับ \n สำหรับ bullet points)
+}
+```
+**ปัจจุบัน**: 40 บทความ, แบ่งหน้าละ 8 (5 หน้า)
+**แก้ไขบทความ**: ผ่าน Admin Panel → tab Articles (ใน RemapPage admin)
