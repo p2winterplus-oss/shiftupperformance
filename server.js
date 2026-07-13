@@ -350,6 +350,7 @@ app.post('/api/notify-lead', async (req, res) => {
   // await ก่อน res.json() — Vercel serverless ตัด process หลัง respond
   await Promise.allSettled([
     sendTelegram(text).catch(e => console.warn('[notify-lead] telegram error:', e.message)),
+    sendLine(text).catch(e => console.warn('[notify-lead] line error:', e.message)),
     sendEmail(subject, text).then(() => console.log(`[notify-lead] ✓ email sent: ${subject}`)).catch(e => console.warn('[notify-lead] email error:', e.message)),
   ]);
   res.json({ success: true });
@@ -526,6 +527,57 @@ async function sendTelegram(text) {
   }
 }
 
+// ── LINE notification (Messaging API — push to multiple user IDs) ──
+async function sendLine(text) {
+  const token   = (process.env.LINE_CHANNEL_ACCESS_TOKEN || '').trim();
+  const userIds = (process.env.LINE_USER_IDS || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (!token || userIds.length === 0) {
+    console.warn('[line] missing LINE_CHANNEL_ACCESS_TOKEN or LINE_USER_IDS env var');
+    return;
+  }
+  const plainText = text.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '');
+  try {
+    const r = await fetch('https://api.line.me/v2/bot/message/multicast', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ to: userIds, messages: [{ type: 'text', text: plainText }] }),
+    });
+    if (r.ok) {
+      console.log('[line] ✓ sent to', userIds.length, 'user(s)');
+    } else {
+      const d = await r.json().catch(() => ({}));
+      console.warn('[line] API error:', r.status, d.message || d);
+    }
+  } catch (err) {
+    console.warn('[line] send error:', err.message);
+  }
+}
+
+// ── API: ทดสอบ LINE ──────────────────────────────────────────────
+app.get('/api/test-line', async (req, res) => {
+  const token   = (process.env.LINE_CHANNEL_ACCESS_TOKEN || '').trim();
+  const userIds = (process.env.LINE_USER_IDS || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (!token || userIds.length === 0) {
+    return res.json({ success: false, error: 'LINE_CHANNEL_ACCESS_TOKEN หรือ LINE_USER_IDS ยังไม่ได้ตั้ง' });
+  }
+  await sendLine('✅ Shiftup LINE ทดสอบ — ระบบทำงานปกติ');
+  res.json({ success: true, userIds, token: token.slice(0, 10) + '...' });
+});
+
+// ── LINE Webhook — ใช้หา User ID ชั่วคราว (log เข้า console) ──────
+app.post('/api/line-webhook', express.json(), (req, res) => {
+  const events = req.body?.events || [];
+  for (const ev of events) {
+    if (ev.source?.userId) {
+      console.log('[line-webhook] userId:', ev.source.userId, '| message:', ev.message?.text || '(no text)');
+    }
+  }
+  res.sendStatus(200);
+});
+
 // ── GET /api/booking-config → config + booked slots ─────────────
 app.get('/api/booking-config', async (req, res) => {
   try {
@@ -617,6 +669,7 @@ app.post('/api/book', async (req, res) => {
 
     await Promise.allSettled([
       sendTelegram(msg).catch(e => console.warn('[booking] telegram error:', e.message)),
+      sendLine(msg).catch(e => console.warn('[booking] line error:', e.message)),
       emailPromise.catch(e => console.warn('[booking] email error:', e.message)),
       fetch(SHEET_DOPOST_URL, {
         method: 'POST',
@@ -710,6 +763,7 @@ app.post('/api/cancel-by-code', async (req, res) => {
   // await ก่อน res.json() — Vercel serverless ตัด process หลัง respond
   await Promise.allSettled([
     sendTelegram(msg).catch(e => console.warn('[cancel] telegram error:', e.message)),
+    sendLine(msg).catch(e => console.warn('[cancel] line error:', e.message)),
     fetch(SHEET_DOPOST_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
