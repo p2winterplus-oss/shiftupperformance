@@ -5,7 +5,7 @@
 - **URL**: deploy บน **Vercel** (auto-deploy จาก GitHub main)
 - **Domain**: `www.shiftupperformance.com` — live แล้ว (18 มิ.ย. 2569)
 - **Stack**: React 18 + Vite 5 + Tailwind CSS v3 + Express server
-- **วันที่อัปเดต**: 12 ก.ค. 2569 (session 8)
+- **วันที่อัปเดต**: 13 ก.ค. 2569 (session 9)
 
 ---
 
@@ -34,7 +34,8 @@
 `https://docs.google.com/spreadsheets/d/1Su-nW33_bmmE-RUDy0xVf7ppiee4g9RuuA5HcIgyN6E`
 
 ### LINE OA
-`https://lin.ee/nZOMcph`
+- **OA หลัก (ลูกค้าคุยด้วย)**: `https://lin.ee/nZOMcph`
+- **OA แจ้งเตือนแอดมิน (Messaging API)**: `@169ibvmf` — แยกต่างหาก ไม่ปนกับ OA หลัก ใช้สำหรับ `sendLine()` ใน server.js เท่านั้น
 
 ---
 
@@ -58,10 +59,12 @@
 | `TELEGRAM_BOT_TOKEN` | Telegram Bot token สำหรับ notification |
 | `TELEGRAM_CHAT_ID` | Telegram Chat ID ของผู้รับ (`6476070617` — **ห้ามมี tab/space นำหน้า**) |
 | `CRON_SECRET` | ป้องกัน `/api/cron-sync` endpoint (ใช้กับ cron-job.org) |
+| `LINE_CHANNEL_ACCESS_TOKEN` | LINE Messaging API — token ของ LINE OA แยกที่สร้างไว้เฉพาะแจ้งเตือนแอดมิน (ไม่ใช่ OA หลักที่ลูกค้าคุยด้วย) |
+| `LINE_USER_IDS` | userId ของผู้รับแจ้งเตือน 2 คน คั่นด้วย comma ไม่มีเว้นวรรค เช่น `U47d7c...,U8ea82...` |
 
 > ⚠️ **Gmail SMTP ใช้ไม่ได้** — ใช้ Resend API แทน (HTTPS port 443)
 > ⚠️ **ระวัง hidden characters** ใน env var — เคยเกิดกับ TELEGRAM_CHAT_ID (tab นำหน้า) และอาจเกิดกับตัวอื่นได้ → server.js ใช้ `.trim()` กับทุกค่าแล้ว
-> ✅ ทดสอบ Telegram ได้ที่ `/api/test-telegram` | ทดสอบ GitHub ได้ที่ `/api/debug-github`
+> ✅ ทดสอบ Telegram ได้ที่ `/api/test-telegram` | ทดสอบ GitHub ได้ที่ `/api/debug-github` | ทดสอบ LINE ได้ที่ `/api/test-line`
 
 ### cron-job.org (แทน setInterval ที่ใช้ไม่ได้บน Vercel serverless)
 - URL: `https://www.shiftupperformance.com/api/cron-sync?secret=<CRON_SECRET>`
@@ -440,6 +443,8 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - [x] **Article Pagination**: แสดง 8 บทความ/หน้า รวม 5 หน้า พร้อม prev/next + page dots (12 ก.ค. 2569)
 - [x] **Remap page reorder**: รีวิว → Portfolio → บทความ → ฟอร์มประเมิน (12 ก.ค. 2569)
 - [x] **About Us SEO content**: เพิ่ม section ข้อมูลหนาแน่น ECU deep-dive, brand grid, HKS, Panthera, FAQ, technical keywords (12 ก.ค. 2569)
+- [x] **LINE notification**: เพิ่ม `sendLine()` ควบคู่ Telegram — แจ้งเตือน booking/cancel/remap/partner ไปพร้อมกัน 2 คน ผ่าน LINE OA แยกต่างหาก (13 ก.ค. 2569)
+- [x] **OG Cover Image debug**: หาสาเหตุ FB โชว์แค่โลโก้ — เพราะ FB cache รูปเก่า ต้อง Scrape Again ที่ FB Debugger (13 ก.ค. 2569)
 
 ---
 
@@ -447,6 +452,7 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - [ ] **Watermark สำหรับ Panthera** — user บอกทำทีหลัง
 - [ ] **Google Business Profile** — เพิ่มรูปภาพ, เวลาทำการ, คำอธิบายบริการให้ครบ
 - [ ] **หน้า About Us** — section ใหม่เพิ่มแล้ว แต่อาจเพิ่มเนื้อหาได้อีก
+- [ ] **OG image ขนาดไม่ตรง meta tag** — ไฟล์จริง 1731×909px แต่ index.html ประกาศ 1200×630px (เจอ 13 ก.ค. 2569 ระหว่าง debug FB share — ยังไม่กระทบการทำงานเพราะ FB แสดงผลถูกแล้วหลัง Scrape Again แต่ควรแก้ตัวเลขให้ตรงกันไว้)
 
 ---
 
@@ -522,7 +528,7 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 ---
 
 ## Last Session
-**วันที่**: 12 ก.ค. 2569 (session 8)
+**วันที่**: 13 ก.ค. 2569 (session 9)
 
 **Session ก่อนหน้า (สรุปย่อ):**
 - Session 1-2 (6 มิ.ย.): Visit tracking, email, timezone, Dashboard
@@ -538,6 +544,22 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - Session 9 ก.ค. S5: Footer, CTA swap, Captcha, BG images
 - Session 10 ก.ค. S6: Code.gs cancel handler, OG Cover Image
 - Session 11 ก.ค. S7: Railway→Vercel, บิ้ว slot, Telegram/GitHub fix, debug endpoints
+- Session 12 ก.ค. S8: 40 บทความ SEO, Article Pagination, Remap reorder, About Us SEO content
+
+**13 ก.ค. 2569 — Session 9 (session นี้):**
+1. **OG Cover Image ไม่ขึ้นตอนแชร์ FB — หาสาเหตุและแก้แล้ว** ✅
+   - สาเหตุจริง: **Facebook cache รูปเก่าไว้** (ไม่ใช่ไฟล์รูปมีปัญหา — ไฟล์ og-cover.png สวยและถูกต้องอยู่แล้ว)
+   - วิธีแก้: เข้า https://developers.facebook.com/tools/debug/ → วาง URL เว็บ → กด **Scrape Again** → FB ดึงรูปใหม่ทันที
+   - พบ bug เล็กน้อยระหว่างทาง: ขนาดรูปที่ประกาศใน index.html (1200×630) ไม่ตรงกับไฟล์จริง (1731×909) — **ยังไม่ได้แก้** (ดูหัวข้อค้างอยู่)
+   - จำไว้: ทุกครั้งที่เปลี่ยนรูป/meta tags ของ OG ต้อง Scrape Again ที่ FB Debugger เสมอ ไม่งั้น FB โชว์รูปเก่าค้าง
+2. **เพิ่มระบบแจ้งเตือนผ่าน LINE (Messaging API) ควบคู่ Telegram** ✅ deploy แล้ว
+   - เหตุผล: อยากให้แจ้งเตือนโผล่ใน LINE ที่ใช้ประจำด้วย ไม่ใช่แค่ Telegram — ปริมาณจอง 5-20 เคส/เดือน ไม่ชนโควตาฟรีแน่นอน
+   - **สร้าง LINE OA ใหม่แยกต่างหาก** (`@169ibvmf`) เฉพาะสำหรับแจ้งเตือนแอดมิน — ไม่ปนกับ OA หลักที่ลูกค้าคุยด้วย (`lin.ee/nZOMcph`) เพื่อไม่ให้กระทบ auto-reply หรือโควตาข้อความของ OA เดิม
+   - เพิ่มใน server.js: `sendLine(text)` (multicast push ไปหลาย userId พร้อมกัน, แปลง HTML tags ของ Telegram เป็น plain text), `/api/test-line`, `/api/line-webhook` (endpoint ชั่วคราวสำหรับ log userId ของคนที่ทักบอทเข้ามา — เก็บไว้เผื่ออนาคตอยากเพิ่ม/เปลี่ยนผู้รับ)
+   - ผูก `sendLine()` เข้ากับ 3 จุดเดิมที่มี Telegram: booking ใหม่, ยกเลิก booking, remap/partner lead
+   - ถ้า `LINE_CHANNEL_ACCESS_TOKEN` หรือ `LINE_USER_IDS` ยังไม่ตั้ง → แค่ log warning เฉยๆ ไม่กระทบระบบอื่น (pattern เดียวกับ sendTelegram)
+   - Setup env vars บน Vercel ครบแล้ว + ทดสอบผ่าน `/api/test-line` สำเร็จ — ข้อความเด้งเข้า LINE ทั้ง 2 คนจริง ✅
+   - Commit: `feat: add LINE Messaging API notification alongside Telegram` (63018c6)
 
 **12 ก.ค. 2569 — Session 8 (session นี้):**
 1. **เพิ่มบทความ SEO ครบ 40 บทความ** ใน `remap.articles` (content.json)
