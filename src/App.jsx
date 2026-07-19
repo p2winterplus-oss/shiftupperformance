@@ -3816,9 +3816,11 @@ const BookingPage = ({ navigateTo }) => {
           <ChevronLeft size={16} /> กลับหน้า ECU Remap
         </button>
         <h1 className="text-4xl font-black text-white mb-3">จองคิวรีแมปรถยนต์</h1>
-        <div className="flex items-center gap-4">
-          <p className="text-neutral-400">เลือกวันและเวลาที่สะดวก ทีมงานจะยืนยันผ่าน LINE</p>
-          <button onClick={() => navigateTo('cancel')} className="shrink-0 text-xs text-neutral-500 hover:text-red-400 underline underline-offset-2 transition-colors">
+        <div className="flex items-start gap-4">
+          <p className="text-neutral-400 leading-relaxed">
+            เลือกวันและเวลาที่สะดวกได้ล่วงหน้าสูงสุด 10 วัน เมื่อจองเรียบร้อยแล้ว ทีมงานจะติดต่อกลับเพื่อยืนยันคิวอีกครั้งผ่าน LINE
+          </p>
+          <button onClick={() => navigateTo('cancel')} className="shrink-0 text-xs text-neutral-500 hover:text-red-400 underline underline-offset-2 transition-colors mt-1">
             ยกเลิกการจอง
           </button>
         </div>
