@@ -3569,14 +3569,16 @@ const BookingPage = ({ navigateTo }) => {
     fetch('/api/booking-config')
       .then(r => r.json())
       .then(d => { setConfig(d.config); setBookedSlots(d.bookedSlots || {}); })
-      .catch(() => setConfig({ advanceDays: 30, defaultSlots: ['09:00','10:30','12:00','13:30','15:00','16:30','18:00','19:30','21:00'], closedDates: [], customSlots: {} }));
+      .catch(() => setConfig({ advanceDays: 30, customerDays: 10, defaultSlots: ['09:00','10:30','12:00','13:30','15:00','16:30','18:00','19:30','21:00'], closedDates: [], customSlots: {} }));
   }, []);
 
   const getDates = () => {
     if (!config) return [];
     const days = [];
     const now = new Date();
-    for (let i = 1; i <= config.advanceDays; i++) {
+    // ลูกค้าเห็นล่วงหน้า customerDays วัน (default 10) — ไม่เกิน advanceDays ที่ admin จัดการ
+    const customerDays = Math.min(config.customerDays ?? 10, config.advanceDays || 30);
+    for (let i = 1; i <= customerDays; i++) {
       const d = new Date(now);
       d.setDate(now.getDate() + i);
       const key = d.toLocaleDateString('sv-SE'); // YYYY-MM-DD
@@ -4111,7 +4113,7 @@ const BookingAdminPanel = ({ config: initConfig, onConfigSaved, onClose }) => {
 
   const formatDate = (key) => new Date(key + 'T00:00:00').toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short' });
 
-  const futureDates = Array.from({ length: 30 }, (_, i) => {
+  const futureDates = Array.from({ length: cfg.advanceDays || 30 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() + i);
     return d.toLocaleDateString('sv-SE');
@@ -4217,9 +4219,17 @@ const BookingAdminPanel = ({ config: initConfig, onConfigSaved, onClose }) => {
 
       {tab === 'slots' && (
         <div className="space-y-5">
-          <div>
-            <label className="text-sm text-neutral-400 block mb-1">จองล่วงหน้าได้ (วัน)</label>
-            <input type="number" min={1} max={90} value={cfg.advanceDays} onChange={e => setCfg(p => ({ ...p, advanceDays: +e.target.value }))} className="w-24 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500" />
+          <div className="flex flex-wrap gap-6">
+            <div>
+              <label className="text-sm text-neutral-400 block mb-1">Admin จัดการล่วงหน้า (วัน)</label>
+              <input type="number" min={1} max={90} value={cfg.advanceDays} onChange={e => setCfg(p => ({ ...p, advanceDays: +e.target.value }))} className="w-24 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500" />
+              <p className="text-xs text-neutral-600 mt-1">จำนวนวันที่ admin เห็น/ปรับได้ (ตารางด้านล่าง)</p>
+            </div>
+            <div>
+              <label className="text-sm text-neutral-400 block mb-1">ลูกค้าเห็นล่วงหน้า (วัน)</label>
+              <input type="number" min={1} max={90} value={cfg.customerDays ?? 10} onChange={e => setCfg(p => ({ ...p, customerDays: +e.target.value }))} className="w-24 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500" />
+              <p className="text-xs text-neutral-600 mt-1">จำนวนวันที่ลูกค้าเลือกจองได้จริง</p>
+            </div>
           </div>
 
           <div>

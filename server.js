@@ -586,6 +586,7 @@ app.get('/api/booking-config', async (req, res) => {
     const getRes  = await fetch(`${apiBase}?ref=${branch}`, { headers: ghHeaders() });
     let config = {
       advanceDays: 30,
+      customerDays: 10,
       defaultSlots: ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00', '19:30', '21:00'],
       closedDates: [],
       customSlots: {},
