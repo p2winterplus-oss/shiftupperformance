@@ -5,7 +5,7 @@
 - **URL**: deploy บน **Vercel** (auto-deploy จาก GitHub main)
 - **Domain**: `www.shiftupperformance.com` — live แล้ว (18 มิ.ย. 2569)
 - **Stack**: React 18 + Vite 5 + Tailwind CSS v3 + Express server
-- **วันที่อัปเดต**: 13 ก.ค. 2569 (session 9)
+- **วันที่อัปเดต**: 20 ต.ค. 2569 (sync เอกสาร — งานล่าสุดคือ session 10, 19 ก.ค. 2569)
 
 ---
 
@@ -259,6 +259,11 @@ pipe.media = [
 - **ปิด** (grey) = admin ปิด
 - ⚡ **Urgency**: เหลือ ≤ 3 slot กระพริบเหลือง
 - **ขั้นต่ำ 1 วัน**: ลูกค้าจองได้เร็วสุดคือพรุ่งนี้ (วันนี้เลือกไม่ได้)
+- **แยกช่วงวันลูกค้า vs admin** (19 ก.ค. 2569):
+  - `config.customerDays` (default 10) = ลูกค้าเลือกจองได้ล่วงหน้ากี่วัน
+  - `config.advanceDays` (default 30) = admin เห็น/ปรับ slot ล่วงหน้ากี่วัน
+  - ลูกค้าได้ `Math.min(customerDays, advanceDays)` — แก้ทั้ง 2 ค่าได้ใน BookingAdminPanel
+  - ⚠️ ข้อความหัวหน้าจอง "ล่วงหน้าสูงสุด 10 วัน" **hardcode ไว้ใน App.jsx** — ถ้าเปลี่ยน customerDays ต้องแก้ข้อความด้วย
 
 ### Admin Booking List
 - **ซ่อนการจองที่เลยวันแล้ว** — แสดงเฉพาะ `b.date >= today`
@@ -445,6 +450,9 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - [x] **About Us SEO content**: เพิ่ม section ข้อมูลหนาแน่น ECU deep-dive, brand grid, HKS, Panthera, FAQ, technical keywords (12 ก.ค. 2569)
 - [x] **LINE notification**: เพิ่ม `sendLine()` ควบคู่ Telegram — แจ้งเตือน booking/cancel/remap/partner ไปพร้อมกัน 2 คน ผ่าน LINE OA แยกต่างหาก (13 ก.ค. 2569)
 - [x] **OG Cover Image debug**: หาสาเหตุ FB โชว์แค่โลโก้ — เพราะ FB cache รูปเก่า ต้อง Scrape Again ที่ FB Debugger (13 ก.ค. 2569)
+- [x] **แยกช่วงจองลูกค้า 10 วัน / admin 30 วัน**: `customerDays` + `advanceDays` แก้ได้ใน admin (19 ก.ค. 2569)
+- [x] **ข้อความหน้าจองใหม่**: "จองล่วงหน้าสูงสุด 10 วัน ... ทีมงานจะติดต่อกลับเพื่อยืนยันคิวอีกครั้งผ่าน LINE" (19 ก.ค. 2569)
+- [x] **AGENTS.md**: ไฟล์คำสั่งสำหรับ Codex — ชี้มาที่ CLAUDE.md เป็นแหล่งข้อมูลหลัก (20 ต.ค. 2569)
 
 ---
 
@@ -528,7 +536,17 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 ---
 
 ## Last Session
-**วันที่**: 13 ก.ค. 2569 (session 9)
+**วันที่**: 19 ก.ค. 2569 (session 10 — เครื่องอื่น) | sync เอกสาร 20 ต.ค. 2569
+
+**19 ก.ค. 2569 — Session 10 (เครื่องอื่น):**
+1. **แยกช่วงวันจอง ลูกค้า 10 วัน / admin 30 วัน** (commit 20a6e18)
+   - เพิ่ม `customerDays: 10` ใน content.json → booking config + fallback ใน server.js
+   - BookingPage: วนวันแค่ `Math.min(customerDays, advanceDays)`
+   - BookingAdminPanel: 2 ช่อง "Admin จัดการล่วงหน้า (วัน)" + "ลูกค้าเห็นล่วงหน้า (วัน)", ตาราง slot ใช้ `advanceDays` แทนเลข 30 ตายตัว
+2. **ปรับข้อความหัวหน้าจองคิว** (commit 94b9f81) — บอกลูกค้าว่าจองล่วงหน้าได้สูงสุด 10 วัน + ทีมงานจะติดต่อยืนยันคิวผ่าน LINE (ข้อความ hardcode "10 วัน")
+3. หลังจากนั้นมีแต่ auto-commit จาก admin panel (`booking: update slot config`, `content: update remap`) — ไม่มีการแก้โค้ด
+
+**20 ต.ค. 2569 — sync เอกสาร:** pull ล่าสุด, บันทึก session 10 ที่ตกหล่น, สร้าง `AGENTS.md` สำหรับ Codex
 
 **Session ก่อนหน้า (สรุปย่อ):**
 - Session 1-2 (6 มิ.ย.): Visit tracking, email, timezone, Dashboard
@@ -546,7 +564,7 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - Session 11 ก.ค. S7: Railway→Vercel, บิ้ว slot, Telegram/GitHub fix, debug endpoints
 - Session 12 ก.ค. S8: 40 บทความ SEO, Article Pagination, Remap reorder, About Us SEO content
 
-**13 ก.ค. 2569 — Session 9 (session นี้):**
+**13 ก.ค. 2569 — Session 9:**
 1. **OG Cover Image ไม่ขึ้นตอนแชร์ FB — หาสาเหตุและแก้แล้ว** ✅
    - สาเหตุจริง: **Facebook cache รูปเก่าไว้** (ไม่ใช่ไฟล์รูปมีปัญหา — ไฟล์ og-cover.png สวยและถูกต้องอยู่แล้ว)
    - วิธีแก้: เข้า https://developers.facebook.com/tools/debug/ → วาง URL เว็บ → กด **Scrape Again** → FB ดึงรูปใหม่ทันที
@@ -561,7 +579,7 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
    - Setup env vars บน Vercel ครบแล้ว + ทดสอบผ่าน `/api/test-line` สำเร็จ — ข้อความเด้งเข้า LINE ทั้ง 2 คนจริง ✅
    - Commit: `feat: add LINE Messaging API notification alongside Telegram` (63018c6)
 
-**12 ก.ค. 2569 — Session 8 (session นี้):**
+**12 ก.ค. 2569 — Session 8:**
 1. **เพิ่มบทความ SEO ครบ 40 บทความ** ใน `remap.articles` (content.json)
    - ก่อนหน้า: 9 บทความ → session นี้เพิ่มเป็น 40 บทความ
    - ครอบคลุม: Mazda CX-5/CX-3/2, Isuzu D-Max/MU-X, Ford Ranger/Raptor, Honda CR-V/HR-V/Civic, Toyota Fortuner/Hilux Revo, Mitsubishi Triton/Pajero, Nissan Terra/Navara/Almera, BMW, Subaru WRX/Forester
