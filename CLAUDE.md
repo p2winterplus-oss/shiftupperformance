@@ -498,6 +498,12 @@ notifyServer(data)   → /api/notify-lead  → Resend API → อีเมล 1 
 - **แก้**: เพิ่ม `.trim()` ทั้ง `ghConf()` และ `ghHeaders()` + เพิ่ม detailed error log
 - **ทดสอบ**: `/api/debug-github`
 
+### 🐛 #9 — Railway แจ้งให้เปลี่ยน key + test endpoint เผย token (22 ต.ค. 2569)
+- Railway ส่งเมลให้ rotate key → ลบ Railway project แล้ว, ลบ GitHub token `Shiftup-railway` (Vercel ใช้ token แยก `Shiftup Vercel` ไม่ต้องเปลี่ยน), สร้าง Resend key ใหม่ `Shiftup Vercel` (ลบ `Shiftup` + `Onboarding`), revoke Telegram bot token แล้วใส่ใหม่
+- ระหว่างนั้นวาง token ผิดช่องลง `TELEGRAM_CHAT_ID` → `/api/test-telegram` แสดง chatId ตรงๆ → token หลุดสาธารณะชั่วคราว → revoke อีกรอบ
+- **แก้**: `/api/test-telegram` และ `/api/test-line` ส่งกลับแค่ `success`/`error` แล้ว ไม่แสดง token/chatId/userIds (commit 47177e3)
+- **กฎ**: endpoint ทดสอบ/debug ที่เปิดสาธารณะ ห้ามส่งค่า env var กลับไปเด็ดขาด
+
 ---
 
 ## สิ่งที่ต้องระวัง
