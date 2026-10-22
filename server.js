@@ -284,7 +284,8 @@ app.get('/api/test-telegram', async (req, res) => {
       body: JSON.stringify({ chat_id: chatId, text: '✅ Shiftup Telegram ทดสอบ — ระบบทำงานปกติ', parse_mode: 'HTML' }),
     });
     const d = await r.json();
-    res.json({ success: d.ok, telegram: d, token: token.slice(0,10) + '...', chatId });
+    // ไม่ส่งค่า token/chatId กลับ — endpoint นี้เปิดสาธารณะ
+    res.json({ success: d.ok, error: d.ok ? null : (d.description || `HTTP ${r.status}`) });
   } catch (err) {
     res.json({ success: false, error: err.toString() });
   }
@@ -564,7 +565,8 @@ app.get('/api/test-line', async (req, res) => {
     return res.json({ success: false, error: 'LINE_CHANNEL_ACCESS_TOKEN หรือ LINE_USER_IDS ยังไม่ได้ตั้ง' });
   }
   await sendLine('✅ Shiftup LINE ทดสอบ — ระบบทำงานปกติ');
-  res.json({ success: true, userIds, token: token.slice(0, 10) + '...' });
+  // ไม่ส่งค่า token/userIds กลับ — endpoint นี้เปิดสาธารณะ
+  res.json({ success: true, recipients: userIds.length });
 });
 
 // ── LINE Webhook — ใช้หา User ID ชั่วคราว (log เข้า console) ──────
